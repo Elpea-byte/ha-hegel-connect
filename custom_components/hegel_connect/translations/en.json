@@ -37,19 +37,6 @@
       "already_in_progress": "This amplifier is already being set up."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Hegel Connect options",
-        "data": {
-          "max_volume": "Maximum volume"
-        },
-        "data_description": {
-          "max_volume": "Home Assistant will never set the volume above this value. The amplifier's own remote is not limited."
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "fixed_volume": {
@@ -84,6 +71,11 @@
       },
       "streaming_service": {
         "name": "Streaming service"
+      }
+    },
+    "number": {
+      "max_volume": {
+        "name": "Maximum volume"
       }
     }
   }

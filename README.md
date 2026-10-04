@@ -26,6 +26,8 @@ The H150, H400 and H600 share the same software platform (they are supported by 
 - **Play, pause, next, previous**
 - **Media browser**: your internet radio favorites, all internet radio, and recently played
 - **Fixed volume** indicator: shows when the current input is set to home theater bypass (volume changes are then ignored by the amplifier)
+- **Stream format sensors**: audio quality (Hi-Res, CD, Lossless, Lossy, DSD), codec, sample rate, bit depth, bitrate, streaming service; track length and position
+- **Network sensor**: tells standby (still on the network) and switched off at the mains apart; the media player then shows off instead of unavailable
 - **Diagnostics** download without IP address or device ids
 
 ## Installation
@@ -48,7 +50,7 @@ Not discovered (other subnet/VLAN, multicast blocked)? Add it by hand: *Add inte
 
 A fixed IP address (DHCP reservation in your router) is still recommended. If the address does change, Home Assistant picks up the new one by itself the next time it sees the amplifier on the network.
 
-Options (⚙ on the integration): **Maximum volume**. Home Assistant will never set the volume above it; the amplifier's own remote is not limited.
+**Maximum volume** is a setting on the device page (a number entity, so automations can change it, e.g. lower in the evening). Home Assistant will never set the volume above it; the amplifier's own remote is not limited.
 
 The amplifier stays reachable in network standby, so it can be switched on from Home Assistant. If it is disconnected from mains, the integration reconnects automatically when it is back.
 

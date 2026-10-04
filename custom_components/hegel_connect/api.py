@@ -142,6 +142,12 @@ class PlayerData:
         return self._meta.get("serviceName") or None
 
     @property
+    def media_id(self) -> str | None:
+        """Id of what is playing (e.g. a radio station); matches the id of a favorites row."""
+        media_id = _dig(self.raw, "mediaRoles", "id")
+        return str(media_id) if media_id else None
+
+    @property
     def is_radio(self) -> bool:
         return bool(self._meta.get("radioStation"))
 

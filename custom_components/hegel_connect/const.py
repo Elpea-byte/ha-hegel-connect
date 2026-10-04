@@ -8,7 +8,7 @@ DOMAIN = "hegel_connect"
 MANUFACTURER = "Hegel"
 
 # Kept here (not in __init__.py) so adding a platform only touches this file.
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SENSOR]
 
 # Models on the StreamUnlimited platform. Other brands (e.g. Onkyo) announce the
 # same mDNS service, so discovery only accepts these.

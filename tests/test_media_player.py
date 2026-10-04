@@ -45,10 +45,10 @@ async def test_push_updates_state(hass: HomeAssistant, fake_hegel, config_entry)
 
 
 async def test_volume_respects_ceiling(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(config_entry, options={"max_volume": 40})
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await _setup(hass, config_entry)
+    await hass.services.async_call(
+        "number", "set_value", {ATTR_ENTITY_ID: "number.hegel_h150_maximum_volume", "value": 40}, blocking=True
+    )
     await hass.services.async_call(
         MP_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: ENTITY, ATTR_MEDIA_VOLUME_LEVEL: 0.9}, blocking=True
     )

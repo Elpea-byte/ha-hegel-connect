@@ -37,6 +37,11 @@
       "fixed_volume": {
         "default": "mdi:volume-lock"
       }
+    },
+    "number": {
+      "max_volume": {
+        "default": "mdi:volume-high"
+      }
     }
   }
 }

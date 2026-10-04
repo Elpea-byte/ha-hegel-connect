@@ -37,19 +37,6 @@
       "already_in_progress": "Deze versterker wordt al ingesteld."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Hegel Connect-opties",
-        "data": {
-          "max_volume": "Maximaal volume"
-        },
-        "data_description": {
-          "max_volume": "Home Assistant zet het volume nooit hoger dan deze waarde. De eigen afstandsbediening van de versterker wordt niet begrensd."
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
       "fixed_volume": {
@@ -84,6 +71,11 @@
       },
       "streaming_service": {
         "name": "Streamingdienst"
+      }
+    },
+    "number": {
+      "max_volume": {
+        "name": "Maximaal volume"
       }
     }
   }

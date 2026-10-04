@@ -23,6 +23,7 @@ from .api import (
 from .const import (
     BACKOFF_MAX,
     BACKOFF_START,
+    DEFAULT_MAX_VOLUME,
     DOMAIN,
     POLL_TIMEOUT,
     POWER_ON_WAIT,
@@ -50,6 +51,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self.sources: list[HegelSource] = []
         self.volume_max = 100
         self.firmware: str | None = None
+        # Volume ceiling, set by the "Maximum volume" number entity.
+        self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
 
     async def _async_setup(self) -> None:

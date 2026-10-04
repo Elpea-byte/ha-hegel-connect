@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HegelConfigEntry
 from .api import PATH_AIRABLE_ROOT, PATH_PLAY_HISTORY, HegelError
-from .const import CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
 
@@ -81,8 +80,8 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     @property
     def _max_volume(self) -> int:
-        """User ceiling (options) within the amplifier's own range."""
-        ceiling = int(self.coordinator.config_entry.options.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME))
+        """User ceiling (number entity) within the amplifier's own range."""
+        ceiling = int(self.coordinator.max_volume)
         return max(1, min(ceiling, self.coordinator.volume_max))
 
     @property
@@ -162,6 +161,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return {
             "fixed_volume": data.volume_fixed,
             "service": data.player.service if self._playing_network() else None,
+            "media_id": data.player.media_id if self._playing_network() else None,
             "audio_format": data.player.codec if self._playing_network() else None,
             "volume_raw": data.volume,
             "max_volume": self._max_volume,

@@ -7,21 +7,17 @@ from typing import Any
 from urllib.parse import urlparse
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
-from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 import voluptuous as vol
 
 from .api import HegelClient, HegelConnectionError, HegelError
-from .const import CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME, DOMAIN, SUPPORTED_MODELS
+from .const import DOMAIN, SUPPORTED_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,28 +136,4 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}),
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        return HegelOptionsFlow()
-
-
-class HegelOptionsFlow(OptionsFlow):
-    """Volume ceiling."""
-
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-        current = self.config_entry.options.get(CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME)
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_MAX_VOLUME, default=current): selector.NumberSelector(
-                        selector.NumberSelectorConfig(min=1, max=100, step=1, mode=selector.NumberSelectorMode.SLIDER)
-                    )
-                }
-            ),
         )
