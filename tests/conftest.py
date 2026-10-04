@@ -114,6 +114,9 @@ class FakeHegel:
     async def control(self, command: str) -> None:
         self.calls.append(("control", command))
 
+    async def play_time(self) -> dict:
+        return {"type": "i64_", "i64_": 30000}
+
     async def resume_spotify(self) -> None:
         self.calls.append(("resume_spotify",))
 

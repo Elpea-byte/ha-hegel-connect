@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import (
     NETWORK_SOURCE_NAME,
+    PATH_PLAYER,
     PATH_SOURCE,
     HegelClient,
     HegelError,
@@ -94,8 +95,10 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             except HegelError as err:
                 if self.connected:
                     _LOGGER.warning("Lost connection to Hegel at %s: %s", self.client.host, err)
-                self.connected = False
-                self.async_set_update_error(err)
+                    # Not unavailable: the media player shows off and the network
+                    # sensor off (switched off at the mains, unplugged, network down).
+                    self.connected = False
+                    self.async_update_listeners()
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, BACKOFF_MAX)
 
@@ -103,18 +106,38 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         state = self.data or HegelState()
         was_on = state.is_on
         changed = False
+        player_changed = False
         for event in events:
             path = event.get("path")
             if isinstance(path, str) and "itemValue" in event:
                 try:
-                    changed |= state.apply_event(path, event["itemValue"])
+                    applied = state.apply_event(path, event["itemValue"])
                 except (TypeError, ValueError) as err:
                     _LOGGER.debug("Ignoring event %s: %s", path, err)
+                    continue
+                changed |= applied
+                player_changed |= applied and path == PATH_PLAYER
+        if player_changed and state.is_on:
+            if state.player.duration:
+                self.hass.async_create_task(self._async_update_position())
+            else:
+                state.set_play_time(None)
         if not was_on and state.is_on:
             # Just switched on: read everything once (player data was invalid in standby).
             self.hass.async_create_task(self.async_request_refresh())
         if changed:
             self.async_set_updated_data(state)
+
+    async def _async_update_position(self) -> None:
+        """Read the playback position once (it is not pushed)."""
+        try:
+            value = await self.client.play_time()
+        except HegelError as err:
+            _LOGGER.debug("Play time not available: %s", err)
+            return
+        if self.data is not None:
+            self.data.set_play_time(value)
+            self.async_set_updated_data(self.data)
 
     # -------------------------------------------------------------- commands
 

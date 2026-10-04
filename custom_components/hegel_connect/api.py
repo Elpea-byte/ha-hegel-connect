@@ -14,6 +14,7 @@ uses:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 import json
 import logging
 from typing import Any
@@ -31,6 +32,8 @@ PATH_SOURCE = "hegel:activePhysicalSource"
 PATH_SOURCES = "hegel:listPhysicalSources"
 PATH_VOLUME_TYPE = "settings:/hegel/volumeType"
 PATH_PLAYER = "player:player/data"
+# Position in ms. Not subscribed (changes several times a second); read after player events.
+PATH_PLAY_TIME = "player:player/data/playTime"
 PATH_CONTROL = "player:player/control"
 # Resume a paused Spotify Connect session. A bare "play" control breaks it
 # ("Directory is empty"); this is the "Resume Playback" action of the Spotify UI.
@@ -50,6 +53,9 @@ EVENT_PATHS: tuple[str, ...] = (
     PATH_VOLUME_TYPE,
     PATH_PLAYER,
 )
+
+LOSSY_CODECS = ("mp3", "mpeg", "aac", "ogg", "vorbis", "opus", "wma")
+LOSSLESS_CODECS = ("flac", "alac", "wav", "pcm", "aiff", "lpcm", "mqa")
 
 POWER_ONLINE = "online"
 POWER_STANDBY = "networkStandby"
@@ -157,6 +163,67 @@ class PlayerData:
         return isinstance(controls, dict) and bool(controls.get(name))
 
     @property
+    def _resource(self) -> dict[str, Any]:
+        return _dig(self.raw, "trackRoles", "mediaData", "activeResource") or {}
+
+    @property
+    def duration(self) -> int | None:
+        """Track length in seconds; None for radio and unknown."""
+        ms = _dig(self.raw, "status", "duration")
+        return round(ms / 1000) if isinstance(ms, (int, float)) and ms > 0 else None
+
+    @property
+    def short_codec(self) -> str | None:
+        res = self._resource
+        return res.get("shortCodec") or res.get("codec") or None
+
+    @property
+    def sample_rate(self) -> float | None:
+        """kHz."""
+        rate = self._resource.get("sampleFrequency")
+        return rate / 1000 if isinstance(rate, (int, float)) and rate > 0 else None
+
+    @property
+    def bit_depth(self) -> int | None:
+        bits = self._resource.get("bitsPerSample")
+        return int(bits) if isinstance(bits, (int, float)) and bits > 0 else None
+
+    @property
+    def bitrate(self) -> int | None:
+        """kbit/s."""
+        rate = self._resource.get("bitRate") or self._resource.get("nominalBitRate")
+        return round(rate / 1000) if isinstance(rate, (int, float)) and rate > 0 else None
+
+    @property
+    def quality(self) -> str | None:
+        """hi_res, cd, lossless, lossy or dsd.
+
+        The codec decides first: internet radio (MP3 16-bit/48 kHz) is lossy, not
+        CD quality. Spotify reports no format, only whether it streams lossless.
+        """
+        res = self._resource
+        if not res:
+            return None
+        spotify = _dig(res, "quality", "spotifyHifi")
+        if spotify is not None and not res.get("shortCodec") and not res.get("codec"):
+            return "lossless" if spotify else "lossy"
+        codec = str(res.get("shortCodec") or res.get("codec") or res.get("mimeType") or "").lower()
+        if "dsd" in codec or "dsf" in codec or "dff" in codec:
+            return "dsd"
+        if any(tag in codec for tag in LOSSY_CODECS):
+            return "lossy"
+        if _dig(res, "quality", "qobuzHiRes"):
+            return "hi_res"
+        bits, rate = self.bit_depth, res.get("sampleFrequency") or 0
+        if any(tag in codec for tag in LOSSLESS_CODECS):
+            if (bits and bits > 16) or rate > 48000:
+                return "hi_res"
+            if bits == 16:
+                return "cd"
+            return "lossless"
+        return None
+
+    @property
     def codec(self) -> str | None:
         resource = _dig(self.raw, "trackRoles", "mediaData", "activeResource") or {}
         parts = []
@@ -181,6 +248,18 @@ class HegelState:
     source_index: int | None = None
     volume_fixed: bool | None = None
     player: PlayerData = field(default_factory=PlayerData)
+    # Playback position (seconds) and when it was read.
+    position: int | None = None
+    position_at: datetime | None = None
+
+    def set_play_time(self, value: Any) -> None:
+        ms = unwrap(value)
+        if isinstance(ms, (int, float)) and ms >= 0 and self.player.duration:
+            self.position = round(ms / 1000)
+            self.position_at = datetime.now(UTC)
+        else:
+            self.position = None
+            self.position_at = None
 
     @property
     def is_on(self) -> bool:
@@ -348,6 +427,9 @@ class HegelClient:
         except (HegelError, ValueError, TypeError):
             return 100
 
+    async def play_time(self) -> Any:
+        return await self.get_value(PATH_PLAY_TIME)
+
     async def fetch_state(self) -> HegelState:
         """Read everything once (used at start-up and after reconnecting)."""
         state = HegelState()
@@ -363,6 +445,8 @@ class HegelClient:
             # In network standby this path does not return valid data.
             try:
                 state.apply_event(PATH_PLAYER, await self.get_value(PATH_PLAYER))
+                if state.player.duration:
+                    state.set_play_time(await self.get_value(PATH_PLAY_TIME))
             except HegelConnectionError:
                 raise
             except HegelError as err:

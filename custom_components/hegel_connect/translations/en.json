@@ -54,6 +54,36 @@
     "binary_sensor": {
       "fixed_volume": {
         "name": "Fixed volume"
+      },
+      "network": {
+        "name": "Network"
+      }
+    },
+    "sensor": {
+      "audio_quality": {
+        "name": "Audio quality",
+        "state": {
+          "hi_res": "Hi-Res",
+          "cd": "CD quality",
+          "lossless": "Lossless",
+          "lossy": "Lossy",
+          "dsd": "DSD"
+        }
+      },
+      "codec": {
+        "name": "Codec"
+      },
+      "sample_rate": {
+        "name": "Sample rate"
+      },
+      "bit_depth": {
+        "name": "Bit depth"
+      },
+      "bitrate": {
+        "name": "Bitrate"
+      },
+      "streaming_service": {
+        "name": "Streaming service"
       }
     }
   }

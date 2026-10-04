@@ -90,7 +90,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         data = self.coordinator.data
         if data is None:
             return None
-        if not data.is_on:
+        if not data.is_on or not self.coordinator.connected:
             return MediaPlayerState.OFF
         if self.coordinator.source_name(data.source_index) == "Network":
             return _PLAYER_STATES.get(data.player.state or "", MediaPlayerState.IDLE)
@@ -115,7 +115,8 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return [source.name for source in self.coordinator.sources]
 
     def _playing_network(self) -> bool:
-        return self.source == "Network" and bool(self.coordinator.data and self.coordinator.data.is_on)
+        data = self.coordinator.data
+        return bool(data and data.is_on and self.coordinator.connected) and self.source == "Network"
 
     @property
     def media_title(self) -> str | None:
@@ -132,6 +133,22 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         return self.coordinator.data.player.image_url if self._playing_network() else None
+
+    @property
+    def media_duration(self) -> int | None:
+        return self.coordinator.data.player.duration if self._playing_network() else None
+
+    @property
+    def media_position(self) -> int | None:
+        return self.coordinator.data.position if self._playing_network() else None
+
+    @property
+    def media_position_updated_at(self):
+        return self.coordinator.data.position_at if self._playing_network() else None
+
+    @property
+    def app_name(self) -> str | None:
+        return self.coordinator.data.player.service if self._playing_network() else None
 
     @property
     def media_image_remotely_accessible(self) -> bool:

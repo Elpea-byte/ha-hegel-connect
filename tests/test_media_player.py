@@ -77,3 +77,22 @@ async def test_spotify_has_no_skip_and_resumes(hass: HomeAssistant, fake_hegel, 
     await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
     assert ("resume_spotify",) in fake_hegel[-1].calls
     assert ("control", "play") not in fake_hegel[-1].calls
+
+
+async def test_stream_sensors_and_network(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    assert hass.states.get("sensor.hegel_h150_audio_quality").state == "lossy"
+    assert hass.states.get("sensor.hegel_h150_streaming_service").state == "Spotify"
+    assert hass.states.get("binary_sensor.hegel_h150_network").state == "on"
+
+
+async def test_lost_connection_shows_off(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Off at the mains: media player off (not unavailable), network sensor off."""
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    coordinator.connected = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).state == "off"
+    assert hass.states.get("binary_sensor.hegel_h150_network").state == "off"
+    assert hass.states.get("sensor.hegel_h150_audio_quality").state == "unknown"

@@ -70,3 +70,49 @@ def test_missing_control_flag_means_not_allowed() -> None:
     assert player.control_allowed("next_") is False
     assert player.control_allowed("previous") is False
     assert PlayerData({"controls": {"next_": True, "previous": True}}).control_allowed("next_") is True
+
+
+def _radio_playing() -> dict:
+    """The last radio event: by then the stream format is complete."""
+    return [
+        e["e"]["itemValue"]
+        for e in FIXTURE["events"]
+        if e["e"]["path"] == "player:player/data"
+        and "radioStation" in json.dumps(e["e"]["itemValue"])
+        and e["e"]["itemValue"].get("state") == "playing"
+    ][-1]
+
+
+def test_stream_format_internet_radio() -> None:
+    """MP3 16-bit/48 kHz radio is lossy, not CD quality."""
+    player = PlayerData(_radio_playing())
+    assert player.quality == "lossy"
+    assert player.short_codec == "MP3"
+    assert player.sample_rate == 48.0
+    assert player.bit_depth == 16
+    assert player.bitrate == 128
+    assert player.duration is None
+
+
+def test_stream_format_spotify_and_lossless() -> None:
+    spotify = {
+        "trackRoles": {
+            "mediaData": {"activeResource": {"mimeType": "audio/unknown", "quality": {"spotifyHifi": False}}}
+        }
+    }
+    assert PlayerData(spotify).quality == "lossy"
+    spotify["trackRoles"]["mediaData"]["activeResource"]["quality"]["spotifyHifi"] = True
+    assert PlayerData(spotify).quality == "lossless"
+
+    def flac(bits: int, rate: int) -> PlayerData:
+        resource = {"shortCodec": "FLAC", "bitsPerSample": bits, "sampleFrequency": rate}
+        return PlayerData({"trackRoles": {"mediaData": {"activeResource": resource}}})
+
+    assert flac(16, 44100).quality == "cd"
+    assert flac(24, 96000).quality == "hi_res"
+    assert PlayerData({}).quality is None
+
+
+def test_duration_from_status() -> None:
+    assert PlayerData({"status": {"duration": 154153}}).duration == 154
+    assert PlayerData({"status": {"duration": 0}}).duration is None
