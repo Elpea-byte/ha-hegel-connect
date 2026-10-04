@@ -15,6 +15,9 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Plat
 SUPPORTED_MODELS = ("H150", "H400", "H600")
 
 CONF_MAX_VOLUME = "max_volume"
+# Saved in the config entry: inputs, volume range and firmware, so the
+# integration can start while the amplifier is off at the mains.
+CACHE_KEY = "cache"
 DEFAULT_MAX_VOLUME = 100
 
 # Push: how long the amplifier keeps a poll request open, and the wait after errors.

@@ -15,6 +15,7 @@ from .api import (
     PATH_PLAYER,
     PATH_SOURCE,
     HegelClient,
+    HegelConnectionError,
     HegelError,
     HegelQueueLost,
     HegelSource,
@@ -23,6 +24,7 @@ from .api import (
 from .const import (
     BACKOFF_MAX,
     BACKOFF_START,
+    CACHE_KEY,
     DEFAULT_MAX_VOLUME,
     DOMAIN,
     POLL_TIMEOUT,
@@ -51,21 +53,59 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self.sources: list[HegelSource] = []
         self.volume_max = 100
         self.firmware: str | None = None
+        self.started_offline = False
         # Volume ceiling, set by the "Maximum volume" number entity.
         self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
 
     async def _async_setup(self) -> None:
+        """Read the static facts; fall back to the copy saved at the last start.
+
+        Off at the mains (e.g. a power strip switched off at night) while Home
+        Assistant starts: set up from the saved copy, show the amplifier as off
+        and let the listener connect as soon as it is back.
+        """
         try:
             self.sources = await self.client.sources()
             self.volume_max = await self.client.volume_max()
             self.firmware = await self.client.firmware()
+        except HegelConnectionError as err:
+            if not self._load_cache():
+                raise UpdateFailed(str(err)) from err
+            _LOGGER.info("Hegel at %s not reachable; starting from saved data", self.client.host)
+            return
         except HegelError as err:
             raise UpdateFailed(str(err)) from err
+        self._save_cache()
+
+    def _save_cache(self) -> None:
+        cache = {
+            "sources": [[s.index, s.name] for s in self.sources],
+            "volume_max": self.volume_max,
+            "firmware": self.firmware,
+        }
+        entry = self.config_entry
+        if entry.data.get(CACHE_KEY) != cache:
+            self.hass.config_entries.async_update_entry(entry, data={**entry.data, CACHE_KEY: cache})
+
+    def _load_cache(self) -> bool:
+        cache = self.config_entry.data.get(CACHE_KEY)
+        if not cache or not cache.get("sources"):
+            return False
+        self.sources = [HegelSource(int(i), str(n)) for i, n in cache["sources"]]
+        self.volume_max = int(cache.get("volume_max") or 100)
+        self.firmware = cache.get("firmware")
+        self.started_offline = True
+        return True
 
     async def _async_update_data(self) -> HegelState:
         try:
             return self._carry_over(await self.client.fetch_state())
+        except HegelConnectionError as err:
+            if self.started_offline or self.data is not None:
+                # Not reachable: shown as off (connected stays False), not unavailable.
+                return self.data or HegelState()
+            raise UpdateFailed(str(err)) from err
         except HegelError as err:
             raise UpdateFailed(str(err)) from err
 

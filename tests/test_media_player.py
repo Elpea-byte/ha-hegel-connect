@@ -17,6 +17,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import FakeHegel
+
 ENTITY = "media_player.hegel_h150"
 
 
@@ -109,3 +111,34 @@ async def test_play_after_pause_resumes_spotify_even_without_service(
     await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
     assert ("resume_spotify",) in fake.calls
     assert ("control", "play") not in fake.calls
+
+
+async def test_starts_while_off_at_the_mains(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Power strip off when Home Assistant starts: set up from saved data, shown as off."""
+    await _setup(hass, config_entry)
+    assert config_entry.data["cache"]["sources"]
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    FakeHegel.reachable = False
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state.state == "off"
+    assert hass.states.get("binary_sensor.hegel_h150_network").state == "off"
+
+
+async def test_stop_for_radio_not_for_spotify(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    assert not hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.STOP
+    radio = {
+        "state": "playing",
+        "controls": {"next_": False, "previous": False},
+        "trackRoles": {"title": "Qmusic", "mediaData": {"metaData": {"serviceName": "airable Radio"}}},
+    }
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", radio)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.STOP
+    await hass.services.async_call(MP_DOMAIN, "media_stop", {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert ("control", "stop") in fake.calls

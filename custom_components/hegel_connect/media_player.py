@@ -76,6 +76,15 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
                 features |= MediaPlayerEntityFeature.NEXT_TRACK
             if data.player.control_allowed("previous"):
                 features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+            # Stop ends the stream (radio). Not for Spotify Connect: like a bare
+            # "play" it would drop the session with the phone.
+            if (data.player.service or data.last_service) != "Spotify" and data.player.state in (
+                "playing",
+                "paused",
+                "buffering",
+                "transitioning",
+            ):
+                features |= MediaPlayerEntityFeature.STOP
         return features
 
     @property
@@ -207,6 +216,9 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             if "Directory is empty" not in str(err):
                 raise HomeAssistantError(f"Hegel did not accept the command: {err}") from err
             await self._run(client.resume_spotify())
+
+    async def async_media_stop(self) -> None:
+        await self._run(self.coordinator.client.control("stop"))
 
     async def async_media_pause(self) -> None:
         await self._run(self.coordinator.client.control("pause"))
