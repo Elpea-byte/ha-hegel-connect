@@ -42,9 +42,11 @@ Copy `custom_components/hegel_connect` to the `custom_components` folder of your
 
 ## Configuration
 
-1. Give the amplifier a fixed IP address (DHCP reservation in your router).
-2. Settings > Devices & services > *Add integration* > **Hegel Connect**.
-3. Enter the IP address.
+The amplifier is **discovered automatically**: it announces itself on the network as a UPnP/DLNA renderer and, with Chromecast built-in enabled, as a Google Cast device. Home Assistant then shows it under Settings > Devices & services > *Discovered*; click *Add*.
+
+Not discovered (other subnet/VLAN, multicast blocked)? Add it by hand: *Add integration* > **Hegel Connect** > enter the IP address.
+
+A fixed IP address (DHCP reservation in your router) is still recommended. If the address does change, Home Assistant picks up the new one by itself the next time it sees the amplifier on the network.
 
 Options (⚙ on the integration): **Maximum volume**. Home Assistant will never set the volume above it; the amplifier's own remote is not limited.
 
@@ -65,7 +67,6 @@ Then open an [issue](../../issues/new/choose) with the log and the diagnostics f
 
 ## Known limitations
 
-- Automatic discovery on the network is not available yet; enter the IP address.
 - *Play* after *pause* is passed to the streaming service; with Spotify Connect, resuming is most reliable from the Spotify app.
 - Radio favorites are managed in the Hegel Control app; Home Assistant shows and plays them.
 

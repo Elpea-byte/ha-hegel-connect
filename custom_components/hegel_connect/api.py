@@ -13,7 +13,6 @@ uses:
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass, field
 import json
 import logging
@@ -210,9 +209,7 @@ class HegelState:
 class HegelClient:
     """Async client for one amplifier."""
 
-    def __init__(
-        self, host: str, session: aiohttp.ClientSession, request_timeout: float = 10
-    ) -> None:
+    def __init__(self, host: str, session: aiohttp.ClientSession, request_timeout: float = 10) -> None:
         self.host = host
         self._session = session
         self._timeout = request_timeout
@@ -242,7 +239,7 @@ class HegelClient:
                     if endpoint == "event/pollQueue":
                         raise HegelQueueLost(text[:200])
                     raise HegelError(f"{endpoint} {resp.status}: {text[:200]}")
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             raise HegelConnectionError(f"{self.host}: {err!r}") from err
         if not text:
             return None
@@ -272,14 +269,10 @@ class HegelClient:
         return data if isinstance(data, dict) else {}
 
     async def set_value(self, path: str, value: dict[str, Any]) -> None:
-        await self._request(
-            "POST", "setData", payload={"path": path, "role": "value", "value": value}
-        )
+        await self._request("POST", "setData", payload={"path": path, "role": "value", "value": value})
 
     async def activate(self, path: str, value: dict[str, Any] | None = None) -> None:
-        await self._request(
-            "POST", "setData", payload={"path": path, "role": "activate", "value": value or {}}
-        )
+        await self._request("POST", "setData", payload={"path": path, "role": "activate", "value": value or {}})
 
     # ------------------------------------------------------------ device info
 

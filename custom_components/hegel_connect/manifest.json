@@ -10,5 +10,39 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/Elpea-byte/ha-hegel-connect/issues",
   "requirements": [],
-  "version": "0.1.0"
+  "ssdp": [
+    {
+      "manufacturer": "Hegel",
+      "modelName": "H150"
+    },
+    {
+      "manufacturer": "Hegel",
+      "modelName": "H400"
+    },
+    {
+      "manufacturer": "Hegel",
+      "modelName": "H600"
+    }
+  ],
+  "version": "0.1.0",
+  "zeroconf": [
+    {
+      "type": "_googlecast._tcp.local.",
+      "properties": {
+        "md": "h150"
+      }
+    },
+    {
+      "type": "_googlecast._tcp.local.",
+      "properties": {
+        "md": "h400"
+      }
+    },
+    {
+      "type": "_googlecast._tcp.local.",
+      "properties": {
+        "md": "h600"
+      }
+    }
+  ]
 }

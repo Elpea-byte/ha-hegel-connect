@@ -1,15 +1,26 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Hegel Connect",
         "description": "Unofficial integration for Hegel H150, H400 and H600 streaming amplifiers. Enter the IP address of the amplifier (give it a fixed address in your router).",
-        "data": { "host": "Host" },
-        "data_description": { "host": "IP address or host name of the amplifier, e.g. 192.168.1.50" }
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "IP address or host name of the amplifier, e.g. 192.168.1.50"
+        }
       },
       "reconfigure": {
         "title": "Change address",
-        "data": { "host": "Host" }
+        "data": {
+          "host": "Host"
+        }
+      },
+      "discovery_confirm": {
+        "title": "Hegel Connect",
+        "description": "Found **{name}** at {host}. Add it to Home Assistant?\n\nTip: give the amplifier a fixed address in your router; if the address changes, Home Assistant picks up the new one automatically when it sees the amplifier again."
       }
     },
     "error": {
@@ -19,21 +30,31 @@
     },
     "abort": {
       "already_configured": "This amplifier is already configured.",
-      "reconfigure_successful": "Address updated."
+      "reconfigure_successful": "Address updated.",
+      "cannot_connect": "The amplifier stopped answering.",
+      "not_supported": "This device does not look like a Hegel H150, H400 or H600.",
+      "not_ipv4": "Only IPv4 addresses are supported.",
+      "already_in_progress": "This amplifier is already being set up."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Hegel Connect options",
-        "data": { "max_volume": "Maximum volume" },
-        "data_description": { "max_volume": "Home Assistant will never set the volume above this value. The amplifier's own remote is not limited." }
+        "data": {
+          "max_volume": "Maximum volume"
+        },
+        "data_description": {
+          "max_volume": "Home Assistant will never set the volume above this value. The amplifier's own remote is not limited."
+        }
       }
     }
   },
   "entity": {
     "binary_sensor": {
-      "fixed_volume": { "name": "Fixed volume" }
+      "fixed_volume": {
+        "name": "Fixed volume"
+      }
     }
   }
 }

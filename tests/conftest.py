@@ -9,10 +9,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hegel_connect.api import EVENT_PATHS, HegelConnectionError, HegelSource
 from custom_components.hegel_connect.const import DOMAIN
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 

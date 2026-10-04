@@ -1,11 +1,10 @@
-"""Config flow: enter the IP address of the amplifier."""
+"""Config flow: discovered on the network (SSDP / Google Cast) or entered by IP address."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
-
-import voluptuous as vol
+from urllib.parse import urlparse
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -15,8 +14,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+import voluptuous as vol
 
 from .api import HegelClient, HegelConnectionError, HegelError
 from .const import CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME, DOMAIN
@@ -29,15 +31,26 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        self._host: str | None = None
+        self._model: str | None = None
+        self._title: str | None = None
+
+    async def _async_probe(self, host: str) -> tuple[str, str, str]:
+        """Ask the amplifier who it is: (model, title, unique id)."""
+        client = HegelClient(host, async_get_clientsession(self.hass))
+        model = await client.product_name()
+        name = await client.device_name() or model
+        unique_id = await client.unique_id() or host
+        title = name if name.lower().startswith("hegel") else f"Hegel {name}"
+        return model, title, unique_id
+
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST].strip()
-            client = HegelClient(host, async_get_clientsession(self.hass))
             try:
-                model = await client.product_name()
-                name = await client.device_name() or model
-                unique_id = await client.unique_id() or host
+                model, title, unique_id = await self._async_probe(host)
             except HegelConnectionError:
                 errors["base"] = "cannot_connect"
             except HegelError:
@@ -48,14 +61,53 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                return self.async_create_entry(
-                    title=f"Hegel {name}" if not name.lower().startswith("hegel") else name,
-                    data={CONF_HOST: host, "model": model},
-                )
+                return self.async_create_entry(title=title, data={CONF_HOST: host, "model": model})
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
+        )
+
+    # -------------------------------------------------------------- discovery
+    # The amplifier announces itself as a UPnP/DLNA renderer (SSDP) and, when
+    # Chromecast built-in is enabled, as a Google Cast device (mDNS). The
+    # manifest only matches H150/H400/H600; the API answer decides the rest.
+    # A known amplifier on a new address gets its address updated silently.
+
+    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> ConfigFlowResult:
+        host = urlparse(discovery_info.ssdp_location or "").hostname
+        return await self._async_step_discovered(host)
+
+    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
+        if discovery_info.ip_address.version != 4:
+            return self.async_abort(reason="not_ipv4")
+        return await self._async_step_discovered(str(discovery_info.ip_address))
+
+    async def _async_step_discovered(self, host: str | None) -> ConfigFlowResult:
+        if not host:
+            return self.async_abort(reason="cannot_connect")
+        self._async_abort_entries_match({CONF_HOST: host})
+        try:
+            model, title, unique_id = await self._async_probe(host)
+        except HegelConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except HegelError:
+            return self.async_abort(reason="not_supported")
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._host, self._model, self._title = host, model, title
+        self.context["title_placeholders"] = {"name": title}
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Ask the user to confirm adding a discovered amplifier."""
+        assert self._host is not None and self._title is not None
+        if user_input is not None:
+            return self.async_create_entry(title=self._title, data={CONF_HOST: self._host, "model": self._model})
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={"name": self._title, "host": self._host},
         )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

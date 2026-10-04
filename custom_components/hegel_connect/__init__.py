@@ -25,9 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_create_background_task(
-        hass, coordinator.async_listen(), f"hegel_connect_listen_{entry.entry_id}"
-    )
+    entry.async_create_background_task(hass, coordinator.async_listen(), f"hegel_connect_listen_{entry.entry_id}")
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 

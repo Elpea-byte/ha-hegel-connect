@@ -226,10 +226,8 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         """Find the radio favorites folder (contains a per-device Airable id)."""
         client = self.coordinator.client
         root = await client.get_rows(PATH_AIRABLE_ROOT, 0, 10)
-        radios = next(
-            (r.get("path") for r in root.get("rows", []) if isinstance(r, dict) and str(r.get("path", "")).endswith("/radios")),
-            None,
-        )
+        rows = [r for r in root.get("rows", []) if isinstance(r, dict)]
+        radios = next((r.get("path") for r in rows if str(r.get("path", "")).endswith("/radios")), None)
         if radios is None:
             raise HegelError("No radio section found")
         return f"{radios}/favorites"
@@ -253,9 +251,9 @@ def _child(row: Any) -> BrowseMedia | None:
     playable = bool(row.get("containerPlayable")) or row.get("type") == "audio"
     icon = row.get("icon")
     return BrowseMedia(
-        media_class=MediaClass.CHANNEL if row.get("audioType") == "audioBroadcast" else (
-            MediaClass.DIRECTORY if is_folder else MediaClass.MUSIC
-        ),
+        media_class=MediaClass.CHANNEL
+        if row.get("audioType") == "audioBroadcast"
+        else (MediaClass.DIRECTORY if is_folder else MediaClass.MUSIC),
         media_content_id=row["path"],
         media_content_type=MEDIA_TYPE_HEGEL,
         title=row["title"],
