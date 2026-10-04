@@ -14,6 +14,9 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Plat
 # same mDNS service, so discovery only accepts these.
 SUPPORTED_MODELS = ("H150", "H400", "H600")
 
+# Older models (IP control on TCP 50001) are served by the built-in integration.
+CORE_HEGEL_URL = "https://www.home-assistant.io/integrations/hegel/"
+
 CONF_MAX_VOLUME = "max_volume"
 # Saved in the config entry: inputs, volume range and firmware, so the
 # integration can start while the amplifier is off at the mains.

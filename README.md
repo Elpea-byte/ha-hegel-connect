@@ -4,7 +4,16 @@
 
 Local-push integration for **Hegel H150, H400 and H600** streaming amplifiers. It talks to the amplifier over your own network, the same way the amplifier's built-in web app does. No cloud, no account, and no polling: changes made on the amplifier, with its remote or in the Hegel Control app show up in Home Assistant within a second.
 
-The older models (Röst, H95, H120, H190(V), H390, H590) are covered by the official [Hegel integration](https://www.home-assistant.io/integrations/hegel/) in Home Assistant. This integration is for the newer generation, which uses a different control interface.
+## Which integration for my Hegel?
+
+Hegel has two generations of network amplifiers, controlled in different ways:
+
+| Generation | Models | How it is controlled | Use |
+| :---- | :---- | :---- | :---- |
+| **Streaming generation** | H150, H400, H600 | Built-in streamer with a web API (the same one the Hegel Control app and the amplifier's web page use) | **Hegel Connect** (this integration) |
+| **IP control generation** | Röst, H95, H120, H190, H190V, H390, H590 | Hegel IP control protocol on TCP port 50001 | The built-in [Hegel integration](https://www.home-assistant.io/integrations/hegel/) in Home Assistant |
+
+Quick check: if `http://<amplifier-address>/webclient/` opens a Hegel page, the amplifier belongs to the streaming generation. If you try to add an older amplifier to Hegel Connect, setup recognises it (it answers a read-only IP control status query) and points you to the built-in integration.
 
 ## Supported models
 

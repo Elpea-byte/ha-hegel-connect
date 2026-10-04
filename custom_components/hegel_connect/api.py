@@ -13,6 +13,7 @@ uses:
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 import json
@@ -537,3 +538,30 @@ class HegelClient:
             timeout=timeout + 15,
         )
         return [event for event in data or [] if isinstance(event, dict)]
+
+
+# Older Hegel amplifiers (H95, H120, H190(V), H390, H590, Röst) have no web API but
+# speak Hegel's IP control protocol on TCP 50001. They belong in Home Assistant's
+# built-in "hegel" integration; recognising them lets setup say so.
+IP_CONTROL_PORT = 50001
+
+
+async def async_has_ip_control(host: str, timeout: float = 3) -> bool:
+    """True if the device answers an IP control power query ("-p.?") on port 50001.
+
+    Read-only: the query only asks for the power state. Older models reply
+    "-p.0"/"-p.1" (or "-e.x" on an error). Anything else, or no reply, is False.
+    """
+    writer = None
+    try:
+        async with asyncio.timeout(timeout):
+            reader, writer = await asyncio.open_connection(host, IP_CONTROL_PORT)
+            writer.write(b"-p.?\r")
+            await writer.drain()
+            reply = await reader.readuntil(b"\r")
+    except Exception:  # noqa: BLE001 - any failure simply means "not an older Hegel"
+        return False
+    finally:
+        if writer is not None:
+            writer.close()
+    return reply.startswith((b"-p.", b"-e."))

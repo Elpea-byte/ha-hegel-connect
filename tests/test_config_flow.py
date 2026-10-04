@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import ip_address
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -194,3 +195,13 @@ async def test_discovery_known_uuid_updates_host_without_probe(hass: HomeAssista
     assert result["reason"] == "already_configured"
     assert config_entry.data["host"] == "192.0.2.20"
     assert fake_hegel == []
+
+
+async def test_user_flow_recognises_older_hegel(hass: HomeAssistant, fake_hegel) -> None:
+    """No web API, but IP control answers: point to the built-in integration."""
+    FakeHegel.reachable = False
+    with patch("custom_components.hegel_connect.config_flow.async_has_ip_control", return_value=True):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.40"})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "legacy_model"}

@@ -16,8 +16,8 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 import voluptuous as vol
 
-from .api import HegelClient, HegelConnectionError, HegelError
-from .const import DOMAIN, SUPPORTED_MODELS
+from .api import HegelClient, HegelConnectionError, HegelError, async_has_ip_control
+from .const import CORE_HEGEL_URL, DOMAIN, SUPPORTED_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +48,9 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 model, title, unique_id = await self._async_probe(host)
             except HegelConnectionError:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "legacy_model" if await async_has_ip_control(host) else "cannot_connect"
             except HegelError:
-                errors["base"] = "not_supported"
+                errors["base"] = "legacy_model" if await async_has_ip_control(host) else "not_supported"
             except Exception:  # noqa: BLE001 - show a friendly error, log the rest
                 _LOGGER.exception("Unexpected error talking to %s", host)
                 errors["base"] = "unknown"
@@ -62,6 +62,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
+            description_placeholders={"core_url": CORE_HEGEL_URL},
         )
 
     # -------------------------------------------------------------- discovery

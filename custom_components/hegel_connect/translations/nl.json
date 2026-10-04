@@ -26,7 +26,8 @@
     "error": {
       "cannot_connect": "De versterker is op dit adres niet bereikbaar. Staat hij op het netwerk (werkt ook in standby)?",
       "not_supported": "Er antwoordt een apparaat, maar het lijkt geen Hegel H150, H400 of H600.",
-      "unknown": "Onverwachte fout, zie het logboek."
+      "unknown": "Onverwachte fout, zie het logboek.",
+      "legacy_model": "Dit is een oudere Hegel-versterker (H95, H120, H190, H390, H590 of Röst). Die wordt bediend via Hegels IP-control: gebruik de ingebouwde [Hegel-integratie]({core_url}) van Home Assistant. Hegel Connect is voor de H150, H400 en H600."
     },
     "abort": {
       "already_configured": "Deze versterker is al ingesteld.",

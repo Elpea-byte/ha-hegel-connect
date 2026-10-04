@@ -143,6 +143,7 @@ def fake_hegel():
         patch("custom_components.hegel_connect.HegelClient", side_effect=factory),
         patch("custom_components.hegel_connect.config_flow.HegelClient", side_effect=factory),
         patch("custom_components.hegel_connect.coordinator.SOURCE_VERIFY_WAIT", 0.05),
+        patch("custom_components.hegel_connect.config_flow.async_has_ip_control", return_value=False),
     ):
         yield instances
 
