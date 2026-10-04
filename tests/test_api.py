@@ -47,7 +47,9 @@ def test_radio_has_no_skip() -> None:
     radio = next(
         e["e"]["itemValue"]
         for e in FIXTURE["events"]
-        if e["e"]["path"] == "player:player/data" and "playMode" in json.dumps(e["e"]["itemValue"])
+        if e["e"]["path"] == "player:player/data"
+        and "radioStation" in json.dumps(e["e"]["itemValue"])
+        and e["e"]["itemValue"].get("state") == "playing"
     )
     player = PlayerData(radio)
     assert player.is_radio
