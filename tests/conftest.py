@@ -33,6 +33,7 @@ class FakeHegel:
     """Stands in for HegelClient; records commands and replays recorded data."""
 
     reachable = True
+    model = "H150"
 
     def __init__(self, host: str, session: Any = None, **_: Any) -> None:
         self.host = host
@@ -46,7 +47,7 @@ class FakeHegel:
 
     async def product_name(self) -> str:
         self._check()
-        return "H150"
+        return FakeHegel.model
 
     async def device_name(self) -> str:
         return "H150"
@@ -121,6 +122,7 @@ class FakeHegel:
 def fake_hegel():
     """Patch the client everywhere; yields the instance the integration uses."""
     FakeHegel.reachable = True
+    FakeHegel.model = "H150"
     instances: list[FakeHegel] = []
 
     def factory(*args: Any, **kwargs: Any) -> FakeHegel:

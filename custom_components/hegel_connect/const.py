@@ -5,6 +5,10 @@ from __future__ import annotations
 DOMAIN = "hegel_connect"
 MANUFACTURER = "Hegel"
 
+# Models on the StreamUnlimited platform. Other brands (e.g. Onkyo) announce the
+# same mDNS service, so discovery only accepts these.
+SUPPORTED_MODELS = ("H150", "H400", "H600")
+
 CONF_MAX_VOLUME = "max_volume"
 DEFAULT_MAX_VOLUME = 100
 

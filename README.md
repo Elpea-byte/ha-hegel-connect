@@ -42,7 +42,7 @@ Copy `custom_components/hegel_connect` to the `custom_components` folder of your
 
 ## Configuration
 
-The amplifier is **discovered automatically**: it announces itself on the network as a UPnP/DLNA renderer and, with Chromecast built-in enabled, as a Google Cast device. Home Assistant then shows it under Settings > Devices & services > *Discovered*; click *Add*.
+The amplifier is **discovered automatically**, the same way the Hegel Control app finds it (mDNS service `_sues800device._tcp`), with UPnP/DLNA and Google Cast as backups. Home Assistant then shows it under Settings > Devices & services > *Discovered*; click *Add*.
 
 Not discovered (other subnet/VLAN, multicast blocked)? Add it by hand: *Add integration* > **Hegel Connect** > enter the IP address.
 

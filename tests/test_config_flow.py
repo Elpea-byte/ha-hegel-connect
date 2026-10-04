@@ -55,6 +55,16 @@ SSDP_INFO = SsdpServiceInfo(
     },
 )
 
+SUE_INFO = ZeroconfServiceInfo(
+    ip_address=ip_address("192.0.2.10"),
+    ip_addresses=[ip_address("192.0.2.10")],
+    hostname="h150.local.",
+    name="H150._sues800device._tcp.local.",
+    port=80,
+    type="_sues800device._tcp.local.",
+    properties={"name": "H150", "uuid": "hegelh600-00000000-0000-0000-0000-000000000000"},
+)
+
 ZEROCONF_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("192.0.2.10"),
     ip_addresses=[ip_address("192.0.2.10")],
@@ -122,3 +132,22 @@ async def test_discovery_unreachable(hass: HomeAssistant, fake_hegel) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_sues800device_discovery(hass: HomeAssistant, fake_hegel) -> None:
+    """The service the Hegel Control app looks for."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=SUE_INFO
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+
+async def test_discovery_ignores_other_brands(hass: HomeAssistant, fake_hegel) -> None:
+    """An Onkyo on the same StreamUnlimited platform is not offered."""
+    FakeHegel.model = "TX-RZ810"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=SUE_INFO
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_supported"

@@ -27,6 +27,9 @@
   "version": "0.1.0",
   "zeroconf": [
     {
+      "type": "_sues800device._tcp.local."
+    },
+    {
       "type": "_googlecast._tcp.local.",
       "properties": {
         "md": "h150"
