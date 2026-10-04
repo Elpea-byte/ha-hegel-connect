@@ -65,9 +65,15 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
 
     async def _async_update_data(self) -> HegelState:
         try:
-            return await self.client.fetch_state()
+            return self._carry_over(await self.client.fetch_state())
         except HegelError as err:
             raise UpdateFailed(str(err)) from err
+
+    def _carry_over(self, state: HegelState) -> HegelState:
+        """Keep what a fresh read cannot know (the last streaming service)."""
+        if self.data is not None and not state.last_service:
+            state.last_service = self.data.last_service
+        return state
 
     # ------------------------------------------------------------------ push
 
@@ -77,7 +83,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         while True:
             try:
                 queue_id = await self.client.subscribe()
-                state = await self.client.fetch_state()
+                state = self._carry_over(await self.client.fetch_state())
                 if not self.connected:
                     _LOGGER.info("Connected to Hegel at %s", self.client.host)
                 self.connected = True

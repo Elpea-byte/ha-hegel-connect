@@ -254,6 +254,8 @@ class HegelState:
     source_index: int | None = None
     volume_fixed: bool | None = None
     player: PlayerData = field(default_factory=PlayerData)
+    # Last streaming service seen (player data can lose it while paused).
+    last_service: str | None = None
     # Playback position (seconds) and when it was read.
     position: int | None = None
     position_at: datetime | None = None
@@ -295,6 +297,8 @@ class HegelState:
             if isinstance(data, dict) and "playLogicData" in data:
                 data = data["playLogicData"]
             self.player = PlayerData(data if isinstance(data, dict) else {})
+            if self.player.service:
+                self.last_service = self.player.service
             return True
         return False
 

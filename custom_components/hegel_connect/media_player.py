@@ -194,11 +194,19 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.async_select_source(source))
 
     async def async_media_play(self) -> None:
+        """Resume. Spotify Connect needs its own resume action; a bare "play"
+        answers "Directory is empty" there and stops the session."""
         data = self.coordinator.data
-        if data and data.player.service == "Spotify":
-            await self._run(self.coordinator.client.resume_spotify())
-        else:
-            await self._run(self.coordinator.client.control("play"))
+        client = self.coordinator.client
+        if data and (data.player.service or data.last_service) == "Spotify":
+            await self._run(client.resume_spotify())
+            return
+        try:
+            await client.control("play")
+        except HegelError as err:
+            if "Directory is empty" not in str(err):
+                raise HomeAssistantError(f"Hegel did not accept the command: {err}") from err
+            await self._run(client.resume_spotify())
 
     async def async_media_pause(self) -> None:
         await self._run(self.coordinator.client.control("pause"))

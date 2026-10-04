@@ -96,3 +96,16 @@ async def test_lost_connection_shows_off(hass: HomeAssistant, fake_hegel, config
     assert hass.states.get(ENTITY).state == "off"
     assert hass.states.get("binary_sensor.hegel_h150_network").state == "off"
     assert hass.states.get("sensor.hegel_h150_audio_quality").state == "unknown"
+
+
+async def test_play_after_pause_resumes_spotify_even_without_service(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """Paused player data can lose the service name; the last one seen still counts."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", {"state": "paused", "controls": {"pause": True}})
+    await hass.async_block_till_done()
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert ("resume_spotify",) in fake.calls
+    assert ("control", "play") not in fake.calls
