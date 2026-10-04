@@ -37,6 +37,8 @@ PATH_CONTROL = "player:player/control"
 PATH_SPOTIFY_RESUME = "spotify:/ui/resume"
 PATH_PRODUCT_NAME = "settings:/system/productName"
 PATH_DEVICE_NAME = "settings:/deviceName"
+PATH_MEMBER = "systemmanager:systemMember"
+PATH_FIRMWARE = "settings:/version"
 PATH_AIRABLE_ROOT = "airable:"
 PATH_PLAY_HISTORY = "ui:/playHistory"
 
@@ -293,15 +295,35 @@ class HegelClient:
         return str(name) if name else None
 
     async def unique_id(self) -> str | None:
-        """Stable id of the amplifier (StreamSDK system member id)."""
+        """Stable id of the amplifier, e.g. "hegelh600-<uuid>".
+
+        The StreamSDK system member id. The same id is announced as the "uuid" TXT
+        record of the _sues800device mDNS service, so discovery can match it before
+        connecting. Falls back to the id in the player data.
+        """
+        try:
+            member = await self.get_value(PATH_MEMBER)
+        except HegelConnectionError:
+            raise
+        except HegelError:
+            member = None
+        if isinstance(member, dict) and isinstance(member.get("systemMember"), dict):
+            member = member["systemMember"]
+        if isinstance(member, dict) and isinstance(member.get("id"), str) and member["id"]:
+            return member["id"]
         try:
             data = await self.get_value(PATH_PLAYER)
         except HegelError:
             return None
-        member = _dig(data, "playId", "systemMemberId")
-        if isinstance(member, str) and member:
-            return member.split("-", 1)[1] if "-" in member else member
-        return None
+        player_id = _dig(data, "playId", "systemMemberId")
+        return player_id if isinstance(player_id, str) and player_id else None
+
+    async def firmware(self) -> str | None:
+        try:
+            version = await self.get_value(PATH_FIRMWARE)
+        except HegelError:
+            return None
+        return str(version) if version else None
 
     async def sources(self) -> list[HegelSource]:
         data = await self.get_rows(PATH_SOURCES)

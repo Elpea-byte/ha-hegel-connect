@@ -80,9 +80,20 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_step_discovered(host)
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
-        if discovery_info.ip_address.version != 4:
+        host = str(discovery_info.ip_address)
+        if discovery_info.type.startswith("_sues800device."):
+            # TXT records: manufacturer, uuid (= system member id), ip. Other brands
+            # on the same platform (Onkyo) are skipped without connecting.
+            props = discovery_info.properties
+            if str(props.get("manufacturer") or "").lower() != "hegel":
+                return self.async_abort(reason="not_supported")
+            host = str(props.get("ip") or host)
+            if uuid := props.get("uuid"):
+                await self.async_set_unique_id(str(uuid))
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        if ":" in host:
             return self.async_abort(reason="not_ipv4")
-        return await self._async_step_discovered(str(discovery_info.ip_address))
+        return await self._async_step_discovered(host)
 
     async def _async_step_discovered(self, host: str | None) -> ConfigFlowResult:
         if not host:

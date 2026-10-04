@@ -60,6 +60,9 @@ class FakeHegel:
         rows = json.loads(FIXTURE["rows"]["hegel:listPhysicalSources"])["rows"]
         return [HegelSource(r["value"]["i32_"], r["title"]) for r in rows]
 
+    async def firmware(self) -> str:
+        return "1205.1011"
+
     async def volume_max(self) -> int:
         return 100
 

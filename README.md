@@ -70,6 +70,10 @@ Then open an [issue](../../issues/new/choose) with the log and the diagnostics f
 - *Play* after *pause* is passed to the streaming service; with Spotify Connect, resuming is most reliable from the Spotify app.
 - Radio favorites are managed in the Hegel Control app; Home Assistant shows and plays them.
 
+## Related projects
+
+[hegel-home-assistant](https://github.com/zerostorypoints/hegel-home-assistant) (`hegel_streaming`, MIT) targets the same amplifiers through the same local API. Matching discovery on the `manufacturer`/`uuid` TXT records and reading the id from `systemmanager:systemMember` were inspired by it.
+
 ## Development
 
 The client in `custom_components/hegel_connect/api.py` has no Home Assistant dependencies and may move to its own package later. Tests replay a real H150 recording (`tests/fixtures/h150_session.json`):

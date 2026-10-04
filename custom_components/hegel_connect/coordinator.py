@@ -48,12 +48,14 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self.client = client
         self.sources: list[HegelSource] = []
         self.volume_max = 100
+        self.firmware: str | None = None
         self.connected = False
 
     async def _async_setup(self) -> None:
         try:
             self.sources = await self.client.sources()
             self.volume_max = await self.client.volume_max()
+            self.firmware = await self.client.firmware()
         except HegelError as err:
             raise UpdateFailed(str(err)) from err
 

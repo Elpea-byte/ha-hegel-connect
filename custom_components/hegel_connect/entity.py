@@ -23,6 +23,7 @@ class HegelEntity(CoordinatorEntity[HegelCoordinator]):
             manufacturer=MANUFACTURER,
             model=entry.data.get("model"),
             name=entry.title,
+            sw_version=coordinator.firmware,
             configuration_url=f"http://{coordinator.client.host}/webclient/",
         )
 

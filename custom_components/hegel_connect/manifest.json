@@ -27,7 +27,10 @@
   "version": "0.1.0",
   "zeroconf": [
     {
-      "type": "_sues800device._tcp.local."
+      "type": "_sues800device._tcp.local.",
+      "properties": {
+        "manufacturer": "hegel"
+      }
     },
     {
       "type": "_googlecast._tcp.local.",

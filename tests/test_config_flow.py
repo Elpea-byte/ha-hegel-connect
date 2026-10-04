@@ -62,7 +62,12 @@ SUE_INFO = ZeroconfServiceInfo(
     name="H150._sues800device._tcp.local.",
     port=80,
     type="_sues800device._tcp.local.",
-    properties={"name": "H150", "uuid": "hegelh600-00000000-0000-0000-0000-000000000000"},
+    properties={
+        "name": "H150",
+        "manufacturer": "Hegel",
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "ip": "192.0.2.10",
+    },
 )
 
 ZEROCONF_INFO = ZeroconfServiceInfo(
@@ -144,10 +149,48 @@ async def test_sues800device_discovery(hass: HomeAssistant, fake_hegel) -> None:
 
 
 async def test_discovery_ignores_other_brands(hass: HomeAssistant, fake_hegel) -> None:
-    """An Onkyo on the same StreamUnlimited platform is not offered."""
-    FakeHegel.model = "TX-RZ810"
+    """An Onkyo on the same StreamUnlimited platform is skipped without connecting."""
+    onkyo = ZeroconfServiceInfo(
+        ip_address=ip_address("192.0.2.30"),
+        ip_addresses=[ip_address("192.0.2.30")],
+        hostname="onkyo.local.",
+        name="TX-RZ810._sues800device._tcp.local.",
+        port=80,
+        type="_sues800device._tcp.local.",
+        properties={"manufacturer": "Onkyo", "uuid": "onkyo-1"},
+    )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=SUE_INFO
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=onkyo
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
+    assert fake_hegel == []
+
+
+async def test_discovery_rejects_unsupported_model(hass: HomeAssistant, fake_hegel) -> None:
+    """Only H150/H400/H600 are offered, whatever announces itself."""
+    FakeHegel.model = "TX-RZ810"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_INFO
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
+
+
+async def test_discovery_known_uuid_updates_host_without_probe(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    moved = ZeroconfServiceInfo(
+        ip_address=ip_address("192.0.2.20"),
+        ip_addresses=[ip_address("192.0.2.20")],
+        hostname="h150.local.",
+        name="H150._sues800device._tcp.local.",
+        port=80,
+        type="_sues800device._tcp.local.",
+        properties={**SUE_INFO.properties, "ip": "192.0.2.20"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=moved
+    )
+    assert result["reason"] == "already_configured"
+    assert config_entry.data["host"] == "192.0.2.20"
+    assert fake_hegel == []
