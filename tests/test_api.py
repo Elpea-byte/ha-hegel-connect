@@ -61,3 +61,12 @@ def test_fixed_volume_inputs() -> None:
     state = HegelState()
     state.apply_event("settings:/hegel/volumeType", {"type": "i32_", "i32_": 1})
     assert state.volume_fixed is True
+
+
+def test_missing_control_flag_means_not_allowed() -> None:
+    """Spotify reports only {"pause": true}; next/previous are then refused."""
+    player = PlayerData({"controls": {"pause": True}, "state": "playing"})
+    assert player.control_allowed("pause") is True
+    assert player.control_allowed("next_") is False
+    assert player.control_allowed("previous") is False
+    assert PlayerData({"controls": {"next_": True, "previous": True}}).control_allowed("next_") is True

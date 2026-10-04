@@ -32,6 +32,9 @@ PATH_SOURCES = "hegel:listPhysicalSources"
 PATH_VOLUME_TYPE = "settings:/hegel/volumeType"
 PATH_PLAYER = "player:player/data"
 PATH_CONTROL = "player:player/control"
+# Resume a paused Spotify Connect session. A bare "play" control breaks it
+# ("Directory is empty"); this is the "Resume Playback" action of the Spotify UI.
+PATH_SPOTIFY_RESUME = "spotify:/ui/resume"
 PATH_PRODUCT_NAME = "settings:/system/productName"
 PATH_DEVICE_NAME = "settings:/deviceName"
 PATH_AIRABLE_ROOT = "airable:"
@@ -142,11 +145,14 @@ class PlayerData:
         return None
 
     def control_allowed(self, name: str) -> bool:
-        """Whether a control is allowed; unknown means allowed (Spotify omits most flags)."""
+        """Whether the current service allows a control (e.g. "next_", "previous").
+
+        A missing flag means not allowed, like the amplifier's own web client:
+        Spotify Connect only reports {"pause": true} and answers next/previous
+        with "Control is not supported".
+        """
         controls = self.raw.get("controls")
-        if not isinstance(controls, dict) or name not in controls:
-            return True
-        return bool(controls[name])
+        return isinstance(controls, dict) and bool(controls.get(name))
 
     @property
     def codec(self) -> str | None:
@@ -361,6 +367,10 @@ class HegelClient:
     async def control(self, command: str) -> None:
         """play, pause, next or previous."""
         await self.activate(PATH_CONTROL, {"control": command})
+
+    async def resume_spotify(self) -> None:
+        """Resume a paused Spotify Connect session."""
+        await self.activate(PATH_SPOTIFY_RESUME, {})
 
     async def play_path(self, path: str) -> None:
         """Play a browse item (e.g. a radio favorite) by its path.

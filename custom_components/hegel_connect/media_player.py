@@ -49,7 +49,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_media_content_type = MediaType.MUSIC
     _attr_volume_step = 0.02
-    _attr_supported_features = (
+    _BASE_FEATURES = (
         MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -58,8 +58,6 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.PLAY_MEDIA
     )
@@ -68,6 +66,18 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         super().__init__(coordinator, "media_player")
 
     # ------------------------------------------------------------------ state
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Next/previous only when the current service allows it (not Spotify, not radio)."""
+        features = self._BASE_FEATURES
+        data = self.coordinator.data
+        if data and self._playing_network():
+            if data.player.control_allowed("next_"):
+                features |= MediaPlayerEntityFeature.NEXT_TRACK
+            if data.player.control_allowed("previous"):
+                features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+        return features
 
     @property
     def _max_volume(self) -> int:
@@ -167,7 +177,11 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.async_select_source(source))
 
     async def async_media_play(self) -> None:
-        await self._run(self.coordinator.client.control("play"))
+        data = self.coordinator.data
+        if data and data.player.service == "Spotify":
+            await self._run(self.coordinator.client.resume_spotify())
+        else:
+            await self._run(self.coordinator.client.control("play"))
 
     async def async_media_pause(self) -> None:
         await self._run(self.coordinator.client.control("pause"))

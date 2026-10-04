@@ -111,6 +111,9 @@ class FakeHegel:
     async def control(self, command: str) -> None:
         self.calls.append(("control", command))
 
+    async def resume_spotify(self) -> None:
+        self.calls.append(("resume_spotify",))
+
     async def play_path(self, path: str) -> None:
         self.calls.append(("play_path", path))
 
