@@ -1,0 +1,34 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Amplifier model and firmware
+      placeholder: "H150, firmware 1.2.3"
+    validations:
+      required: true
+  - type: input
+    id: ha
+    attributes:
+      label: Home Assistant version
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Settings > Devices & services > Hegel Connect > ⋮ > Download diagnostics. Paste or attach the file (it contains no IP address or device ids).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug log
+      description: See "Troubleshooting" in the README for how to enable debug logging.
+      render: text

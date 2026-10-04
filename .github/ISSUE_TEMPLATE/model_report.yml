@@ -1,0 +1,29 @@
+name: Model report (H400, H600, other)
+description: Tell us whether Hegel Connect works on your amplifier
+labels: [model-report]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you! Only the H150 is tested by the maintainer. A 5-minute check on your model helps everyone.
+  - type: input
+    id: model
+    attributes:
+      label: Model and firmware
+    validations:
+      required: true
+  - type: checkboxes
+    id: works
+    attributes:
+      label: What works?
+      options:
+        - label: Setup with the IP address
+        - label: Power on / standby
+        - label: Volume and mute (also when changed on the amplifier or in the Hegel app)
+        - label: Input selection (all inputs listed)
+        - label: Now playing (Spotify, AirPlay, radio)
+        - label: Radio favorites in the media browser
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics file
+      description: Settings > Devices & services > Hegel Connect > ⋮ > Download diagnostics.

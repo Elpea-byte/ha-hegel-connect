@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hegel Connect",
+        "description": "Onofficiële integratie voor de Hegel H150, H400 en H600. Vul het IP-adres van de versterker in (geef hem een vast adres in je router).",
+        "data": { "host": "Adres" },
+        "data_description": { "host": "IP-adres of naam van de versterker, bv. 192.168.1.50" }
+      },
+      "reconfigure": {
+        "title": "Adres wijzigen",
+        "data": { "host": "Adres" }
+      }
+    },
+    "error": {
+      "cannot_connect": "De versterker is op dit adres niet bereikbaar. Staat hij op het netwerk (werkt ook in standby)?",
+      "not_supported": "Er antwoordt een apparaat, maar het lijkt geen Hegel H150, H400 of H600.",
+      "unknown": "Onverwachte fout, zie het logboek."
+    },
+    "abort": {
+      "already_configured": "Deze versterker is al ingesteld.",
+      "reconfigure_successful": "Adres bijgewerkt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Hegel Connect-opties",
+        "data": { "max_volume": "Maximaal volume" },
+        "data_description": { "max_volume": "Home Assistant zet het volume nooit hoger dan deze waarde. De eigen afstandsbediening van de versterker wordt niet begrensd." }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "fixed_volume": { "name": "Vast volume" }
+    }
+  }
+}

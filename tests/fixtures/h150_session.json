@@ -1,0 +1,1555 @@
+{
+ "recorded": "2026-10-04",
+ "model": "H150",
+ "snap": {
+  "powermanager:target": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"powerTarget\",\"powerTarget\":{\"nextReason\":\"none\",\"reason\":\"userActivity\",\"nextTarget\":\"none\",\"target\":\"online\"}},\"type\":\"value\",\"path\":\"powermanager:target\"}"
+  },
+  "player:volume": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"i32_\",\"i32_\":17},\"edit\":{\"min\":\"0\",\"max\":\"100\",\"step\":\"1\",\"type\":\"slider\"},\"type\":\"value\",\"title\":\"Volume\",\"path\":\"player:volume\",\"modifiable\":true}"
+  },
+  "settings:/mediaPlayer/mute": {
+   "status": 200,
+   "body": "{\"value\":{\"bool_\":false,\"type\":\"bool_\"},\"defaultValue\":{\"bool_\":false,\"type\":\"bool_\"},\"timestamp\":1784737780768,\"type\":\"value\",\"title\":\"Mute\",\"path\":\"settings:/mediaPlayer/mute\",\"modifiable\":true}"
+  },
+  "hegel:activePhysicalSource": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"i32_\",\"i32_\":9},\"type\":\"value\",\"path\":\"hegel:activePhysicalSource\",\"modifiable\":true}"
+  },
+  "settings:/hegel/volumeType": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"i32_\",\"i32_\":0},\"defaultValue\":{\"type\":\"i32_\",\"i32_\":0},\"timestamp\":1791103117673,\"type\":\"value\",\"title\":\"Volume type\",\"path\":\"settings:/hegel/volumeType\",\"modifiable\":true}"
+  },
+  "player:player/data": {
+   "status": 200,
+   "body": "{\"value\":{\"controls\":{\"pause\":true},\"trackRoles\":{\"icon\":\"https://i.scdn.co/image/ab67616d0000b27343afb80ed05482c3d6b81360\",\"mediaData\":{\"metaData\":{\"serviceIcon\":\"skin:iconSpotify\",\"playbackSource\":\"New Dance 2026\",\"albumId\":\"spotify:album:02sORmDFuuqhc9JLzUJT6p\",\"playLogicPath\":\"spotify:playlogic\",\"albumCoverUri\":\"spotify:image:ab67616d0000b27343afb80ed05482c3d6b81360\",\"artist\":\"Franky Rizardo\",\"playbackSourceId\":\"spotify:playlist:37i9dQZF1DWWrJKwf0q9nn\",\"album\":\"Marido Dansa EP\",\"trackId\":\"spotify:track:1wceODcNiRPq4kwo9vh3oE\",\"live\":true,\"serviceName\":\"Spotify\",\"contentPlayContextPath\":\"spotify:/ui/context\",\"artistId\":\"spotify:artist:2UgphhGSlC9QWgaZWUOCkl\",\"serviceID\":\"spotify\"},\"activeResource\":{\"quality\":{\"spotifyHifi\":false},\"mimeType\":\"audio/unknown\"},\"resources\":[{\"quality\":{\"spotifyHifi\":false},\"mimeType\":\"audio/unknown\"}]},\"doNotTrack\":true,\"containerType\":\"none\",\"audioType\":\"audioBroadcast\",\"type\":\"audio\",\"title\":\"Marido Dansa\"},\"status\":{\"duration\":154153},\"mediaRoles\":{\"mediaData\":{\"metaData\":{\"serviceIcon\":\"skin:iconSpotify\",\"playLogicPath\":\"spotify:playlogic\",\"live\":true,\"serviceName\":\"Spotify\",\"contentPlayContextPath\":\"spotify:/ui/context\",\"serviceID\":\"spotify\"},\"resources\":[{\"uri\":\"?preset=%7B%22trackUri%22:%22spotify:track:1wceODcNiRPq4kwo9vh3oE%22,%22srcUri%22:%22spotify:playlist:37i9dQZF1DWWrJKwf0q9nn%22,%22playMode%22:%22normal%22,%22title%22:%22New%20Dance%202026%22%7D\",\"mimeType\":\"audio/unknown\"}]},\"doNotTrack\":true,\"containerType\":\"none\",\"audioType\":\"audioBroadcast\",\"type\":\"audio\",\"title\":\"New Dance 2026\"},\"contextPath\":\"spotify:/ui/context\",\"playId\":{\"systemMemberId\":\"hegelh600-00000000-0000-0000-0000-000000000000\",\"timestamp\":30924582},\"state\":\"playing\"},\"type\":\"value\",\"path\":\"player:player/externalData\"}"
+  },
+  "settings:/system/productName": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"string_\",\"string_\":\"H150\"},\"defaultValue\":{\"type\":\"string_\",\"string_\":\"H600\"},\"timestamp\":1789117539814,\"type\":\"value\",\"title\":\"Product Name\",\"path\":\"settings:/system/productName\",\"modifiable\":true}"
+  },
+  "settings:/deviceName": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"string_\",\"string_\":\"H150\"},\"defaultValue\":{\"type\":\"string_\",\"string_\":\"\"},\"timestamp\":1791090027766,\"type\":\"value\",\"title\":\"Device Name\",\"path\":\"settings:/deviceName\",\"modifiable\":true}"
+  },
+  "settings:/system/manufacturer": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"string_\",\"string_\":\"Hegel\"},\"defaultValue\":{\"type\":\"string_\",\"string_\":\"Hegel\"},\"type\":\"value\",\"title\":\"Device Manufacturer\",\"path\":\"settings:/system/manufacturer\"}"
+  }
+ },
+ "rows": {
+  "hegel:listPhysicalSources": "{\"rows\":[{\"value\":{\"type\":\"i32_\",\"i32_\":1},\"title\":\"XLR\"},{\"value\":{\"type\":\"i32_\",\"i32_\":2},\"title\":\"RCA\"},{\"value\":{\"type\":\"i32_\",\"i32_\":3},\"title\":\"Phono\"},{\"value\":{\"type\":\"i32_\",\"i32_\":4},\"title\":\"Coaxial\"},{\"value\":{\"type\":\"i32_\",\"i32_\":5},\"title\":\"Optical 1\"},{\"value\":{\"type\":\"i32_\",\"i32_\":6},\"title\":\"Optical 2\"},{\"value\":{\"type\":\"i32_\",\"i32_\":7},\"title\":\"USB\"},{\"value\":{\"type\":\"i32_\",\"i32_\":8},\"title\":\"USB Drive\"},{\"value\":{\"type\":\"i32_\",\"i32_\":9},\"title\":\"Network\"}],\"rowsCount\":9,\"rowsVersion\":0,\"roles\":{\"containerType\":\"none\",\"type\":\"container\",\"path\":\"hegel:listPhysicalSources\"}}"
+ },
+ "events": [
+  {
+   "t": 17793,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 18
+    }
+   }
+  },
+  {
+   "t": 18250,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 19
+    }
+   }
+  },
+  {
+   "t": 18701,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 20
+    }
+   }
+  },
+  {
+   "t": 19105,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 21
+    }
+   }
+  },
+  {
+   "t": 20772,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": true,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 21260,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": false,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 21720,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": true,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 22312,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": false,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 23436,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": true,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 23905,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": false,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 24634,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 14
+    }
+   }
+  },
+  {
+   "t": 25474,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 10
+    }
+   }
+  },
+  {
+   "t": 27872,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 11
+    }
+   }
+  },
+  {
+   "t": 28255,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 12
+    }
+   }
+  },
+  {
+   "t": 28530,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 13
+    }
+   }
+  },
+  {
+   "t": 28768,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 14
+    }
+   }
+  },
+  {
+   "t": 29303,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 13
+    }
+   }
+  },
+  {
+   "t": 29551,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 12
+    }
+   }
+  },
+  {
+   "t": 29773,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 11
+    }
+   }
+  },
+  {
+   "t": 30375,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": true,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 31477,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/mediaPlayer/mute",
+    "itemValue": {
+     "bool_": false,
+     "type": "bool_"
+    }
+   }
+  },
+  {
+   "t": 37103,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 1
+    }
+   }
+  },
+  {
+   "t": 37228,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "error": "",
+     "trackRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "",
+        "serviceName": "",
+        "serviceID": ""
+       }
+      }
+     },
+     "keepActive": false,
+     "mediaRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "",
+        "serviceName": "",
+        "serviceID": ""
+       }
+      }
+     },
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 30924582
+     },
+     "streamerError": {},
+     "state": "stopped"
+    }
+   }
+  },
+  {
+   "t": 40030,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 2
+    }
+   }
+  },
+  {
+   "t": 40077,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/hegel/volumeType",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 1
+    }
+   }
+  },
+  {
+   "t": 42799,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 3
+    }
+   }
+  },
+  {
+   "t": 42818,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/hegel/volumeType",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 0
+    }
+   }
+  },
+  {
+   "t": 44853,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 4
+    }
+   }
+  },
+  {
+   "t": 44890,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/hegel/volumeType",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 1
+    }
+   }
+  },
+  {
+   "t": 46388,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 5
+    }
+   }
+  },
+  {
+   "t": 46425,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "settings:/hegel/volumeType",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 0
+    }
+   }
+  },
+  {
+   "t": 48062,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 6
+    }
+   }
+  },
+  {
+   "t": 49452,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 7
+    }
+   }
+  },
+  {
+   "t": 51317,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 8
+    }
+   }
+  },
+  {
+   "t": 52571,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 9
+    }
+   }
+  },
+  {
+   "t": 71776,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "trackRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "serviceName": "Spotify",
+        "serviceID": "spotify"
+       }
+      }
+     },
+     "mediaRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "playLogicPath": "spotify:playlogic",
+        "live": true,
+        "serviceName": "Spotify",
+        "contentPlayContextPath": "spotify:/ui/context",
+        "serviceID": "spotify"
+       },
+       "resources": [
+        {
+         "mimeType": "audio/unknown"
+        }
+       ]
+      },
+      "doNotTrack": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Spotify"
+     },
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31075186
+     },
+     "state": "transitioning"
+    }
+   }
+  },
+  {
+   "t": 71826,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "controls": {
+      "pause": true
+     },
+     "trackRoles": {
+      "icon": "https://i.scdn.co/image/ab67616d0000b27343afb80ed05482c3d6b81360",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "playbackSource": "New Dance 2026",
+        "albumId": "spotify:album:02sORmDFuuqhc9JLzUJT6p",
+        "playLogicPath": "spotify:playlogic",
+        "albumCoverUri": "spotify:image:ab67616d0000b27343afb80ed05482c3d6b81360",
+        "artist": "Franky Rizardo",
+        "playbackSourceId": "spotify:playlist:37i9dQZF1DWWrJKwf0q9nn",
+        "album": "Marido Dansa EP",
+        "trackId": "spotify:track:1wceODcNiRPq4kwo9vh3oE",
+        "live": true,
+        "serviceName": "Spotify",
+        "contentPlayContextPath": "spotify:/ui/context",
+        "artistId": "spotify:artist:2UgphhGSlC9QWgaZWUOCkl",
+        "serviceID": "spotify"
+       },
+       "activeResource": {
+        "quality": {
+         "spotifyHifi": false
+        },
+        "mimeType": "audio/unknown"
+       },
+       "resources": [
+        {
+         "quality": {
+          "spotifyHifi": false
+         },
+         "mimeType": "audio/unknown"
+        }
+       ]
+      },
+      "doNotTrack": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Marido Dansa"
+     },
+     "status": {
+      "duration": 154153
+     },
+     "mediaRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "playLogicPath": "spotify:playlogic",
+        "live": true,
+        "serviceName": "Spotify",
+        "contentPlayContextPath": "spotify:/ui/context",
+        "serviceID": "spotify"
+       },
+       "resources": [
+        {
+         "uri": "?preset=%7B%22trackUri%22:%22spotify:track:1wceODcNiRPq4kwo9vh3oE%22,%22srcUri%22:%22spotify:playlist:37i9dQZF1DWWrJKwf0q9nn%22,%22playMode%22:%22normal%22,%22title%22:%22New%20Dance%202026%22%7D",
+         "mimeType": "audio/unknown"
+        }
+       ]
+      },
+      "doNotTrack": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "New Dance 2026"
+     },
+     "contextPath": "spotify:/ui/context",
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31075186
+     },
+     "state": "paused"
+    }
+   }
+  },
+  {
+   "t": 71940,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "controls": {
+      "pause": true
+     },
+     "trackRoles": {
+      "icon": "https://i.scdn.co/image/ab67616d0000b27343afb80ed05482c3d6b81360",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "playbackSource": "New Dance 2026",
+        "albumId": "spotify:album:02sORmDFuuqhc9JLzUJT6p",
+        "playLogicPath": "spotify:playlogic",
+        "albumCoverUri": "spotify:image:ab67616d0000b27343afb80ed05482c3d6b81360",
+        "artist": "Franky Rizardo",
+        "playbackSourceId": "spotify:playlist:37i9dQZF1DWWrJKwf0q9nn",
+        "album": "Marido Dansa EP",
+        "trackId": "spotify:track:1wceODcNiRPq4kwo9vh3oE",
+        "live": true,
+        "serviceName": "Spotify",
+        "contentPlayContextPath": "spotify:/ui/context",
+        "artistId": "spotify:artist:2UgphhGSlC9QWgaZWUOCkl",
+        "serviceID": "spotify"
+       },
+       "activeResource": {
+        "quality": {
+         "spotifyHifi": false
+        },
+        "mimeType": "audio/unknown"
+       },
+       "resources": [
+        {
+         "quality": {
+          "spotifyHifi": false
+         },
+         "mimeType": "audio/unknown"
+        }
+       ]
+      },
+      "doNotTrack": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Marido Dansa"
+     },
+     "status": {
+      "duration": 154153
+     },
+     "mediaRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "playLogicPath": "spotify:playlogic",
+        "live": true,
+        "serviceName": "Spotify",
+        "contentPlayContextPath": "spotify:/ui/context",
+        "serviceID": "spotify"
+       },
+       "resources": [
+        {
+         "uri": "?preset=%7B%22trackUri%22:%22spotify:track:1wceODcNiRPq4kwo9vh3oE%22,%22srcUri%22:%22spotify:playlist:37i9dQZF1DWWrJKwf0q9nn%22,%22playMode%22:%22normal%22,%22title%22:%22New%20Dance%202026%22%7D",
+         "mimeType": "audio/unknown"
+        }
+       ]
+      },
+      "doNotTrack": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "New Dance 2026"
+     },
+     "contextPath": "spotify:/ui/context",
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31075186
+     },
+     "state": "playing"
+    }
+   }
+  },
+  {
+   "t": 84728,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "controls": {
+      "pause": true
+     },
+     "trackRoles": {
+      "icon": "https://i.scdn.co/image/ab67616d0000b27343afb80ed05482c3d6b81360",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "playbackSource": "New Dance 2026",
+        "albumId": "spotify:album:02sORmDFuuqhc9JLzUJT6p",
+        "playLogicPath": "spotify:playlogic",
+        "albumCoverUri": "spotify:image:ab67616d0000b27343afb80ed05482c3d6b81360",
+        "artist": "Franky Rizardo",
+        "playbackSourceId": "spotify:playlist:37i9dQZF1DWWrJKwf0q9nn",
+        "album": "Marido Dansa EP",
+        "trackId": "spotify:track:1wceODcNiRPq4kwo9vh3oE",
+        "live": true,
+        "serviceName": "Spotify",
+        "contentPlayContextPath": "spotify:/ui/context",
+        "artistId": "spotify:artist:2UgphhGSlC9QWgaZWUOCkl",
+        "serviceID": "spotify"
+       },
+       "activeResource": {
+        "quality": {
+         "spotifyHifi": false
+        },
+        "mimeType": "audio/unknown"
+       },
+       "resources": [
+        {
+         "quality": {
+          "spotifyHifi": false
+         },
+         "mimeType": "audio/unknown"
+        }
+       ]
+      },
+      "doNotTrack": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Marido Dansa"
+     },
+     "status": {
+      "duration": 154153
+     },
+     "mediaRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconSpotify",
+        "playLogicPath": "spotify:playlogic",
+        "live": true,
+        "serviceName": "Spotify",
+        "contentPlayContextPath": "spotify:/ui/context",
+        "serviceID": "spotify"
+       },
+       "resources": [
+        {
+         "uri": "?preset=%7B%22trackUri%22:%22spotify:track:1wceODcNiRPq4kwo9vh3oE%22,%22srcUri%22:%22spotify:playlist:37i9dQZF1DWWrJKwf0q9nn%22,%22playMode%22:%22normal%22,%22title%22:%22New%20Dance%202026%22%7D",
+         "mimeType": "audio/unknown"
+        }
+       ]
+      },
+      "doNotTrack": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "New Dance 2026"
+     },
+     "contextPath": "spotify:/ui/context",
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31075186
+     },
+     "state": "paused"
+    }
+   }
+  },
+  {
+   "t": 101639,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "trackRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "serviceName": "airable Radio",
+        "serviceID": "airableRadios"
+       }
+      }
+     },
+     "mediaRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31105055
+     },
+     "state": "transitioning"
+    }
+   }
+  },
+  {
+   "t": 101664,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "trackRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "error": "",
+     "matchingMediaRoles": [],
+     "mediaRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31105055
+     },
+     "state": "transitioning"
+    }
+   }
+  },
+  {
+   "t": 101797,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "controls": {
+      "playMode": {
+       "shuffleRepeatOne": false,
+       "repeatOne": false,
+       "shuffle": false,
+       "shuffleRepeatAll": false,
+       "repeatAll": false
+      },
+      "seekTime": false,
+      "previous": false,
+      "seekTrack": false,
+      "like": false,
+      "next_": false,
+      "seekBytes": false,
+      "dislike": false
+     },
+     "trackRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "prePlayTimeOffset": 0,
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "activeResource": {
+        "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+        "bitRate": 128000,
+        "uid": "0",
+        "mimeType": "audio/mpeg"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "error": "",
+     "matchingMediaRoles": [],
+     "sessionId": 1,
+     "status": {},
+     "mediaRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "contextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31105055
+     },
+     "streamId": 4,
+     "state": "transitioning"
+    }
+   }
+  },
+  {
+   "t": 102799,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "controls": {
+      "playMode": {
+       "shuffleRepeatOne": false,
+       "repeatOne": false,
+       "shuffle": false,
+       "shuffleRepeatAll": false,
+       "repeatAll": false
+      },
+      "seekTime": false,
+      "previous": false,
+      "seekTrack": false,
+      "like": false,
+      "next_": false,
+      "seekBytes": false,
+      "dislike": false
+     },
+     "trackRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "prePlayTimeOffset": 0,
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "activeResource": {
+        "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+        "bitRate": 128000,
+        "uid": "0",
+        "mimeType": "audio/mpeg"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "error": "",
+     "matchingMediaRoles": [],
+     "sessionId": 1,
+     "status": {},
+     "mediaRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "contextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31105055
+     },
+     "streamId": 4,
+     "state": "playing"
+    }
+   }
+  },
+  {
+   "t": 103058,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "controls": {
+      "playMode": {
+       "shuffleRepeatOne": false,
+       "repeatOne": false,
+       "shuffle": false,
+       "shuffleRepeatAll": false,
+       "repeatAll": false
+      },
+      "seekTime": false,
+      "previous": false,
+      "seekTrack": false,
+      "like": false,
+      "next_": false,
+      "seekBytes": false,
+      "dislike": false
+     },
+     "trackRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "prePlayTimeOffset": 0,
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "activeResource": {
+        "maxBitRate": 128000,
+        "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+        "bitsPerSample": 16,
+        "nrAudioChannels": 2,
+        "bitRate": 128000,
+        "minBitRate": 128000,
+        "uid": "0",
+        "codec": "MPEG-1 Layer 3 (MP3)",
+        "sampleFrequency": 48000,
+        "shortCodec": "MP3",
+        "nominalBitRate": 128000,
+        "mimeType": "audio/mpeg"
+       },
+       "resources": [
+        {
+         "maxBitRate": 128000,
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitsPerSample": 16,
+         "nrAudioChannels": 2,
+         "bitRate": 128000,
+         "minBitRate": 128000,
+         "uid": "0",
+         "codec": "MPEG-1 Layer 3 (MP3)",
+         "sampleFrequency": 48000,
+         "shortCodec": "MP3",
+         "nominalBitRate": 128000,
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "error": "",
+     "matchingMediaRoles": [],
+     "sessionId": 1,
+     "status": {
+      "timeSeek": false,
+      "byteSeek": false,
+      "duration": 0
+     },
+     "mediaRoles": {
+      "id": "airable://airable/radio/2116826320067048",
+      "icon": "http://static.airable.io/51/77/898464.png",
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "skin:iconAirableRadios",
+        "playbackStateChangePath": "airable:statechange",
+        "slogan": "Q sounds better with you",
+        "maximumRetryCount": 2,
+        "prePlayPath": "airable:preplay\\?serviceType\\=airable&dataType\\=radio&objectId\\=2116826320067048",
+        "radioStation": true,
+        "live": true,
+        "serviceName": "airable Radio",
+        "contentPlayContextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+        "serviceID": "airableRadios"
+       },
+       "resources": [
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/6070447992999107",
+         "bitRate": 128000,
+         "uid": "0",
+         "mimeType": "audio/mpeg"
+        },
+        {
+         "data": "https://1234567890.airable.io/airable/play/radio/2116826320067048/2616064781788736",
+         "bitRate": 96000,
+         "uid": "1",
+         "mimeType": "audio/mp4"
+        }
+       ]
+      },
+      "context": {
+       "path": "airable:context:AAAANgBSAGUAbQBvAHYAZQAgAGYAcgBvAG0AIABSAGEAZABpAG8AIABmAGEAdgBvAHIAaQB0AGUAcwAAAQQAaAB0AHQAcABzADoALwAvADIAOAA4ADAANQAwADcANgA5ADYALgBhAGkAcgBhAGIAbABlAC4AaQBvAC8AYQBjAHQAaQBvAG4AcwAvAGYAYQB2AG8AcgBpAHQAZQBzAC8AYQBpAHIAYQBiAGwAZQAvAHIAYQBkAGkAbwAvADIAMQAxADYAOAAyADYAMwAyADAAMAA2ADcAMAA0ADgALwByAGUAbQBvAHYAZQA/AHIAPQAlADIARgBpAGQAJQAyAEYAYQBpAHIAYQBiAGwAZQAlADIARgByAGEAZABpAG8AJQAyAEYAMgAxADEANgA4ADIANgAzADIAMAAwADYANwAwADQAOAAAAFAAYQBpAHIAYQBiAGwAZQA6AC8ALwBhAGkAcgBhAGIAbABlAC8AYQBjAHQAaQBvAG4ALwBmAGEAdgBvAHIAaQB0AGUALgByAGUAbQBvAHYAZQAA"
+      },
+      "containerPlayable": true,
+      "containerType": "none",
+      "audioType": "audioBroadcast",
+      "type": "audio",
+      "title": "Qmusic",
+      "path": "airable:https://1234567890.airable.io/id/airable/radio/2116826320067048"
+     },
+     "contextPath": "airable:playContext:https://1234567890.airable.io/id/airable/radio/2116826320067048",
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31105055
+     },
+     "streamId": 4,
+     "state": "playing"
+    }
+   }
+  },
+  {
+   "t": 117191,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 12
+    }
+   }
+  },
+  {
+   "t": 117509,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:volume",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 13
+    }
+   }
+  },
+  {
+   "t": 122741,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "player:player/data",
+    "itemValue": {
+     "error": "",
+     "trackRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "",
+        "serviceName": "",
+        "serviceID": ""
+       }
+      }
+     },
+     "keepActive": false,
+     "mediaRoles": {
+      "mediaData": {
+       "metaData": {
+        "serviceIcon": "",
+        "serviceName": "",
+        "serviceID": ""
+       }
+      }
+     },
+     "playId": {
+      "systemMemberId": "hegelh600-00000000-0000-0000-0000-000000000000",
+      "timestamp": 31105055
+     },
+     "streamerError": {},
+     "state": "stopped"
+    }
+   }
+  },
+  {
+   "t": 125257,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "powermanager:target",
+    "itemValue": {
+     "type": "powerTarget",
+     "powerTarget": {
+      "nextReason": "userActivity",
+      "reason": "userActivity",
+      "nextTarget": "networkStandby",
+      "target": "online"
+     }
+    }
+   }
+  },
+  {
+   "t": 125302,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "powermanager:target",
+    "itemValue": {
+     "type": "powerTarget",
+     "powerTarget": {
+      "nextReason": "none",
+      "reason": "userActivity",
+      "nextTarget": "none",
+      "target": "networkStandby"
+     }
+    }
+   }
+  },
+  {
+   "t": 125339,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "powermanager:target",
+    "itemValue": {
+     "type": "powerTarget",
+     "powerTarget": {
+      "nextReason": "none",
+      "nextTarget": "none",
+      "target": "networkStandby"
+     }
+    }
+   }
+  },
+  {
+   "t": 126268,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 0
+    }
+   }
+  },
+  {
+   "t": 134150,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "powermanager:target",
+    "itemValue": {
+     "type": "powerTarget",
+     "powerTarget": {
+      "nextReason": "none",
+      "reason": "userActivity",
+      "nextTarget": "none",
+      "target": "networkStandby"
+     }
+    }
+   }
+  },
+  {
+   "t": 146910,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "hegel:activePhysicalSource",
+    "itemValue": {
+     "type": "i32_",
+     "i32_": 9
+    }
+   }
+  },
+  {
+   "t": 146961,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "powermanager:target",
+    "itemValue": {
+     "type": "powerTarget",
+     "powerTarget": {
+      "nextReason": "none",
+      "reason": "userActivity",
+      "nextTarget": "online",
+      "target": "networkStandby"
+     }
+    }
+   }
+  },
+  {
+   "t": 147002,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "powermanager:target",
+    "itemValue": {
+     "type": "powerTarget",
+     "powerTarget": {
+      "nextReason": "none",
+      "nextTarget": "none",
+      "target": "online"
+     }
+    }
+   }
+  },
+  {
+   "t": 160520,
+   "e": {
+    "itemType": "update",
+    "rowsEvents": [],
+    "path": "powermanager:target",
+    "itemValue": {
+     "type": "powerTarget",
+     "powerTarget": {
+      "nextReason": "none",
+      "reason": "userActivity",
+      "nextTarget": "none",
+      "target": "online"
+     }
+    }
+   }
+  }
+ ]
+}

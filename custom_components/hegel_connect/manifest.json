@@ -1,0 +1,14 @@
+{
+  "domain": "hegel_connect",
+  "name": "Hegel Connect",
+  "codeowners": [
+    "@Elpea-byte"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/Elpea-byte/ha-hegel-connect",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Elpea-byte/ha-hegel-connect/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

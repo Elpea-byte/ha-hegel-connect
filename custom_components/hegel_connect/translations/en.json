@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hegel Connect",
+        "description": "Unofficial integration for Hegel H150, H400 and H600 streaming amplifiers. Enter the IP address of the amplifier (give it a fixed address in your router).",
+        "data": { "host": "Host" },
+        "data_description": { "host": "IP address or host name of the amplifier, e.g. 192.168.1.50" }
+      },
+      "reconfigure": {
+        "title": "Change address",
+        "data": { "host": "Host" }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot reach the amplifier on this address. Is it on the network (also works in standby)?",
+      "not_supported": "A device answered, but it does not look like a Hegel H150, H400 or H600.",
+      "unknown": "Unexpected error, see the log."
+    },
+    "abort": {
+      "already_configured": "This amplifier is already configured.",
+      "reconfigure_successful": "Address updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Hegel Connect options",
+        "data": { "max_volume": "Maximum volume" },
+        "data_description": { "max_volume": "Home Assistant will never set the volume above this value. The amplifier's own remote is not limited." }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "fixed_volume": { "name": "Fixed volume" }
+    }
+  }
+}

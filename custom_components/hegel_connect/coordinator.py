@@ -1,0 +1,168 @@
+"""Push-driven coordinator: one long-poll connection per amplifier."""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import time
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .api import (
+    NETWORK_SOURCE_NAME,
+    PATH_SOURCE,
+    HegelClient,
+    HegelError,
+    HegelQueueLost,
+    HegelSource,
+    HegelState,
+)
+from .const import (
+    BACKOFF_MAX,
+    BACKOFF_START,
+    DOMAIN,
+    POLL_TIMEOUT,
+    POWER_ON_WAIT,
+    SOURCE_ATTEMPTS,
+    SOURCE_VERIFY_WAIT,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class HegelCoordinator(DataUpdateCoordinator[HegelState]):
+    """Keeps the amplifier state up to date via the event queue (no polling)."""
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: HegelClient) -> None:
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN} {client.host}",
+            update_interval=None,  # push, see async_listen
+        )
+        self.client = client
+        self.sources: list[HegelSource] = []
+        self.volume_max = 100
+        self.connected = False
+
+    async def _async_setup(self) -> None:
+        try:
+            self.sources = await self.client.sources()
+            self.volume_max = await self.client.volume_max()
+        except HegelError as err:
+            raise UpdateFailed(str(err)) from err
+
+    async def _async_update_data(self) -> HegelState:
+        try:
+            return await self.client.fetch_state()
+        except HegelError as err:
+            raise UpdateFailed(str(err)) from err
+
+    # ------------------------------------------------------------------ push
+
+    async def async_listen(self) -> None:
+        """Run forever: subscribe, wait for events, reconnect with backoff."""
+        backoff = BACKOFF_START
+        while True:
+            try:
+                queue_id = await self.client.subscribe()
+                state = await self.client.fetch_state()
+                if not self.connected:
+                    _LOGGER.info("Connected to Hegel at %s", self.client.host)
+                self.connected = True
+                backoff = BACKOFF_START
+                self.async_set_updated_data(state)
+                while True:
+                    started = time.monotonic()
+                    events = await self.client.poll(queue_id, POLL_TIMEOUT)
+                    if events:
+                        self._apply(events)
+                    elif time.monotonic() - started < 1:
+                        await asyncio.sleep(2)  # never spin if the device answers at once
+            except asyncio.CancelledError:
+                raise
+            except HegelQueueLost:
+                _LOGGER.debug("Event queue lost on %s, subscribing again", self.client.host)
+                continue
+            except HegelError as err:
+                if self.connected:
+                    _LOGGER.warning("Lost connection to Hegel at %s: %s", self.client.host, err)
+                self.connected = False
+                self.async_set_update_error(err)
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, BACKOFF_MAX)
+
+    def _apply(self, events: list[dict]) -> None:
+        state = self.data or HegelState()
+        was_on = state.is_on
+        changed = False
+        for event in events:
+            path = event.get("path")
+            if isinstance(path, str) and "itemValue" in event:
+                try:
+                    changed |= state.apply_event(path, event["itemValue"])
+                except (TypeError, ValueError) as err:
+                    _LOGGER.debug("Ignoring event %s: %s", path, err)
+        if not was_on and state.is_on:
+            # Just switched on: read everything once (player data was invalid in standby).
+            self.hass.async_create_task(self.async_request_refresh())
+        if changed:
+            self.async_set_updated_data(state)
+
+    # -------------------------------------------------------------- commands
+
+    def source_name(self, index: int | None) -> str | None:
+        return next((s.name for s in self.sources if s.index == index), None)
+
+    async def async_wait_for(self, check, timeout: float) -> bool:
+        """Wait until ``check(state)`` is true or the timeout passes."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self.data is not None and check(self.data):
+                return True
+            await asyncio.sleep(0.25)
+        return self.data is not None and check(self.data)
+
+    async def async_select_source(self, name: str) -> None:
+        """Switch input reliably.
+
+        Seen on the H150: right after power-on the amplifier resumes its last
+        network stream and jumps back to Network within a second. So: wait until
+        it is on, pause a running stream when leaving Network, set the input and
+        check it stuck (retry a few times).
+        """
+        source = next((s for s in self.sources if s.name == name), None)
+        if source is None:
+            raise HegelError(f"Unknown input {name}")
+        if not (self.data and self.data.is_on):
+            await self.client.power_on()
+            await self.async_wait_for(lambda s: s.is_on, POWER_ON_WAIT)
+        for _attempt in range(SOURCE_ATTEMPTS):
+            state = self.data
+            if (
+                state is not None
+                and source.name != NETWORK_SOURCE_NAME
+                and self.source_name(state.source_index) == NETWORK_SOURCE_NAME
+                and state.player.state in ("playing", "buffering", "transitioning")
+            ):
+                try:
+                    await self.client.control("pause")
+                except HegelError as err:
+                    _LOGGER.debug("Pause before switching failed: %s", err)
+                await asyncio.sleep(0.5)
+            await self.client.set_source(source.index)
+            await asyncio.sleep(SOURCE_VERIFY_WAIT)
+            if not self.connected:
+                # No push right now: read the input ourselves.
+                try:
+                    self.data.source_index = int(await self.client.get_value(PATH_SOURCE))
+                except (HegelError, TypeError, ValueError):
+                    pass
+            if self.data is not None and self.data.source_index == source.index:
+                return
+        _LOGGER.warning("Hegel did not keep input %s after %s attempts", name, SOURCE_ATTEMPTS)
