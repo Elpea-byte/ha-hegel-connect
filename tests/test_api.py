@@ -116,3 +116,15 @@ def test_stream_format_spotify_and_lossless() -> None:
 def test_duration_from_status() -> None:
     assert PlayerData({"status": {"duration": 154153}}).duration == 154
     assert PlayerData({"status": {"duration": 0}}).duration is None
+
+
+def test_stream_format_airplay_badging() -> None:
+    """AirPlay sends its own label (as shown by the amplifier's web client)."""
+
+    def airplay(badge: str) -> PlayerData:
+        resource = {"quality": {"airplayBadging": badge}}
+        return PlayerData({"trackRoles": {"mediaData": {"activeResource": resource}}})
+
+    assert airplay("Hi-Res Lossless").quality == "hi_res"
+    assert airplay("Lossless").quality == "lossless"
+    assert airplay("Lossless").short_codec == "Lossless"

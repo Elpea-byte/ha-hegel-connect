@@ -181,7 +181,7 @@ class PlayerData:
     @property
     def short_codec(self) -> str | None:
         res = self._resource
-        return res.get("shortCodec") or res.get("codec") or None
+        return res.get("shortCodec") or res.get("codec") or _dig(res, "quality", "airplayBadging") or None
 
     @property
     def sample_rate(self) -> float | None:
@@ -213,6 +213,12 @@ class PlayerData:
         spotify = _dig(res, "quality", "spotifyHifi")
         if spotify is not None and not res.get("shortCodec") and not res.get("codec"):
             return "lossless" if spotify else "lossy"
+        # AirPlay (e.g. Apple Music) labels the stream itself, like the web client shows.
+        badge = str(_dig(res, "quality", "airplayBadging") or "").lower()
+        if "hi-res" in badge or "hires" in badge:
+            return "hi_res"
+        if "lossless" in badge:
+            return "lossless"
         codec = str(res.get("shortCodec") or res.get("codec") or res.get("mimeType") or "").lower()
         if "dsd" in codec or "dsf" in codec or "dff" in codec:
             return "dsd"
@@ -236,6 +242,8 @@ class PlayerData:
         codec = resource.get("shortCodec")
         if _dig(resource, "quality", "spotifyHifi"):
             codec = "Lossless"
+        elif _dig(resource, "quality", "airplayBadging"):
+            codec = _dig(resource, "quality", "airplayBadging")
         if codec:
             parts.append(str(codec))
         if resource.get("bitsPerSample") and resource.get("sampleFrequency"):
