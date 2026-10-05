@@ -120,6 +120,12 @@ class FakeHegel:
     async def resume_spotify(self) -> None:
         self.calls.append(("resume_spotify",))
 
+    async def favorites(self) -> list[dict]:
+        return [{"title": "Qmusic", "path": "airable:fav/qmusic", "id": "fav-1", "icon": None}]
+
+    async def favorites_path(self) -> str:
+        return "airable:fav"
+
     async def play_path(self, path: str) -> None:
         self.calls.append(("play_path", path))
 

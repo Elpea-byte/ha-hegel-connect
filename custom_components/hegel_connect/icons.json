@@ -25,6 +25,9 @@
       },
       "streaming_service": {
         "default": "mdi:cast-audio"
+      },
+      "radio_favorites": {
+        "default": "mdi:radio"
       }
     },
     "binary_sensor": {

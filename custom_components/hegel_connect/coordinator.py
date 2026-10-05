@@ -8,6 +8,7 @@ import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
@@ -27,6 +28,7 @@ from .const import (
     CACHE_KEY,
     DEFAULT_MAX_VOLUME,
     DOMAIN,
+    FAVORITES_INTERVAL,
     POLL_TIMEOUT,
     POWER_ON_WAIT,
     SOURCE_ATTEMPTS,
@@ -54,6 +56,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self.volume_max = 100
         self.firmware: str | None = None
         self.started_offline = False
+        self.favorites: list[dict] = []
         # Volume ceiling, set by the "Maximum volume" number entity.
         self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
@@ -77,6 +80,25 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         except HegelError as err:
             raise UpdateFailed(str(err)) from err
         self._save_cache()
+        await self.async_refresh_favorites()
+        self.config_entry.async_on_unload(
+            async_track_time_interval(self.hass, self._async_favorites_tick, FAVORITES_INTERVAL)
+        )
+
+    async def _async_favorites_tick(self, _now) -> None:
+        await self.async_refresh_favorites()
+
+    async def async_refresh_favorites(self) -> None:
+        """Re-read the radio favorites (they change only in the Hegel Control app)."""
+        try:
+            favorites = await self.client.favorites()
+        except HegelError as err:
+            _LOGGER.debug("Radio favorites not available: %s", err)
+            return
+        if favorites != self.favorites:
+            self.favorites = favorites
+            if self.data is not None:
+                self.async_update_listeners()
 
     def _save_cache(self) -> None:
         cache = {
@@ -126,6 +148,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 state = self._carry_over(await self.client.fetch_state())
                 if not self.connected:
                     _LOGGER.info("Connected to Hegel at %s", self.client.host)
+                    if not self.favorites:
+                        self.hass.async_create_task(self.async_refresh_favorites())
                 self.connected = True
                 backoff = BACKOFF_START
                 self.async_set_updated_data(state)

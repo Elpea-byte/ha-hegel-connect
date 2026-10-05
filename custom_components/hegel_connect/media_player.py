@@ -257,7 +257,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         path = media_content_id
         try:
             if path == FAVORITES_ID:
-                path = await self._favorites_path()
+                path = await self.coordinator.client.favorites_path()
             data = await self.coordinator.client.get_rows(path, 0, 100)
         except HegelError as err:
             raise BrowseError(f"Cannot browse {media_content_id}: {err}") from err
@@ -272,16 +272,6 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             can_expand=True,
             children=children,
         )
-
-    async def _favorites_path(self) -> str:
-        """Find the radio favorites folder (contains a per-device Airable id)."""
-        client = self.coordinator.client
-        root = await client.get_rows(PATH_AIRABLE_ROOT, 0, 10)
-        rows = [r for r in root.get("rows", []) if isinstance(r, dict)]
-        radios = next((r.get("path") for r in rows if str(r.get("path", "")).endswith("/radios")), None)
-        if radios is None:
-            raise HegelError("No radio section found")
-        return f"{radios}/favorites"
 
 
 def _folder(content_id: str, title: str) -> BrowseMedia:

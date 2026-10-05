@@ -72,6 +72,9 @@
       },
       "streaming_service": {
         "name": "Streamingdienst"
+      },
+      "radio_favorites": {
+        "name": "Radiofavorieten"
       }
     },
     "number": {

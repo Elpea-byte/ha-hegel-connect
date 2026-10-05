@@ -142,3 +142,18 @@ async def test_stop_for_radio_not_for_spotify(hass: HomeAssistant, fake_hegel, c
     assert hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.STOP
     await hass.services.async_call(MP_DOMAIN, "media_stop", {ATTR_ENTITY_ID: ENTITY}, blocking=True)
     assert ("control", "stop") in fake.calls
+
+
+async def test_radio_favorites_sensor_and_play(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    state = hass.states.get("sensor.hegel_h150_radio_favorites")
+    assert state.state == "1"
+    favorite = state.attributes["favorites"][0]
+    assert favorite["title"] == "Qmusic"
+    await hass.services.async_call(
+        MP_DOMAIN,
+        "play_media",
+        {ATTR_ENTITY_ID: ENTITY, "media_content_type": "hegel_path", "media_content_id": favorite["path"]},
+        blocking=True,
+    )
+    assert ("play_path", "airable:fav/qmusic") in fake_hegel[-1].calls

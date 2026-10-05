@@ -377,8 +377,9 @@ class HegelClient:
     async def set_value(self, path: str, value: dict[str, Any]) -> None:
         await self._request("POST", "setData", payload={"path": path, "role": "value", "value": value})
 
-    async def activate(self, path: str, value: dict[str, Any] | None = None) -> None:
-        await self._request("POST", "setData", payload={"path": path, "role": "activate", "value": value or {}})
+    async def activate(self, path: str, value: dict[str, Any] | None = None, **extra: Any) -> None:
+        payload = {"path": path, "role": "activate", "value": value or {}, **extra}
+        await self._request("POST", "setData", payload=payload)
 
     # ------------------------------------------------------------ device info
 
@@ -507,10 +508,40 @@ class HegelClient:
         if not rows:
             raise HegelError(f"Nothing playable at {path}")
         row = rows[0]
+        # Same request as the Hegel web client (including "platform"), live-tested
+        # with radio favorites: the full, freshly read item as media and track.
         await self.activate(
             PATH_CONTROL,
             {"control": "play", "mediaRoles": row, "trackRoles": row, "type": None, "index": 0},
+            platform="windows",
         )
+
+    async def favorites_path(self) -> str:
+        """The radio favorites folder (its path contains a per-device Airable id)."""
+        root = await self.get_rows(PATH_AIRABLE_ROOT, 0, 10)
+        rows = [r for r in root.get("rows", []) if isinstance(r, dict)]
+        radios = next((r.get("path") for r in rows if str(r.get("path", "")).endswith("/radios")), None)
+        if radios is None:
+            raise HegelError("No radio section found")
+        return f"{radios}/favorites"
+
+    async def favorites(self) -> list[dict[str, Any]]:
+        """Radio favorites as saved in the Hegel Control app: title, icon, path, id."""
+        data = await self.get_rows(await self.favorites_path(), 0, 50)
+        result = []
+        for row in data.get("rows", []):
+            if not isinstance(row, dict) or not row.get("path") or not row.get("title"):
+                continue
+            icon = row.get("icon")
+            result.append(
+                {
+                    "title": row["title"],
+                    "path": row["path"],
+                    "id": row.get("id"),
+                    "icon": icon if isinstance(icon, str) and icon.startswith(("http://", "https://")) else None,
+                }
+            )
+        return result
 
     # ------------------------------------------------------------------ push
 

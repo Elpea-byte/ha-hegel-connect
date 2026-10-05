@@ -81,7 +81,9 @@ async def async_setup_entry(
     entry: HegelConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    async_add_entities(HegelSensor(entry.runtime_data, description) for description in SENSORS)
+    entities: list[SensorEntity] = [HegelSensor(entry.runtime_data, d) for d in SENSORS]
+    entities.append(HegelFavoritesSensor(entry.runtime_data))
+    async_add_entities(entities)
 
 
 class HegelSensor(HegelEntity, SensorEntity):
@@ -106,3 +108,30 @@ class HegelSensor(HegelEntity, SensorEntity):
         ):
             return None
         return self.entity_description.value_fn(data.player)
+
+
+class HegelFavoritesSensor(HegelEntity, SensorEntity):
+    """Number of radio favorites; the list (title, icon, path) as attribute.
+
+    For dashboards: show a button per favorite and play it with
+    media_player.play_media (media_content_type: hegel_path, media_content_id: path).
+    """
+
+    _attr_translation_key = "radio_favorites"
+    _attr_state_class = None
+    _unrecorded_attributes = frozenset({"favorites"})
+
+    def __init__(self, coordinator: HegelCoordinator) -> None:
+        super().__init__(coordinator, "radio_favorites")
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_value(self) -> int:
+        return len(self.coordinator.favorites)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"favorites": self.coordinator.favorites}

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.const import Platform
 
 DOMAIN = "hegel_connect"
@@ -25,6 +27,8 @@ DEFAULT_MAX_VOLUME = 100
 
 # Push: how long the amplifier keeps a poll request open, and the wait after errors.
 POLL_TIMEOUT = 30
+# Radio favorites only change in the Hegel Control app: re-read now and then.
+FAVORITES_INTERVAL = timedelta(hours=6)
 BACKOFF_START = 5
 BACKOFF_MAX = 60
 
