@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from custom_components.hegel_connect.api import EVENT_PATHS, HegelState, PlayerData, unwrap
+from custom_components.hegel_connect.api import EVENT_PATHS, HegelState, PlayerData, play_request, unwrap
 
 from .conftest import FIXTURE, snapshot_value
 
@@ -128,3 +128,14 @@ def test_stream_format_airplay_badging() -> None:
     assert airplay("Hi-Res Lossless").quality == "hi_res"
     assert airplay("Lossless").quality == "lossless"
     assert airplay("Lossless").short_codec == "Lossless"
+
+
+def test_play_request_keeps_album_together() -> None:
+    album = {"type": "container", "containerPlayable": True, "path": "upnp:/a"}
+    track = {"type": "audio", "path": "upnp:/t"}
+    station = {"type": "audio", "audioType": "audioBroadcast", "path": "airable:/s"}
+    assert play_request(track, album, 3) == {
+        "control": "play", "mediaRoles": album, "trackRoles": track, "type": "itemInContainer", "index": 3
+    }
+    assert play_request(station, album, 0)["type"] is None
+    assert play_request(track, None, 0)["mediaRoles"] is track

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from homeassistant.components.media_player import (
@@ -18,13 +19,22 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HegelConfigEntry
-from .api import PATH_AIRABLE_ROOT, PATH_PLAY_HISTORY, HegelError
+from .api import PATH_AIRABLE_ROOT, PATH_MEDIA_SERVERS, PATH_PLAY_HISTORY, PATH_USB, HegelError
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
 
 MEDIA_TYPE_HEGEL = "hegel_path"
 ROOT_ID = "root"
 FAVORITES_ID = "favorites"
+# A track inside a folder: "track:<index>:<folder path>", so it plays with the rest of the folder
+TRACK_PREFIX = "track:"
+BROWSE_PAGE = 100
+BROWSE_MAX = 1000
+# Media server folders that hold no music (the amplifier only plays audio)
+_NON_AUDIO_TITLES = {
+    "photo", "photos", "pictures", "picture", "video", "videos", "movies",
+    "foto", "fotos", "foto's", "video's", "films", "bilder", "filme",
+}
 
 _PLAYER_STATES = {
     "playing": MediaPlayerState.PLAYING,
@@ -230,48 +240,126 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.client.control("previous"))
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
-        if media_id in (ROOT_ID, FAVORITES_ID):
-            raise HomeAssistantError("Choose a station, not a folder")
-        await self._run(self.coordinator.client.play_path(media_id))
+        if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):
+            raise HomeAssistantError("Choose a station, album or track, not a folder")
+        client = self.coordinator.client
+        if media_id.startswith(TRACK_PREFIX):
+            index, _, folder = media_id[len(TRACK_PREFIX) :].partition(":")
+            if not index.isdigit() or not folder:
+                raise HomeAssistantError(f"Unknown media id {media_id}")
+            await self._run(client.play_in_container(folder, int(index)))
+            return
+        await self._run(client.play_path(media_id))
 
     # ------------------------------------------------------------- browsing
 
     async def async_browse_media(
         self, media_content_type: MediaType | str | None = None, media_content_id: str | None = None
     ) -> BrowseMedia:
-        """Radio favorites, internet radio (Airable) and recently played."""
+        """Radio favorites, internet radio, media servers, USB and recently played."""
         if media_content_id in (None, ROOT_ID):
-            return BrowseMedia(
-                media_class=MediaClass.DIRECTORY,
-                media_content_id=ROOT_ID,
-                media_content_type=MEDIA_TYPE_HEGEL,
-                title=self.coordinator.config_entry.title,
-                can_play=False,
-                can_expand=True,
-                children=[
-                    _folder(FAVORITES_ID, "Radio favorites"),
-                    _folder(PATH_AIRABLE_ROOT, "Internet radio"),
-                    _folder(PATH_PLAY_HISTORY, "Recently played"),
-                ],
-            )
+            return await self._browse_root()
         path = media_content_id
         try:
             if path == FAVORITES_ID:
                 path = await self.coordinator.client.favorites_path()
-            data = await self.coordinator.client.get_rows(path, 0, 100)
+            folder, rows = await self._rows(path)
         except HegelError as err:
             raise BrowseError(f"Cannot browse {media_content_id}: {err}") from err
-        roles = data.get("roles") or {}
-        children = [child for row in data.get("rows", []) if (child := _child(row)) is not None]
+        on_server = path.endswith("?itemType=server")
+        if on_server:
+            # The server calls its own top folder "Root"; show the server's name
+            servers = await self._rows_safe(PATH_MEDIA_SERVERS)
+            name = next((r.get("title") for r in servers if r.get("path") == path), None)
+            if name:
+                folder = {**folder, "title": name}
+        children = []
+        for index, row in enumerate(rows):
+            if on_server and str(row.get("title", "")).strip().lower() in _NON_AUDIO_TITLES:
+                continue
+            if (child := _child(row, path, index, folder)) is not None:
+                children.append(child)
+        # A folder with tracks in it (album, playlist) can be played as a whole
+        has_tracks = any(isinstance(r, dict) and r.get("type") == "audio" for r in rows)
+        playable = has_tracks and not path.startswith(PATH_AIRABLE_ROOT) and media_content_id != FAVORITES_ID
         return BrowseMedia(
-            media_class=MediaClass.DIRECTORY,
+            media_class=MediaClass.ALBUM if playable else MediaClass.DIRECTORY,
             media_content_id=media_content_id,
             media_content_type=MEDIA_TYPE_HEGEL,
-            title=roles.get("title") or "Hegel",
+            title=folder.get("title") or _ROOT_TITLES.get(media_content_id) or "Hegel",
+            can_play=playable,
+            can_expand=True,
+            children=children,
+        )
+
+    async def _browse_root(self) -> BrowseMedia:
+        children = [
+            _folder(FAVORITES_ID, _ROOT_TITLES[FAVORITES_ID]),
+            _folder(PATH_AIRABLE_ROOT, _ROOT_TITLES[PATH_AIRABLE_ROOT]),
+        ]
+        # Media servers and USB only when the amplifier sees something there
+        servers, usb = await asyncio.gather(
+            self._has_rows(PATH_MEDIA_SERVERS), self._has_rows(PATH_USB)
+        )
+        if servers:
+            children.append(_folder(PATH_MEDIA_SERVERS, _ROOT_TITLES[PATH_MEDIA_SERVERS]))
+        if usb:
+            children.append(_folder(PATH_USB, _ROOT_TITLES[PATH_USB]))
+        children.append(_folder(PATH_PLAY_HISTORY, _ROOT_TITLES[PATH_PLAY_HISTORY]))
+        return BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id=ROOT_ID,
+            media_content_type=MEDIA_TYPE_HEGEL,
+            title=self.coordinator.config_entry.title,
             can_play=False,
             can_expand=True,
             children=children,
         )
+
+    async def _has_rows(self, path: str) -> bool:
+        try:
+            data = await self.coordinator.client.get_rows(path, 0, 1)
+        except HegelError:
+            return False
+        return any(isinstance(r, dict) and r.get("type") != "action" for r in data.get("rows", []))
+
+    async def _rows_safe(self, path: str) -> list[dict[str, Any]]:
+        try:
+            data = await self.coordinator.client.get_rows(path, 0, BROWSE_PAGE)
+        except HegelError:
+            return []
+        return [r for r in data.get("rows", []) if isinstance(r, dict)]
+
+    async def _rows(self, path: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+        """The folder itself and all its rows (large libraries are read in pages)."""
+        client = self.coordinator.client
+        data = await client.get_rows(path, 0, BROWSE_PAGE)
+        rows = [r for r in data.get("rows", []) if isinstance(r, dict)]
+        total = data.get("rowsCount")
+        while isinstance(total, int) and len(rows) < min(total, BROWSE_MAX):
+            more = await client.get_rows(path, len(rows), BROWSE_PAGE)
+            page = [r for r in more.get("rows", []) if isinstance(r, dict)]
+            if not page:
+                break
+            rows.extend(page)
+        folder = data.get("roles") if isinstance(data.get("roles"), dict) else {}
+        if path.startswith(("upnp:", "musiclibrary:", "playhistory:", "ui:/playHistory")) and not folder.get("title"):
+            try:
+                raw = await client.get_raw(path)
+            except HegelError:
+                raw = None
+            if isinstance(raw, dict):
+                folder = {**raw, **folder} if folder else raw
+        return folder, rows
+
+
+_ROOT_TITLES = {
+    FAVORITES_ID: "Radio favorites",
+    PATH_AIRABLE_ROOT: "Internet radio",
+    PATH_MEDIA_SERVERS: "Media servers",
+    PATH_USB: "USB",
+    PATH_PLAY_HISTORY: "Recently played",
+}
 
 
 def _folder(content_id: str, title: str) -> BrowseMedia:
@@ -285,20 +373,48 @@ def _folder(content_id: str, title: str) -> BrowseMedia:
     )
 
 
-def _child(row: Any) -> BrowseMedia | None:
+def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> BrowseMedia | None:
     if not isinstance(row, dict) or not row.get("path") or not row.get("title"):
         return None
-    is_folder = row.get("type") == "container"
-    playable = bool(row.get("containerPlayable")) or row.get("type") == "audio"
-    icon = row.get("icon")
+    kind = row.get("type")
+    if kind in ("action", "image", "video"):
+        return None
+    meta = ((row.get("mediaData") or {}).get("metaData") or {}) if isinstance(row.get("mediaData"), dict) else {}
+    icon = row.get("icon") or meta.get("albumArtUri") or meta.get("albumArtURI")
+    thumbnail = icon if isinstance(icon, str) and icon.startswith(("http://", "https://")) else None
+    broadcast = row.get("audioType") == "audioBroadcast"
+    if row["path"].startswith(PATH_AIRABLE_ROOT) or broadcast:
+        # Internet radio and favorites: stations are containers that play directly
+        is_folder = kind == "container"
+        playable = bool(row.get("containerPlayable")) or kind == "audio"
+        return BrowseMedia(
+            media_class=MediaClass.CHANNEL if broadcast else (MediaClass.DIRECTORY if is_folder else MediaClass.MUSIC),
+            media_content_id=row["path"],
+            media_content_type=MEDIA_TYPE_HEGEL,
+            title=row["title"],
+            can_play=playable,
+            can_expand=is_folder and not playable,
+            thumbnail=thumbnail,
+        )
+    if kind == "container":
+        # Albums, artists, folders: open to see the tracks (and play the album there)
+        return BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id=row["path"],
+            media_content_type=MEDIA_TYPE_HEGEL,
+            title=row["title"],
+            can_play=False,
+            can_expand=True,
+            thumbnail=thumbnail,
+        )
+    # A track: inside a playable folder it plays with the rest of that folder
+    in_folder = parent.get("containerPlayable") or parent_path.startswith(("upnp:", "musiclibrary:"))
     return BrowseMedia(
-        media_class=MediaClass.CHANNEL
-        if row.get("audioType") == "audioBroadcast"
-        else (MediaClass.DIRECTORY if is_folder else MediaClass.MUSIC),
-        media_content_id=row["path"],
+        media_class=MediaClass.TRACK,
+        media_content_id=f"{TRACK_PREFIX}{index}:{parent_path}" if in_folder else row["path"],
         media_content_type=MEDIA_TYPE_HEGEL,
         title=row["title"],
-        can_play=playable,
-        can_expand=is_folder and not playable,
-        thumbnail=icon if isinstance(icon, str) and icon.startswith(("http://", "https://")) else None,
+        can_play=True,
+        can_expand=False,
+        thumbnail=thumbnail,
     )

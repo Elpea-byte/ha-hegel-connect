@@ -157,3 +157,70 @@ async def test_radio_favorites_sensor_and_play(hass: HomeAssistant, fake_hegel, 
         blocking=True,
     )
     assert ("play_path", "airable:fav/qmusic") in fake_hegel[-1].calls
+
+
+SERVER = "upnp:/uuid:nas?itemType=server"
+ALBUM = "upnp:/uuid:nas/42?itemType=container"
+
+
+def _library() -> None:
+    folder = {"type": "container", "containerPlayable": True}
+    FakeHegel.rows = {
+        "ui:/upnp": {"rows": [{**folder, "path": SERVER, "title": "NAS"}], "roles": {"path": "upnp:"}},
+        SERVER: {
+            "rows": [
+                {**folder, "path": "upnp:/uuid:nas/1?itemType=container", "title": "Music"},
+                {**folder, "path": "upnp:/uuid:nas/2?itemType=container", "title": "Photo"},
+                {**folder, "path": "upnp:/uuid:nas/3?itemType=container", "title": "Video"},
+            ]
+        },
+        ALBUM: {
+            "rows": [
+                {"type": "audio", "path": "upnp:/uuid:nas/t1?itemType=track", "title": "One"},
+                {"type": "audio", "path": "upnp:/uuid:nas/t2?itemType=track", "title": "Two"},
+            ]
+        },
+        # USB: only the (empty) folder and a disabled refresh action
+        "musiclibrary:/usbFolder": {"rows": [{"type": "action", "path": "musiclibrary:/refresh", "title": "Refresh"}]},
+    }
+    FakeHegel.raw = {ALBUM: {**folder, "path": ALBUM, "title": "Best of"}}
+
+
+async def _browse(hass: HomeAssistant, ws, content_id: str | None) -> dict:
+    msg = {"id": 1 + len(content_id or ""), "type": "media_player/browse_media", "entity_id": ENTITY}
+    if content_id is not None:
+        msg |= {"media_content_id": content_id, "media_content_type": "hegel_path"}
+    await ws.send_json(msg)
+    reply = await ws.receive_json()
+    assert reply["success"], reply
+    return reply["result"]
+
+
+async def test_browse_media_servers(hass: HomeAssistant, fake_hegel, config_entry, hass_ws_client) -> None:
+    _library()
+    await _setup(hass, config_entry)
+    ws = await hass_ws_client(hass)
+
+    root = await _browse(hass, ws, None)
+    titles = [c["title"] for c in root["children"]]
+    assert "Media servers" in titles
+    assert "USB" not in titles  # no stick in the amplifier
+
+    server = await _browse(hass, ws, SERVER)
+    assert server["title"] == "NAS"
+    assert [c["title"] for c in server["children"]] == ["Music"]  # no photo/video folders
+    assert server["children"][0]["can_expand"] and not server["children"][0]["can_play"]
+
+    album = await _browse(hass, ws, ALBUM)
+    assert album["title"] == "Best of"
+    assert album["can_play"]
+    second = album["children"][1]
+    assert second["media_content_id"] == f"track:1:{ALBUM}"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        "play_media",
+        {ATTR_ENTITY_ID: ENTITY, "media_content_type": "hegel_path", "media_content_id": second["media_content_id"]},
+        blocking=True,
+    )
+    assert ("play_in_container", ALBUM, 1) in fake_hegel[-1].calls

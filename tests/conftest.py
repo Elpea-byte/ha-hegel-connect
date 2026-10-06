@@ -129,8 +129,20 @@ class FakeHegel:
     async def play_path(self, path: str) -> None:
         self.calls.append(("play_path", path))
 
+    async def play_in_container(self, path: str, index: int, parent: dict | None = None) -> None:
+        self.calls.append(("play_in_container", path, index))
+
+    # Browse tree per path; tests fill it in. Unknown paths are empty folders.
+    rows: dict[str, dict] = {}
+    raw: dict[str, dict] = {}
+
     async def get_rows(self, path: str, start: int = 0, count: int = 50) -> dict:
-        return {"rows": [], "roles": {"title": path}}
+        data = FakeHegel.rows.get(path, {"rows": [], "roles": {"title": path}})
+        rows = data.get("rows", [])
+        return {**data, "rows": rows[start : start + count], "rowsCount": len(rows)}
+
+    async def get_raw(self, path: str, roles: str = "@all") -> dict:
+        return FakeHegel.raw.get(path, {"type": "container", "path": path})
 
 
 @pytest.fixture
@@ -138,6 +150,8 @@ def fake_hegel():
     """Patch the client everywhere; yields the instance the integration uses."""
     FakeHegel.reachable = True
     FakeHegel.model = "H150"
+    FakeHegel.rows = {}
+    FakeHegel.raw = {}
     instances: list[FakeHegel] = []
 
     def factory(*args: Any, **kwargs: Any) -> FakeHegel:

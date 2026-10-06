@@ -40,7 +40,7 @@ The H150, H400 and H600 share the same software platform (they are supported by 
 - **Inputs** read from the amplifier, so every model shows its own inputs
 - **Reliable input switching**: waits until the amplifier is on, pauses a running stream and checks the input stays selected (after power-on the amplifier otherwise jumps back to Network)
 - **Playback**: play, pause, next, previous and stop, **only where the current service allows it** (see below)
-- **Media browser**: your internet radio favorites, all internet radio and recently played
+- **Media browser**: your internet radio favorites, all internet radio, **media servers** (UPnP/DLNA, e.g. your NAS), a **USB stick** in the amplifier and recently played. Nothing to set up: Hegel Connect shows the servers the amplifier finds itself. Albums play as a whole and continue with the next track; photo and video folders are left out
 - **Radio favorites sensor** with the stations saved in the Hegel Control app, to build radio buttons on a dashboard
 
 **Now playing and stream format**
@@ -119,6 +119,17 @@ target:
 data:
   media_content_type: hegel_path
   media_content_id: "{{ state_attr('sensor.hegel_h150_radio_favorites', 'favorites')[0].path }}"
+```
+
+Play an album from your NAS from a script or button. In the script editor, add the action *Media player: Play media*, choose the Hegel and click *Pick media*: you browse the same folders as in the media browser. The result looks like this (the id stays the same as long as the server does):
+
+```yaml
+action: media_player.play_media
+target:
+  entity_id: media_player.hegel_h150
+data:
+  media_content_type: hegel_path
+  media_content_id: "upnp:/uuid:<server>/<album>?itemType=container"
 ```
 
 ## Installation

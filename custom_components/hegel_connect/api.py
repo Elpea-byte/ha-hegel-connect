@@ -45,6 +45,8 @@ PATH_MEMBER = "systemmanager:systemMember"
 PATH_FIRMWARE = "settings:/version"
 PATH_AIRABLE_ROOT = "airable:"
 PATH_PLAY_HISTORY = "ui:/playHistory"
+PATH_MEDIA_SERVERS = "ui:/upnp"
+PATH_USB = "musiclibrary:/usbFolder"
 
 EVENT_PATHS: tuple[str, ...] = (
     PATH_POWER,
@@ -312,6 +314,25 @@ class HegelState:
         return False
 
 
+def play_request(track: dict[str, Any], parent: dict[str, Any] | None, index: int) -> dict[str, Any]:
+    """The play command of the Hegel web client (player:player/control).
+
+    Inside a playable folder (album, playlist, play history) the folder goes along
+    as mediaRoles with type "itemInContainer", so the amplifier keeps playing the
+    next items. Radio stations (audioBroadcast) are always played on their own.
+    """
+    media: dict[str, Any] = track
+    kind: str | None = None
+    if (
+        parent
+        and track.get("audioType") != "audioBroadcast"
+        and parent.get("type") == "container"
+        and parent.get("containerPlayable")
+    ):
+        media, kind = parent, "itemInContainer"
+    return {"control": "play", "mediaRoles": media, "trackRoles": track, "type": kind, "index": index}
+
+
 class HegelClient:
     """Async client for one amplifier."""
 
@@ -499,22 +520,43 @@ class HegelClient:
         await self.activate(PATH_SPOTIFY_RESUME, {})
 
     async def play_path(self, path: str) -> None:
-        """Play a browse item (e.g. a radio favorite) by its path.
+        """Play a browse item by its path.
 
-        Favorites are containers; the playable item is the first row inside.
+        A track plays directly. A folder (radio favorite, album, playlist, USB
+        folder) plays from its first item; albums and folders then continue
+        with the next tracks.
         """
-        detail = await self.get_rows(path, 0, 5)
+        try:
+            item = await self.get_raw(path)
+        except HegelError:
+            item = None
+        if isinstance(item, dict) and item.get("type") not in (None, "container"):
+            await self._play(item, None, 0)
+            return
+        await self.play_in_container(path, 0, item if isinstance(item, dict) else None)
+
+    async def play_in_container(self, path: str, index: int, parent: dict[str, Any] | None = None) -> None:
+        """Play item number `index` of a folder, and continue with the rest."""
+        detail = await self.get_rows(path, index, 1)
         rows = [row for row in detail.get("rows", []) if isinstance(row, dict)]
         if not rows:
             raise HegelError(f"Nothing playable at {path}")
-        row = rows[0]
+        if parent is None:
+            roles = detail.get("roles")
+            if isinstance(roles, dict) and roles.get("containerPlayable"):
+                parent = roles
+            else:
+                try:
+                    raw = await self.get_raw(path)
+                except HegelError:
+                    raw = None
+                parent = raw if isinstance(raw, dict) else None
+        await self._play(rows[0], parent, index)
+
+    async def _play(self, track: dict[str, Any], parent: dict[str, Any] | None, index: int) -> None:
         # Same request as the Hegel web client (including "platform"), live-tested
-        # with radio favorites: the full, freshly read item as media and track.
-        await self.activate(
-            PATH_CONTROL,
-            {"control": "play", "mediaRoles": row, "trackRoles": row, "type": None, "index": 0},
-            platform="windows",
-        )
+        # with radio favorites and media server albums.
+        await self.activate(PATH_CONTROL, play_request(track, parent, index), platform="windows")
 
     async def favorites_path(self) -> str:
         """The radio favorites folder (its path contains a per-device Airable id)."""

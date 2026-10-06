@@ -5,6 +5,7 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 ## [Unreleased]
 
 ### Added
+- Media browser: media servers (UPnP/DLNA) and USB stick, as found by the amplifier. Albums and folders play as a whole (like the Hegel web client); photo and video folders are hidden.
 - H200 listed as supported model (expected to work, not tested yet).
 - Norwegian (Bokmål), German, French and Spanish translations.
 - Radio favorites sensor; favorites play the same way as in the Hegel web client.
