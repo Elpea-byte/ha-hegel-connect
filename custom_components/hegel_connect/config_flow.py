@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Add a Hegel H150/H400/H600."""
+    """Add a Hegel H150/H200/H400/H600."""
 
     VERSION = 1
 

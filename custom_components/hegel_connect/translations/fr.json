@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Intégration non officielle pour les amplificateurs de streaming Hegel H150, H400 et H600. Saisissez l'adresse IP de l'amplificateur (attribuez-lui une adresse fixe dans votre routeur).",
+        "description": "Intégration non officielle pour les amplificateurs de streaming Hegel H150, H200, H400 et H600. Saisissez l'adresse IP de l'amplificateur (attribuez-lui une adresse fixe dans votre routeur).",
         "data": {
           "host": "Hôte"
         },
@@ -25,15 +25,15 @@
     },
     "error": {
       "cannot_connect": "Impossible de joindre l'amplificateur à cette adresse. Est-il connecté au réseau (fonctionne aussi en veille) ?",
-      "not_supported": "Un appareil a répondu, mais il ne ressemble pas à un Hegel H150, H400 ou H600.",
+      "not_supported": "Un appareil a répondu, mais il ne ressemble pas à un Hegel H150, H200, H400 ou H600.",
       "unknown": "Erreur inattendue, consultez le journal.",
-      "legacy_model": "Il s'agit d'un amplificateur Hegel plus ancien (H95, H120, H190, H390, H590 ou Röst). Il se pilote avec le protocole de contrôle IP de Hegel : utilisez l'[intégration Hegel]({core_url}) intégrée à Home Assistant. Hegel Connect est destiné aux H150, H400 et H600."
+      "legacy_model": "Il s'agit d'un amplificateur Hegel plus ancien (H95, H120, H190, H390, H590 ou Röst). Il se pilote avec le protocole de contrôle IP de Hegel : utilisez l'[intégration Hegel]({core_url}) intégrée à Home Assistant. Hegel Connect est destiné aux H150, H200, H400 et H600."
     },
     "abort": {
       "already_configured": "Cet amplificateur est déjà configuré.",
       "reconfigure_successful": "Adresse mise à jour.",
       "cannot_connect": "L'amplificateur ne répond plus.",
-      "not_supported": "Cet appareil ne ressemble pas à un Hegel H150, H400 ou H600.",
+      "not_supported": "Cet appareil ne ressemble pas à un Hegel H150, H200, H400 ou H600.",
       "not_ipv4": "Seules les adresses IPv4 sont prises en charge.",
       "already_in_progress": "Cet amplificateur est déjà en cours de configuration."
     }

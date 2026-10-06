@@ -14,7 +14,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Plat
 
 # Models on the StreamUnlimited platform. Other brands (e.g. Onkyo) announce the
 # same mDNS service, so discovery only accepts these.
-SUPPORTED_MODELS = ("H150", "H400", "H600")
+SUPPORTED_MODELS = ("H150", "H200", "H400", "H600")
 
 # Older models (IP control on TCP 50001) are served by the built-in integration.
 CORE_HEGEL_URL = "https://www.home-assistant.io/integrations/hegel/"

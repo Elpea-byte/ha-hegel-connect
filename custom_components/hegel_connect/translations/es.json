@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Integración no oficial para los amplificadores de streaming Hegel H150, H400 y H600. Introduce la dirección IP del amplificador (asígnale una dirección fija en tu router).",
+        "description": "Integración no oficial para los amplificadores de streaming Hegel H150, H200, H400 y H600. Introduce la dirección IP del amplificador (asígnale una dirección fija en tu router).",
         "data": {
           "host": "Host"
         },
@@ -25,15 +25,15 @@
     },
     "error": {
       "cannot_connect": "No se puede conectar con el amplificador en esta dirección. ¿Está conectado a la red (también funciona en reposo)?",
-      "not_supported": "Un dispositivo ha respondido, pero no parece un Hegel H150, H400 o H600.",
+      "not_supported": "Un dispositivo ha respondido, pero no parece un Hegel H150, H200, H400 o H600.",
       "unknown": "Error inesperado, consulta el registro.",
-      "legacy_model": "Es un amplificador Hegel más antiguo (H95, H120, H190, H390, H590 o Röst). Se controla con el protocolo de control IP de Hegel: usa la [integración Hegel]({core_url}) incluida en Home Assistant. Hegel Connect es para el H150, H400 y H600."
+      "legacy_model": "Es un amplificador Hegel más antiguo (H95, H120, H190, H390, H590 o Röst). Se controla con el protocolo de control IP de Hegel: usa la [integración Hegel]({core_url}) incluida en Home Assistant. Hegel Connect es para el H150, H200, H400 y H600."
     },
     "abort": {
       "already_configured": "Este amplificador ya está configurado.",
       "reconfigure_successful": "Dirección actualizada.",
       "cannot_connect": "El amplificador ha dejado de responder.",
-      "not_supported": "Este dispositivo no parece un Hegel H150, H400 o H600.",
+      "not_supported": "Este dispositivo no parece un Hegel H150, H200, H400 o H600.",
       "not_ipv4": "Solo se admiten direcciones IPv4.",
       "already_in_progress": "Este amplificador ya se está configurando."
     }

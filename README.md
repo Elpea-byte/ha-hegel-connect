@@ -2,7 +2,11 @@
 
 > **Unofficial community integration.** Not affiliated with, endorsed or supported by Hegel Music Systems AS. Hegel is a trademark of its owner.
 
-Local-push integration for **Hegel H150, H400 and H600** streaming amplifiers. It talks to the amplifier over your own network, the same way the amplifier's built-in web app does. No cloud, no account, and no polling: changes made on the amplifier, with its remote or in the Hegel Control app show up in Home Assistant within a second.
+Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifiers. It talks to the amplifier over your own network, the same way the amplifier's built-in web app does. No cloud, no account, and no polling: changes made on the amplifier, with its remote or in the Hegel Control app show up in Home Assistant within a second.
+
+## Why this project
+
+I bought a new Hegel H150 and found that my Logitech Harmony Elite could not control it. In mid-September 2026 I started with Home Assistant to bring all my devices together. I looked for an integration for the new streaming Hegels and could not find one in HACS, so I built Hegel Connect for my own H150. It works well enough that I decided to share it with the community.
 
 ## Which integration for my Hegel?
 
@@ -10,7 +14,7 @@ Hegel has two generations of network amplifiers, controlled in different ways:
 
 | Generation | Models | How it is controlled | Use |
 | :---- | :---- | :---- | :---- |
-| **Streaming generation** | H150, H400, H600 | Built-in streamer with a web API (the same one the Hegel Control app and the amplifier's web page use) | **Hegel Connect** (this integration) |
+| **Streaming generation** | H150, H200, H400, H600 | Built-in streamer with a web API (the same one the Hegel Control app and the amplifier's web page use) | **Hegel Connect** (this integration) |
 | **IP control generation** | Röst, H95, H120, H190, H190V, H390, H590 | Hegel IP control protocol on TCP port 50001 | The built-in [Hegel integration](https://www.home-assistant.io/integrations/hegel/) in Home Assistant |
 
 Quick check: if `http://<amplifier-address>/webclient/` opens a Hegel page, the amplifier belongs to the streaming generation. If you try to add an older amplifier to Hegel Connect, setup recognises it (it answers a read-only IP control status query) and points you to the built-in integration.
@@ -20,10 +24,11 @@ Quick check: if `http://<amplifier-address>/webclient/` opens a Hegel page, the 
 | Model | Status |
 | :---- | :---- |
 | H150 | ✅ Tested by the maintainer |
+| H200 | 🟡 Expected to work, not tested yet (new in 2026) |
 | H400 | 🟡 Expected to work, not tested yet |
 | H600 | 🟡 Expected to work, not tested yet |
 
-The H150, H400 and H600 share the same software platform (they are supported by the same Hegel Control app). If you own an H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
+The H150, H400 and H600 share the same software platform (they are supported by the same Hegel Control app). The H200 is newer; the current Hegel Control app finds amplifiers the same way for all models and already lists a phono input (the H200 is the first streaming model with a phono stage), so it very likely uses the same platform. If you own an H200, H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
 
 ## Features
 
@@ -156,7 +161,7 @@ Then open an [issue](../../issues/new/choose) with the log and the diagnostics f
 - Spotify Connect: next/previous and stop are not available through the amplifier (it only allows pause); use the Spotify app or Home Assistant's Spotify integration for skipping.
 - Radio favorites are managed in the Hegel Control app; Home Assistant shows and plays them.
 - The DAC and display buttons of the Hegel remote have no network command.
-- Tested on the H150 only; H400 and H600 reports are very welcome.
+- Tested on the H150 only; H200, H400 and H600 reports are very welcome.
 
 ## How it works
 
@@ -174,6 +179,10 @@ The client in `custom_components/hegel_connect/api.py` has no Home Assistant dep
 pip install -r requirements_test.txt
 pytest
 ```
+
+## Contributing
+
+Bug reports, model reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Changes per version are in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

@@ -1,4 +1,4 @@
-"""Hegel Connect: local push integration for Hegel H150, H400 and H600.
+"""Hegel Connect: local push integration for Hegel H150, H200, H400 and H600.
 
 Unofficial; not affiliated with Hegel Music Systems AS.
 """

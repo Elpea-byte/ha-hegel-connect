@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Onofficiële integratie voor de Hegel H150, H400 en H600. Vul het IP-adres van de versterker in (geef hem een vast adres in je router).",
+        "description": "Onofficiële integratie voor de Hegel H150, H200, H400 en H600. Vul het IP-adres van de versterker in (geef hem een vast adres in je router).",
         "data": {
           "host": "Adres"
         },
@@ -25,15 +25,15 @@
     },
     "error": {
       "cannot_connect": "De versterker is op dit adres niet bereikbaar. Staat hij op het netwerk (werkt ook in standby)?",
-      "not_supported": "Er antwoordt een apparaat, maar het lijkt geen Hegel H150, H400 of H600.",
+      "not_supported": "Er antwoordt een apparaat, maar het lijkt geen Hegel H150, H200, H400 of H600.",
       "unknown": "Onverwachte fout, zie het logboek.",
-      "legacy_model": "Dit is een oudere Hegel-versterker (H95, H120, H190, H390, H590 of Röst). Die wordt bediend via Hegels IP-control: gebruik de ingebouwde [Hegel-integratie]({core_url}) van Home Assistant. Hegel Connect is voor de H150, H400 en H600."
+      "legacy_model": "Dit is een oudere Hegel-versterker (H95, H120, H190, H390, H590 of Röst). Die wordt bediend via Hegels IP-control: gebruik de ingebouwde [Hegel-integratie]({core_url}) van Home Assistant. Hegel Connect is voor de H150, H200, H400 en H600."
     },
     "abort": {
       "already_configured": "Deze versterker is al ingesteld.",
       "reconfigure_successful": "Adres bijgewerkt.",
       "cannot_connect": "De versterker antwoordt niet meer.",
-      "not_supported": "Dit apparaat lijkt geen Hegel H150, H400 of H600.",
+      "not_supported": "Dit apparaat lijkt geen Hegel H150, H200, H400 of H600.",
       "not_ipv4": "Alleen IPv4-adressen worden ondersteund.",
       "already_in_progress": "Deze versterker wordt al ingesteld."
     }

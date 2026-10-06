@@ -169,7 +169,7 @@ async def test_discovery_ignores_other_brands(hass: HomeAssistant, fake_hegel) -
 
 
 async def test_discovery_rejects_unsupported_model(hass: HomeAssistant, fake_hegel) -> None:
-    """Only H150/H400/H600 are offered, whatever announces itself."""
+    """Only H150/H200/H400/H600 are offered, whatever announces itself."""
     FakeHegel.model = "TX-RZ810"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_INFO

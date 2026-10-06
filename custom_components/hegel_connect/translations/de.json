@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Inoffizielle Integration für die Streaming-Verstärker Hegel H150, H400 und H600. Gib die IP-Adresse des Verstärkers ein (vergib im Router eine feste Adresse).",
+        "description": "Inoffizielle Integration für die Streaming-Verstärker Hegel H150, H200, H400 und H600. Gib die IP-Adresse des Verstärkers ein (vergib im Router eine feste Adresse).",
         "data": {
           "host": "Host"
         },
@@ -25,15 +25,15 @@
     },
     "error": {
       "cannot_connect": "Der Verstärker ist unter dieser Adresse nicht erreichbar. Ist er mit dem Netzwerk verbunden (funktioniert auch im Standby)?",
-      "not_supported": "Ein Gerät hat geantwortet, scheint aber kein Hegel H150, H400 oder H600 zu sein.",
+      "not_supported": "Ein Gerät hat geantwortet, scheint aber kein Hegel H150, H200, H400 oder H600 zu sein.",
       "unknown": "Unerwarteter Fehler, siehe Protokoll.",
-      "legacy_model": "Dies ist ein älterer Hegel-Verstärker (H95, H120, H190, H390, H590 oder Röst). Er wird über Hegels IP-Steuerprotokoll gesteuert: Verwende die in Home Assistant integrierte [Hegel-Integration]({core_url}). Hegel Connect ist für den H150, H400 und H600."
+      "legacy_model": "Dies ist ein älterer Hegel-Verstärker (H95, H120, H190, H390, H590 oder Röst). Er wird über Hegels IP-Steuerprotokoll gesteuert: Verwende die in Home Assistant integrierte [Hegel-Integration]({core_url}). Hegel Connect ist für den H150, H200, H400 und H600."
     },
     "abort": {
       "already_configured": "Dieser Verstärker ist bereits eingerichtet.",
       "reconfigure_successful": "Adresse aktualisiert.",
       "cannot_connect": "Der Verstärker antwortet nicht mehr.",
-      "not_supported": "Dieses Gerät scheint kein Hegel H150, H400 oder H600 zu sein.",
+      "not_supported": "Dieses Gerät scheint kein Hegel H150, H200, H400 oder H600 zu sein.",
       "not_ipv4": "Nur IPv4-Adressen werden unterstützt.",
       "already_in_progress": "Dieser Verstärker wird bereits eingerichtet."
     }

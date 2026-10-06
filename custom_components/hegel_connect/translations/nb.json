@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Uoffisiell integrasjon for Hegel H150, H400 og H600 strømmeforsterkere. Skriv inn IP-adressen til forsterkeren (gi den en fast adresse i ruteren).",
+        "description": "Uoffisiell integrasjon for Hegel H150, H200, H400 og H600 strømmeforsterkere. Skriv inn IP-adressen til forsterkeren (gi den en fast adresse i ruteren).",
         "data": {
           "host": "Vert"
         },
@@ -25,15 +25,15 @@
     },
     "error": {
       "cannot_connect": "Får ikke kontakt med forsterkeren på denne adressen. Er den koblet til nettverket (fungerer også i standby)?",
-      "not_supported": "En enhet svarte, men den ser ikke ut som en Hegel H150, H400 eller H600.",
+      "not_supported": "En enhet svarte, men den ser ikke ut som en Hegel H150, H200, H400 eller H600.",
       "unknown": "Uventet feil, se loggen.",
-      "legacy_model": "Dette er en eldre Hegel-forsterker (H95, H120, H190, H390, H590 eller Röst). Den styres med Hegels IP-kontrollprotokoll: bruk den innebygde [Hegel-integrasjonen]({core_url}) i Home Assistant. Hegel Connect er for H150, H400 og H600."
+      "legacy_model": "Dette er en eldre Hegel-forsterker (H95, H120, H190, H390, H590 eller Röst). Den styres med Hegels IP-kontrollprotokoll: bruk den innebygde [Hegel-integrasjonen]({core_url}) i Home Assistant. Hegel Connect er for H150, H200, H400 og H600."
     },
     "abort": {
       "already_configured": "Denne forsterkeren er allerede konfigurert.",
       "reconfigure_successful": "Adressen er oppdatert.",
       "cannot_connect": "Forsterkeren sluttet å svare.",
-      "not_supported": "Denne enheten ser ikke ut som en Hegel H150, H400 eller H600.",
+      "not_supported": "Denne enheten ser ikke ut som en Hegel H150, H200, H400 eller H600.",
       "not_ipv4": "Bare IPv4-adresser støttes.",
       "already_in_progress": "Denne forsterkeren blir allerede satt opp."
     }

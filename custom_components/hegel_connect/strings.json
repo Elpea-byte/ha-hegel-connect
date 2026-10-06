@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Unofficial integration for Hegel H150, H400 and H600 streaming amplifiers. Enter the IP address of the amplifier (give it a fixed address in your router).",
+        "description": "Unofficial integration for Hegel H150, H200, H400 and H600 streaming amplifiers. Enter the IP address of the amplifier (give it a fixed address in your router).",
         "data": {
           "host": "Host"
         },
@@ -25,15 +25,15 @@
     },
     "error": {
       "cannot_connect": "Cannot reach the amplifier on this address. Is it on the network (also works in standby)?",
-      "not_supported": "A device answered, but it does not look like a Hegel H150, H400 or H600.",
+      "not_supported": "A device answered, but it does not look like a Hegel H150, H200, H400 or H600.",
       "unknown": "Unexpected error, see the log.",
-      "legacy_model": "This is an older Hegel amplifier (H95, H120, H190, H390, H590 or Röst). It is controlled with Hegel's IP control protocol: use Home Assistant's built-in [Hegel integration]({core_url}). Hegel Connect is for the H150, H400 and H600."
+      "legacy_model": "This is an older Hegel amplifier (H95, H120, H190, H390, H590 or Röst). It is controlled with Hegel's IP control protocol: use Home Assistant's built-in [Hegel integration]({core_url}). Hegel Connect is for the H150, H200, H400 and H600."
     },
     "abort": {
       "already_configured": "This amplifier is already configured.",
       "reconfigure_successful": "Address updated.",
       "cannot_connect": "The amplifier stopped answering.",
-      "not_supported": "This device does not look like a Hegel H150, H400 or H600.",
+      "not_supported": "This device does not look like a Hegel H150, H200, H400 or H600.",
       "not_ipv4": "Only IPv4 addresses are supported.",
       "already_in_progress": "This amplifier is already being set up."
     }

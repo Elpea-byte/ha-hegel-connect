@@ -1,4 +1,4 @@
-"""Client for the local API of Hegel streaming amplifiers (H150, H400, H600).
+"""Client for the local API of Hegel streaming amplifiers (H150, H200, H400, H600).
 
 This module has no Home Assistant dependencies so it can later move to its own
 package on PyPI. It talks to the same HTTP API the amplifier's built-in web app
