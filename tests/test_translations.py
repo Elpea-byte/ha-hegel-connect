@@ -1,7 +1,7 @@
 """Every translation has exactly the keys and placeholders of strings.json."""
 import json
-import re
 from pathlib import Path
+import re
 
 import pytest
 
