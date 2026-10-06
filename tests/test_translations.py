@@ -1,4 +1,5 @@
 """Every translation has exactly the keys and placeholders of strings.json."""
+
 import json
 from pathlib import Path
 import re

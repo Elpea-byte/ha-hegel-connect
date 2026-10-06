@@ -118,7 +118,6 @@ class HegelFavoritesSensor(HegelEntity, SensorEntity):
     """
 
     _attr_translation_key = "radio_favorites"
-    _attr_state_class = None
     _unrecorded_attributes = frozenset({"favorites"})
 
     def __init__(self, coordinator: HegelCoordinator) -> None:

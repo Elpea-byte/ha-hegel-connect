@@ -35,7 +35,8 @@
       "cannot_connect": "L'amplificateur ne répond plus.",
       "not_supported": "Cet appareil ne ressemble pas à un Hegel H150, H200, H400 ou H600.",
       "not_ipv4": "Seules les adresses IPv4 sont prises en charge.",
-      "already_in_progress": "Cet amplificateur est déjà en cours de configuration."
+      "already_in_progress": "Cet amplificateur est déjà en cours de configuration.",
+      "wrong_device": "Cette adresse appartient à un autre amplificateur. Ajoutez-le comme nouvel appareil."
     }
   },
   "entity": {
@@ -81,6 +82,23 @@
       "max_volume": {
         "name": "Volume maximal"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Le Hegel n'a pas accepté la commande : {error}"
+    },
+    "fixed_volume": {
+      "message": "Cette entrée utilise un volume fixe (bypass home cinéma) ; le volume ne peut pas être modifié ici."
+    },
+    "not_playable": {
+      "message": "Choisissez une station, un album ou un morceau, pas un dossier."
+    },
+    "unknown_media": {
+      "message": "Identifiant de média inconnu : {media_id}"
+    },
+    "browse_failed": {
+      "message": "Impossible d'ouvrir ce dossier sur le Hegel : {error}"
     }
   }
 }

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 from unittest.mock import patch
 
 import pytest
@@ -34,6 +34,7 @@ class FakeHegel:
 
     reachable = True
     model = "H150"
+    uid = "00000000-0000-0000-0000-000000000000"
 
     def __init__(self, host: str, session: Any = None, **_: Any) -> None:
         self.host = host
@@ -53,7 +54,7 @@ class FakeHegel:
         return "H150"
 
     async def unique_id(self) -> str:
-        return "00000000-0000-0000-0000-000000000000"
+        return FakeHegel.uid
 
     async def sources(self) -> list[HegelSource]:
         self._check()
@@ -133,8 +134,8 @@ class FakeHegel:
         self.calls.append(("play_in_container", path, index))
 
     # Browse tree per path; tests fill it in. Unknown paths are empty folders.
-    rows: dict[str, dict] = {}
-    raw: dict[str, dict] = {}
+    rows: ClassVar[dict[str, dict]] = {}
+    raw: ClassVar[dict[str, dict]] = {}
 
     async def get_rows(self, path: str, start: int = 0, count: int = 50) -> dict:
         data = FakeHegel.rows.get(path, {"rows": [], "roles": {"title": path}})
@@ -150,6 +151,7 @@ def fake_hegel():
     """Patch the client everywhere; yields the instance the integration uses."""
     FakeHegel.reachable = True
     FakeHegel.model = "H150"
+    FakeHegel.uid = "00000000-0000-0000-0000-000000000000"
     FakeHegel.rows = {}
     FakeHegel.raw = {}
     instances: list[FakeHegel] = []

@@ -183,6 +183,7 @@ class PlayerData:
 
     @property
     def short_codec(self) -> str | None:
+        """Codec name only (e.g. "FLAC", or the AirPlay badge), for the codec sensor."""
         res = self._resource
         return res.get("shortCodec") or res.get("codec") or _dig(res, "quality", "airplayBadging") or None
 
@@ -240,7 +241,8 @@ class PlayerData:
 
     @property
     def codec(self) -> str | None:
-        resource = _dig(self.raw, "trackRoles", "mediaData", "activeResource") or {}
+        """Display label with codec and format, e.g. "FLAC · 24-bit/96kHz" (audio_format attribute)."""
+        resource = self._resource
         parts = []
         codec = resource.get("shortCodec")
         if _dig(resource, "quality", "spotifyHifi"):
@@ -287,7 +289,8 @@ class HegelState:
     def apply_event(self, path: str, value: Any) -> bool:
         """Apply a push event. Returns True if something we track changed."""
         if path == PATH_POWER:
-            target = (unwrap(value) or {}).get("target")
+            data = unwrap(value)
+            target = data.get("target") if isinstance(data, dict) else None
             if target:
                 self.power = target
             return True
@@ -405,7 +408,11 @@ class HegelClient:
     # ------------------------------------------------------------ device info
 
     async def product_name(self) -> str:
-        return str(await self.get_value(PATH_PRODUCT_NAME))
+        """Model as reported by the amplifier, e.g. "H150"."""
+        name = await self.get_value(PATH_PRODUCT_NAME)
+        if not isinstance(name, str) or not name.strip():
+            raise HegelError("No product name reported")
+        return name.strip()
 
     async def device_name(self) -> str | None:
         try:
@@ -497,18 +504,23 @@ class HegelClient:
     # --------------------------------------------------------------- commands
 
     async def power_on(self) -> None:
+        """Wake the amplifier from network standby."""
         await self.activate(PATH_GO_ONLINE)
 
     async def power_off(self) -> None:
+        """Put the amplifier in network standby (it stays reachable)."""
         await self.activate(PATH_GO_STANDBY)
 
     async def set_volume(self, volume: int) -> None:
+        """Set the volume in the amplifier's own steps (0..volume_max)."""
         await self.set_value(PATH_VOLUME, {"type": "i32_", "i32_": int(volume)})
 
     async def set_mute(self, mute: bool) -> None:
+        """Mute or unmute."""
         await self.set_value(PATH_MUTE, {"type": "bool_", "bool_": bool(mute)})
 
     async def set_source(self, index: int) -> None:
+        """Select an input by its index (see sources()); no retry, see the coordinator."""
         await self.set_value(PATH_SOURCE, {"type": "i32_", "i32_": int(index)})
 
     async def control(self, command: str) -> None:

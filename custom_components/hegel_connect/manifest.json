@@ -45,6 +45,12 @@
     {
       "type": "_googlecast._tcp.local.",
       "properties": {
+        "md": "h200"
+      }
+    },
+    {
+      "type": "_googlecast._tcp.local.",
+      "properties": {
         "md": "h400"
       }
     },

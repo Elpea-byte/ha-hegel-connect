@@ -11,7 +11,22 @@ from homeassistant.core import HomeAssistant
 
 from . import HegelConfigEntry
 
-TO_REDACT = {CONF_HOST, "systemMemberId", "contentPlayContextPath", "data", "context"}
+# Host, device ids and every URL/URI (stream and artwork links can point to a
+# NAS or other device on the local network).
+TO_REDACT = {
+    CONF_HOST,
+    "systemMemberId",
+    "contentPlayContextPath",
+    "data",
+    "context",
+    "uri",
+    "url",
+    "icon",
+    "albumArtUri",
+    "albumArtURI",
+    "albumCoverUri",
+    "path",
+}
 
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: HegelConfigEntry) -> dict[str, Any]:

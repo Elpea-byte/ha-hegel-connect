@@ -178,7 +178,8 @@ async def test_discovery_rejects_unsupported_model(hass: HomeAssistant, fake_heg
     assert result["reason"] == "not_supported"
 
 
-async def test_discovery_known_uuid_updates_host_without_probe(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+async def test_discovery_known_uuid_updates_host_after_probe(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """A new address from mDNS is only used after the device there confirms its id."""
     config_entry.add_to_hass(hass)
     moved = ZeroconfServiceInfo(
         ip_address=ip_address("192.0.2.20"),
@@ -194,7 +195,51 @@ async def test_discovery_known_uuid_updates_host_without_probe(hass: HomeAssista
     )
     assert result["reason"] == "already_configured"
     assert config_entry.data["host"] == "192.0.2.20"
-    assert fake_hegel == []
+    assert fake_hegel != []  # the new address was asked first
+
+
+async def test_discovery_cannot_take_over_address(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Another device announcing our uuid with its own address changes nothing."""
+    config_entry.add_to_hass(hass)
+    FakeHegel.uid = "11111111-1111-1111-1111-111111111111"  # what the device at .20 really is
+    spoof = ZeroconfServiceInfo(
+        ip_address=ip_address("192.0.2.20"),
+        ip_addresses=[ip_address("192.0.2.20")],
+        hostname="other.local.",
+        name="Other._sues800device._tcp.local.",
+        port=80,
+        type="_sues800device._tcp.local.",
+        properties={**SUE_INFO.properties, "ip": "192.0.2.20"},
+    )
+    await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=spoof)
+    assert config_entry.data["host"] == "192.0.2.10"
+
+
+async def test_user_flow_rejects_other_models(hass: HomeAssistant, fake_hegel) -> None:
+    FakeHegel.model = "TX-RZ810"
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.10"})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_supported"}
+
+
+async def test_reconfigure_same_amplifier(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.20"})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data["host"] == "192.0.2.20"
+
+
+async def test_reconfigure_other_amplifier_refused(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    FakeHegel.uid = "11111111-1111-1111-1111-111111111111"
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.20"})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert config_entry.data["host"] == "192.0.2.10"
 
 
 async def test_user_flow_recognises_older_hegel(hass: HomeAssistant, fake_hegel) -> None:

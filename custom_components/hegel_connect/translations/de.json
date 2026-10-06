@@ -35,7 +35,8 @@
       "cannot_connect": "Der Verstärker antwortet nicht mehr.",
       "not_supported": "Dieses Gerät scheint kein Hegel H150, H200, H400 oder H600 zu sein.",
       "not_ipv4": "Nur IPv4-Adressen werden unterstützt.",
-      "already_in_progress": "Dieser Verstärker wird bereits eingerichtet."
+      "already_in_progress": "Dieser Verstärker wird bereits eingerichtet.",
+      "wrong_device": "Diese Adresse gehört zu einem anderen Verstärker. Füge ihn als neues Gerät hinzu."
     }
   },
   "entity": {
@@ -81,6 +82,23 @@
       "max_volume": {
         "name": "Maximale Lautstärke"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Der Hegel hat den Befehl nicht angenommen: {error}"
+    },
+    "fixed_volume": {
+      "message": "Dieser Eingang hat eine feste Lautstärke (Heimkino-Bypass); die Lautstärke kann hier nicht geändert werden."
+    },
+    "not_playable": {
+      "message": "Wähle einen Sender, ein Album oder einen Titel, keinen Ordner."
+    },
+    "unknown_media": {
+      "message": "Unbekannte Medien-ID: {media_id}"
+    },
+    "browse_failed": {
+      "message": "Dieser Ordner auf dem Hegel konnte nicht geöffnet werden: {error}"
     }
   }
 }

@@ -46,6 +46,25 @@ async def test_push_updates_state(hass: HomeAssistant, fake_hegel, config_entry)
     assert hass.states.get(ENTITY).attributes["volume_level"] == 0.3
 
 
+async def test_listener_survives_unexpected_event(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """A malformed event is skipped; later events still arrive (push keeps running)."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("powermanager:target", "not-a-dict")
+    fake.push("player:volume", {"type": "i32_", "i32_": 25})
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["volume_level"] == 0.25
+
+
+async def test_max_volume_attribute_follows_number(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    await hass.services.async_call(
+        "number", "set_value", {ATTR_ENTITY_ID: "number.hegel_h150_maximum_volume", "value": 35}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["max_volume"] == 35
+
+
 async def test_volume_respects_ceiling(hass: HomeAssistant, fake_hegel, config_entry) -> None:
     await _setup(hass, config_entry)
     await hass.services.async_call(

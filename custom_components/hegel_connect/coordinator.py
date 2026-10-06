@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+import contextlib
+from datetime import datetime
 import logging
 import time
 
@@ -56,7 +59,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self.volume_max = 100
         self.firmware: str | None = None
         self.started_offline = False
-        self.favorites: list[dict] = []
+        self.favorites: list[dict[str, str | None]] = []
         # Volume ceiling, set by the "Maximum volume" number entity.
         self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
@@ -76,17 +79,21 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             if not self._load_cache():
                 raise UpdateFailed(str(err)) from err
             _LOGGER.info("Hegel at %s not reachable; starting from saved data", self.client.host)
-            return
         except HegelError as err:
             raise UpdateFailed(str(err)) from err
-        self._save_cache()
-        await self.async_refresh_favorites()
+        else:
+            self._save_cache()
+            await self.async_refresh_favorites()
+        # Also when started offline: the favorites are then read on connecting
+        # (async_listen) and refreshed by this timer like normal.
         self.config_entry.async_on_unload(
             async_track_time_interval(self.hass, self._async_favorites_tick, FAVORITES_INTERVAL)
         )
 
-    async def _async_favorites_tick(self, _now) -> None:
-        await self.async_refresh_favorites()
+    async def _async_favorites_tick(self, _now: datetime) -> None:
+        """Periodic favorites refresh (only while connected; offline is skipped)."""
+        if self.connected:
+            await self.async_refresh_favorites()
 
     async def async_refresh_favorites(self) -> None:
         """Re-read the radio favorites (they change only in the Hegel Control app)."""
@@ -142,6 +149,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     async def async_listen(self) -> None:
         """Run forever: subscribe, wait for events, reconnect with backoff."""
         backoff = BACKOFF_START
+        lost = 0
         while True:
             try:
                 queue_id = await self.client.subscribe()
@@ -152,6 +160,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                         self.hass.async_create_task(self.async_refresh_favorites())
                 self.connected = True
                 backoff = BACKOFF_START
+                lost = 0
                 self.async_set_updated_data(state)
                 while True:
                     started = time.monotonic()
@@ -163,17 +172,33 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             except asyncio.CancelledError:
                 raise
             except HegelQueueLost:
-                _LOGGER.debug("Event queue lost on %s, subscribing again", self.client.host)
+                # Normal after a reboot of the amplifier: subscribe again at once.
+                # If it keeps happening (e.g. HTTP 500 on every poll), back off.
+                lost += 1
+                _LOGGER.debug("Event queue lost on %s (%s), subscribing again", self.client.host, lost)
+                if lost > 1:
+                    await asyncio.sleep(min(BACKOFF_START * 2 ** (lost - 2), BACKOFF_MAX))
                 continue
             except HegelError as err:
-                if self.connected:
-                    _LOGGER.warning("Lost connection to Hegel at %s: %s", self.client.host, err)
-                    # Not unavailable: the media player shows off and the network
-                    # sensor off (switched off at the mains, unplugged, network down).
-                    self.connected = False
-                    self.async_update_listeners()
+                await self._async_connection_lost(str(err))
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, BACKOFF_MAX)
+            except Exception:
+                # Safety net: an unexpected answer must never stop push updates
+                # until a restart. Log it, then reconnect like a lost connection.
+                _LOGGER.exception("Unexpected error in the Hegel listener for %s", self.client.host)
+                await self._async_connection_lost("unexpected error")
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, BACKOFF_MAX)
+
+    async def _async_connection_lost(self, reason: str) -> None:
+        """Show the amplifier as off (not unavailable) until it answers again."""
+        if self.connected:
+            _LOGGER.warning("Lost connection to Hegel at %s: %s", self.client.host, reason)
+            # Not unavailable: the media player shows off and the network
+            # sensor off (switched off at the mains, unplugged, network down).
+            self.connected = False
+            self.async_update_listeners()
 
     def _apply(self, events: list[dict]) -> None:
         state = self.data or HegelState()
@@ -185,7 +210,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             if isinstance(path, str) and "itemValue" in event:
                 try:
                     applied = state.apply_event(path, event["itemValue"])
-                except (TypeError, ValueError) as err:
+                except (TypeError, ValueError, AttributeError, KeyError) as err:
                     _LOGGER.debug("Ignoring event %s: %s", path, err)
                     continue
                 changed |= applied
@@ -215,9 +240,10 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     # -------------------------------------------------------------- commands
 
     def source_name(self, index: int | None) -> str | None:
+        """Name of the input with this index (None if unknown)."""
         return next((s.name for s in self.sources if s.index == index), None)
 
-    async def async_wait_for(self, check, timeout: float) -> bool:
+    async def async_wait_for(self, check: Callable[[HegelState], bool], timeout: float) -> bool:
         """Wait until ``check(state)`` is true or the timeout passes."""
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
@@ -255,12 +281,10 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 await asyncio.sleep(0.5)
             await self.client.set_source(source.index)
             await asyncio.sleep(SOURCE_VERIFY_WAIT)
-            if not self.connected:
+            if not self.connected and self.data is not None:
                 # No push right now: read the input ourselves.
-                try:
+                with contextlib.suppress(HegelError, TypeError, ValueError):
                     self.data.source_index = int(await self.client.get_value(PATH_SOURCE))
-                except (HegelError, TypeError, ValueError):
-                    pass
             if self.data is not None and self.data.source_index == source.index:
                 return
         _LOGGER.warning("Hegel did not keep input %s after %s attempts", name, SOURCE_ATTEMPTS)

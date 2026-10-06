@@ -4,6 +4,17 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Fixed
+- Discovery: a new address announced over mDNS is only used after the device at that address confirms it is the same amplifier.
+- The push listener can no longer stop on an unexpected answer; it logs it and reconnects. Backs off when the event queue keeps getting lost.
+- Manual setup and reconfigure check the model and the amplifier's id (reconfigure refuses a different amplifier); no more IP address as fallback id.
+- Radio favorites are also refreshed after starting while the amplifier was off at the mains.
+- No double reload after reconfigure; `max_volume` attribute follows the number entity right away.
+- Diagnostics also hide stream and artwork URLs (they can point to a NAS on your network).
+
+### Added
+- Error messages in all six languages; H200 in the Google Cast discovery.
+
 ## [0.1.0] - 2026-10-06
 
 First release. Tested on the H150; H200, H400 and H600 are expected to work.

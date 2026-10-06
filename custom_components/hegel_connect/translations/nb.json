@@ -35,7 +35,8 @@
       "cannot_connect": "Forsterkeren sluttet å svare.",
       "not_supported": "Denne enheten ser ikke ut som en Hegel H150, H200, H400 eller H600.",
       "not_ipv4": "Bare IPv4-adresser støttes.",
-      "already_in_progress": "Denne forsterkeren blir allerede satt opp."
+      "already_in_progress": "Denne forsterkeren blir allerede satt opp.",
+      "wrong_device": "Denne adressen tilhører en annen forsterker. Legg den til som en ny enhet."
     }
   },
   "entity": {
@@ -81,6 +82,23 @@
       "max_volume": {
         "name": "Maksimalt volum"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Hegel godtok ikke kommandoen: {error}"
+    },
+    "fixed_volume": {
+      "message": "Denne inngangen har fast volum (hjemmekino-bypass); volumet kan ikke endres her."
+    },
+    "not_playable": {
+      "message": "Velg en stasjon, et album eller et spor, ikke en mappe."
+    },
+    "unknown_media": {
+      "message": "Ukjent medie-ID: {media_id}"
+    },
+    "browse_failed": {
+      "message": "Kunne ikke åpne denne mappen på Hegel: {error}"
     }
   }
 }

@@ -7,7 +7,9 @@ target-version = "py313"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP"]
+select = ["E", "F", "W", "I", "B", "UP", "BLE", "SIM", "RUF", "ASYNC"]
+# ASYNC109: the timeout parameters of the client are intentional (per-request timeouts)
+ignore = ["ASYNC109"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["custom_components.hegel_connect"]

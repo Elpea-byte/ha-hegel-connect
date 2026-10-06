@@ -25,14 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_create_background_task(hass, coordinator.async_listen(), f"hegel_connect_listen_{entry.entry_id}")
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bool:
     """Unload; the background listener is cancelled automatically."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def _async_options_updated(hass: HomeAssistant, entry: HegelConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)

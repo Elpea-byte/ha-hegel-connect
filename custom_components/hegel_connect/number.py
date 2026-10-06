@@ -56,4 +56,5 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         self.coordinator.max_volume = max(1, min(int(value), 100))
-        self.async_write_ha_state()
+        # Also refreshes the media player (its max_volume attribute and volume limit).
+        self.coordinator.async_update_listeners()

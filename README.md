@@ -134,6 +134,8 @@ data:
 
 ## Installation
 
+Requires Home Assistant 2025.2 or newer. The integration's own icon is shown from Home Assistant 2026.3 (older versions work the same, without the icon).
+
 ### HACS (recommended)
 
 1. HACS > ⋮ > *Custom repositories* > add `https://github.com/Elpea-byte/ha-hegel-connect`, type *Integration*.

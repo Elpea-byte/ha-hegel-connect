@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.media_player import (
@@ -19,9 +21,20 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HegelConfigEntry
-from .api import PATH_AIRABLE_ROOT, PATH_MEDIA_SERVERS, PATH_PLAY_HISTORY, PATH_USB, HegelError
+from .api import (
+    NETWORK_SOURCE_NAME,
+    PATH_AIRABLE_ROOT,
+    PATH_MEDIA_SERVERS,
+    PATH_PLAY_HISTORY,
+    PATH_USB,
+    HegelError,
+)
+from .const import DOMAIN
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
+
+# Commands go one at a time to the amplifier; state comes from the coordinator (push).
+PARALLEL_UPDATES = 1
 
 MEDIA_TYPE_HEGEL = "hegel_path"
 ROOT_ID = "root"
@@ -32,8 +45,29 @@ BROWSE_PAGE = 100
 BROWSE_MAX = 1000
 # Media server folders that hold no music (the amplifier only plays audio)
 _NON_AUDIO_TITLES = {
-    "photo", "photos", "pictures", "picture", "video", "videos", "movies",
-    "foto", "fotos", "foto's", "video's", "films", "bilder", "filme",
+    "photo",
+    "photos",
+    "pictures",
+    "picture",
+    "video",
+    "videos",
+    "movies",
+    "foto",
+    "fotos",
+    "foto's",
+    "video's",
+    "films",
+    "bilder",
+    "filme",
+}
+
+# Titles of the top-level browse folders
+_ROOT_TITLES = {
+    FAVORITES_ID: "Radio favorites",
+    PATH_AIRABLE_ROOT: "Internet radio",
+    PATH_MEDIA_SERVERS: "Media servers",
+    PATH_USB: "USB",
+    PATH_PLAY_HISTORY: "Recently played",
 }
 
 _PLAYER_STATES = {
@@ -110,7 +144,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             return None
         if not data.is_on or not self.coordinator.connected:
             return MediaPlayerState.OFF
-        if self.coordinator.source_name(data.source_index) == "Network":
+        if self.coordinator.source_name(data.source_index) == NETWORK_SOURCE_NAME:
             return _PLAYER_STATES.get(data.player.state or "", MediaPlayerState.IDLE)
         return MediaPlayerState.ON
 
@@ -134,7 +168,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     def _playing_network(self) -> bool:
         data = self.coordinator.data
-        return bool(data and data.is_on and self.coordinator.connected) and self.source == "Network"
+        return bool(data and data.is_on and self.coordinator.connected) and self.source == NETWORK_SOURCE_NAME
 
     @property
     def media_title(self) -> str | None:
@@ -161,7 +195,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return self.coordinator.data.position if self._playing_network() else None
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         return self.coordinator.data.position_at if self._playing_network() else None
 
     @property
@@ -188,11 +222,12 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     # --------------------------------------------------------------- commands
 
-    async def _run(self, coro) -> None:
+    async def _run(self, coro: Awaitable[Any]) -> None:
+        """Run a command; turn amplifier errors into a (translated) Home Assistant error."""
         try:
             await coro
         except HegelError as err:
-            raise HomeAssistantError(f"Hegel did not accept the command: {err}") from err
+            raise _command_failed(err) from err
 
     async def async_turn_on(self) -> None:
         await self._run(self.coordinator.client.power_on())
@@ -202,7 +237,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         if self.coordinator.data and self.coordinator.data.volume_fixed:
-            raise HomeAssistantError("This input uses fixed volume (home theater bypass)")
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="fixed_volume")
         raw = round(volume * self.coordinator.volume_max)
         await self._run(self.coordinator.client.set_volume(max(0, min(raw, self._max_volume))))
 
@@ -223,9 +258,13 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         try:
             await client.control("play")
         except HegelError as err:
-            if "Directory is empty" not in str(err):
-                raise HomeAssistantError(f"Hegel did not accept the command: {err}") from err
-            await self._run(client.resume_spotify())
+            # The service name can be gone while paused; the amplifier then answers
+            # with an error (e.g. "Directory is empty"). Try the Spotify resume
+            # before giving up, without depending on the exact error text.
+            try:
+                await client.resume_spotify()
+            except HegelError:
+                raise _command_failed(err) from err
 
     async def async_media_stop(self) -> None:
         await self._run(self.coordinator.client.control("stop"))
@@ -241,12 +280,16 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):
-            raise HomeAssistantError("Choose a station, album or track, not a folder")
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="not_playable")
         client = self.coordinator.client
         if media_id.startswith(TRACK_PREFIX):
             index, _, folder = media_id[len(TRACK_PREFIX) :].partition(":")
             if not index.isdigit() or not folder:
-                raise HomeAssistantError(f"Unknown media id {media_id}")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_media",
+                    translation_placeholders={"media_id": media_id},
+                )
             await self._run(client.play_in_container(folder, int(index)))
             return
         await self._run(client.play_path(media_id))
@@ -265,7 +308,11 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
                 path = await self.coordinator.client.favorites_path()
             folder, rows = await self._rows(path)
         except HegelError as err:
-            raise BrowseError(f"Cannot browse {media_content_id}: {err}") from err
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="browse_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         on_server = path.endswith("?itemType=server")
         if on_server:
             # The server calls its own top folder "Root"; show the server's name
@@ -298,9 +345,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             _folder(PATH_AIRABLE_ROOT, _ROOT_TITLES[PATH_AIRABLE_ROOT]),
         ]
         # Media servers and USB only when the amplifier sees something there
-        servers, usb = await asyncio.gather(
-            self._has_rows(PATH_MEDIA_SERVERS), self._has_rows(PATH_USB)
-        )
+        servers, usb = await asyncio.gather(self._has_rows(PATH_MEDIA_SERVERS), self._has_rows(PATH_USB))
         if servers:
             children.append(_folder(PATH_MEDIA_SERVERS, _ROOT_TITLES[PATH_MEDIA_SERVERS]))
         if usb:
@@ -353,13 +398,12 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return folder, rows
 
 
-_ROOT_TITLES = {
-    FAVORITES_ID: "Radio favorites",
-    PATH_AIRABLE_ROOT: "Internet radio",
-    PATH_MEDIA_SERVERS: "Media servers",
-    PATH_USB: "USB",
-    PATH_PLAY_HISTORY: "Recently played",
-}
+def _command_failed(err: HegelError) -> HomeAssistantError:
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="command_failed",
+        translation_placeholders={"error": str(err)},
+    )
 
 
 def _folder(content_id: str, title: str) -> BrowseMedia:
@@ -379,7 +423,10 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
     kind = row.get("type")
     if kind in ("action", "image", "video"):
         return None
-    meta = ((row.get("mediaData") or {}).get("metaData") or {}) if isinstance(row.get("mediaData"), dict) else {}
+    media_data = row.get("mediaData")
+    meta = media_data.get("metaData") if isinstance(media_data, dict) else None
+    if not isinstance(meta, dict):
+        meta = {}
     icon = row.get("icon") or meta.get("albumArtUri") or meta.get("albumArtURI")
     thumbnail = icon if isinstance(icon, str) and icon.startswith(("http://", "https://")) else None
     broadcast = row.get("audioType") == "audioBroadcast"

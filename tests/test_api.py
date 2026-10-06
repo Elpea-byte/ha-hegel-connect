@@ -135,7 +135,11 @@ def test_play_request_keeps_album_together() -> None:
     track = {"type": "audio", "path": "upnp:/t"}
     station = {"type": "audio", "audioType": "audioBroadcast", "path": "airable:/s"}
     assert play_request(track, album, 3) == {
-        "control": "play", "mediaRoles": album, "trackRoles": track, "type": "itemInContainer", "index": 3
+        "control": "play",
+        "mediaRoles": album,
+        "trackRoles": track,
+        "type": "itemInContainer",
+        "index": 3,
     }
     assert play_request(station, album, 0)["type"] is None
     assert play_request(track, None, 0)["mediaRoles"] is track

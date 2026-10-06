@@ -35,7 +35,8 @@
       "cannot_connect": "De versterker antwoordt niet meer.",
       "not_supported": "Dit apparaat lijkt geen Hegel H150, H200, H400 of H600.",
       "not_ipv4": "Alleen IPv4-adressen worden ondersteund.",
-      "already_in_progress": "Deze versterker wordt al ingesteld."
+      "already_in_progress": "Deze versterker wordt al ingesteld.",
+      "wrong_device": "Dit adres hoort bij een andere versterker. Voeg die toe als nieuw apparaat."
     }
   },
   "entity": {
@@ -81,6 +82,23 @@
       "max_volume": {
         "name": "Maximaal volume"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "De Hegel nam de opdracht niet aan: {error}"
+    },
+    "fixed_volume": {
+      "message": "Deze ingang heeft een vast volume (home-theater-bypass); het volume kan hier niet worden aangepast."
+    },
+    "not_playable": {
+      "message": "Kies een zender, album of nummer, geen map."
+    },
+    "unknown_media": {
+      "message": "Onbekend media-id: {media_id}"
+    },
+    "browse_failed": {
+      "message": "Deze map op de Hegel kon niet worden geopend: {error}"
     }
   }
 }

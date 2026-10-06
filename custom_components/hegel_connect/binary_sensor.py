@@ -8,7 +8,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HegelConfigEntry
+from .coordinator import HegelCoordinator
 from .entity import HegelEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -25,7 +28,7 @@ class HegelFixedVolume(HegelEntity, BinarySensorEntity):
     _attr_translation_key = "fixed_volume"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator) -> None:
+    def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "fixed_volume")
 
     @property
@@ -44,7 +47,7 @@ class HegelNetwork(HegelEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator) -> None:
+    def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "network")
 
     @property

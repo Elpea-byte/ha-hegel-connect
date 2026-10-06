@@ -33,11 +33,20 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         self._title: str | None = None
 
     async def _async_probe(self, host: str) -> tuple[str, str, str]:
-        """Ask the amplifier who it is: (model, title, unique id)."""
+        """Ask the amplifier who it is: (model, title, unique id).
+
+        Raises HegelError when it is not a supported Hegel or has no stable id
+        (never fall back to the IP address: that changes and would end up in the
+        entity ids).
+        """
         client = HegelClient(host, async_get_clientsession(self.hass))
         model = await client.product_name()
+        if model.upper() not in SUPPORTED_MODELS:
+            raise HegelError(f"Unsupported model {model}")
+        unique_id = await client.unique_id()
+        if not unique_id:
+            raise HegelError("No stable id reported")
         name = await client.device_name() or model
-        unique_id = await client.unique_id() or host
         title = name if name.lower().startswith("hegel") else f"Hegel {name}"
         return model, title, unique_id
 
@@ -51,7 +60,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "legacy_model" if await async_has_ip_control(host) else "cannot_connect"
             except HegelError:
                 errors["base"] = "legacy_model" if await async_has_ip_control(host) else "not_supported"
-            except Exception:  # noqa: BLE001 - show a friendly error, log the rest
+            except Exception:  # show a friendly error, log the rest
                 _LOGGER.exception("Unexpected error talking to %s", host)
                 errors["base"] = "unknown"
             else:
@@ -86,8 +95,10 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_supported")
             host = str(props.get("ip") or host)
             if uuid := props.get("uuid"):
+                # Only to skip duplicate flows. A new address is NOT taken from the
+                # announcement itself: _async_step_discovered first asks the device
+                # at that address for its id, so another device cannot take over.
                 await self.async_set_unique_id(str(uuid))
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         if ":" in host:
             return self.async_abort(reason="not_ipv4")
         return await self._async_step_discovered(host)
@@ -102,8 +113,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except HegelError:
             return self.async_abort(reason="not_supported")
-        if model.upper() not in SUPPORTED_MODELS:
-            return self.async_abort(reason="not_supported")
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._host, self._model, self._title = host, model, title
@@ -112,7 +121,8 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Ask the user to confirm adding a discovered amplifier."""
-        assert self._host is not None and self._title is not None
+        if self._host is None or self._title is None:
+            return self.async_abort(reason="cannot_connect")
         if user_input is not None:
             return self.async_create_entry(title=self._title, data={CONF_HOST: self._host, "model": self._model})
         self._set_confirm_only()
@@ -128,10 +138,18 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST].strip()
             try:
-                await HegelClient(host, async_get_clientsession(self.hass)).product_name()
-            except HegelError:
+                _model, _title, unique_id = await self._async_probe(host)
+            except HegelConnectionError:
                 errors["base"] = "cannot_connect"
+            except HegelError:
+                errors["base"] = "not_supported"
+            except Exception:  # show a friendly error, log the rest
+                _LOGGER.exception("Unexpected error talking to %s", host)
+                errors["base"] = "unknown"
             else:
+                # Same amplifier only: a different one is a new device, not a new address.
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
         return self.async_show_form(
             step_id="reconfigure",

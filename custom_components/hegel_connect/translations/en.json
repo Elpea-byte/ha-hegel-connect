@@ -35,7 +35,8 @@
       "cannot_connect": "The amplifier stopped answering.",
       "not_supported": "This device does not look like a Hegel H150, H200, H400 or H600.",
       "not_ipv4": "Only IPv4 addresses are supported.",
-      "already_in_progress": "This amplifier is already being set up."
+      "already_in_progress": "This amplifier is already being set up.",
+      "wrong_device": "This address belongs to a different amplifier. Add that one as a new device."
     }
   },
   "entity": {
@@ -81,6 +82,23 @@
       "max_volume": {
         "name": "Maximum volume"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "The Hegel did not accept the command: {error}"
+    },
+    "fixed_volume": {
+      "message": "This input uses fixed volume (home theater bypass); the volume cannot be changed here."
+    },
+    "not_playable": {
+      "message": "Choose a station, album or track, not a folder."
+    },
+    "unknown_media": {
+      "message": "Unknown media id: {media_id}"
+    },
+    "browse_failed": {
+      "message": "Could not open this folder on the Hegel: {error}"
     }
   }
 }

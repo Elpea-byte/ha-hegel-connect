@@ -35,7 +35,8 @@
       "cannot_connect": "El amplificador ha dejado de responder.",
       "not_supported": "Este dispositivo no parece un Hegel H150, H200, H400 o H600.",
       "not_ipv4": "Solo se admiten direcciones IPv4.",
-      "already_in_progress": "Este amplificador ya se está configurando."
+      "already_in_progress": "Este amplificador ya se está configurando.",
+      "wrong_device": "Esta dirección pertenece a otro amplificador. Añádelo como un dispositivo nuevo."
     }
   },
   "entity": {
@@ -81,6 +82,23 @@
       "max_volume": {
         "name": "Volumen máximo"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "El Hegel no ha aceptado el comando: {error}"
+    },
+    "fixed_volume": {
+      "message": "Esta entrada usa volumen fijo (bypass de cine en casa); aquí no se puede cambiar el volumen."
+    },
+    "not_playable": {
+      "message": "Elige una emisora, un álbum o una pista, no una carpeta."
+    },
+    "unknown_media": {
+      "message": "ID de medio desconocido: {media_id}"
+    },
+    "browse_failed": {
+      "message": "No se ha podido abrir esta carpeta en el Hegel: {error}"
     }
   }
 }

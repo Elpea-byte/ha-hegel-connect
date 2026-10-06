@@ -15,6 +15,7 @@ class HegelEntity(CoordinatorEntity[HegelCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: HegelCoordinator, key: str) -> None:
+        """One device per amplifier; ``key`` makes the entity's unique id."""
         super().__init__(coordinator)
         entry = coordinator.config_entry
         self._attr_unique_id = f"{entry.unique_id}_{key}"
@@ -29,4 +30,5 @@ class HegelEntity(CoordinatorEntity[HegelCoordinator]):
 
     @property
     def available(self) -> bool:
+        """Unavailable only before the first state is known (offline shows as off)."""
         return super().available and self.coordinator.data is not None
