@@ -36,6 +36,7 @@ The H150, H400 and H600 share the same software platform (they are supported by 
 - **Reliable input switching**: waits until the amplifier is on, pauses a running stream and checks the input stays selected (after power-on the amplifier otherwise jumps back to Network)
 - **Playback**: play, pause, next, previous and stop, **only where the current service allows it** (see below)
 - **Media browser**: your internet radio favorites, all internet radio and recently played
+- **Radio favorites sensor** with the stations saved in the Hegel Control app, to build radio buttons on a dashboard
 
 **Now playing and stream format**
 - Title, artist, album, cover art, streaming service, track length and position
@@ -63,6 +64,7 @@ The amplifier reports per service which controls work; Hegel Connect follows it,
 | :---- | :---- | :---- | :---- |
 | Spotify Connect | Service and quality only (Spotify sends no codec or bitrate) | No: the amplifier refuses it | No: would end the session with your phone |
 | Internet radio | Codec, bit depth, sample rate, bitrate | No | Yes |
+| Media server (UPnP/DLNA, e.g. FLAC from a NAS) | Codec, bit depth, sample rate, bitrate | Yes (tested) | Offered (not tested yet) |
 | TIDAL / Qobuz Connect | Codec, bit depth, sample rate | Expected (not tested yet) | Offered (not tested yet) |
 | AirPlay (e.g. Apple Music) | AirPlay's own label (Lossless, Hi-Res Lossless) | Expected (not tested yet) | Offered (not tested yet) |
 | Google Cast (e.g. YouTube Music) | Codec | Not tested yet | Offered (not tested yet) |
@@ -78,6 +80,7 @@ For an amplifier named *Hegel H150*:
 | `media_player.hegel_h150` | Power, volume, mute, input, playback, now playing, media browser |
 | `sensor.hegel_h150_audio_quality` | Hi-Res, CD quality, Lossless, Lossy, DSD (while the streamer plays) |
 | `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate`, `_streaming_service` | Stream details, when the service reports them |
+| `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for radio buttons on a dashboard |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
 | `binary_sensor.hegel_h150_fixed_volume` | On when the current input uses fixed volume (diagnostic) |
@@ -102,7 +105,16 @@ automation:
           value: 40
 ```
 
-Play a radio favorite from a script: open the media browser on the media player, pick the station, and use *Play* in the action editor; Home Assistant fills in the `media_content_id` for you.
+Play the first radio favorite from a script or button:
+
+```yaml
+action: media_player.play_media
+target:
+  entity_id: media_player.hegel_h150
+data:
+  media_content_type: hegel_path
+  media_content_id: "{{ state_attr('sensor.hegel_h150_radio_favorites', 'favorites')[0].path }}"
+```
 
 ## Installation
 
