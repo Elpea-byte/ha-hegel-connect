@@ -175,6 +175,8 @@ Then open an [issue](../../issues/new/choose) with the log and the diagnostics f
 - Radio favorites are managed in the Hegel Control app; Home Assistant shows and plays them.
 - The DAC and display buttons of the Hegel remote have no network command.
 - Tested on the H150 only; H200, H400 and H600 reports are very welcome.
+- The network input is recognised by its name "Network", as the amplifier reports it. If a future firmware renames it, now playing and the stream sensors stay empty; please open an issue.
+- The amplifier's local API has no password. Hegel Connect checks that a device really is your amplifier (its id) before using a new address, but a device on your network that imitates the whole Hegel API cannot be told apart. Keep the amplifier on a trusted network.
 
 ## How it works
 

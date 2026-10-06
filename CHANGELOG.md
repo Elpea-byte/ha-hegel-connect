@@ -4,6 +4,15 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-06
+
+### Fixed
+- Back-off when the event queue keeps failing now really works: the counter is only reset after a poll that succeeded.
+- Play: the Spotify resume is only tried when the streaming service is unknown, not for other services.
+
+### Documentation
+- Known limitations (input named "Network", unauthenticated local API); CONTRIBUTING mentions `ruff format`.
+
 ## [0.1.1] - 2026-10-06
 
 ### Fixed
@@ -31,6 +40,7 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.1.1...HEAD
+[Unreleased]: ../../compare/v0.1.2...HEAD
+[0.1.2]: ../../compare/v0.1.1...v0.1.2
 [0.1.1]: ../../compare/v0.1.0...v0.1.1
 [0.1.0]: ../../releases/tag/v0.1.0

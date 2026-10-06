@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.hegel_connect.api import EVENT_PATHS, HegelConnectionError, HegelSource
+from custom_components.hegel_connect.api import EVENT_PATHS, HegelConnectionError, HegelQueueLost, HegelSource
 from custom_components.hegel_connect.const import DOMAIN
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -82,11 +82,17 @@ class FakeHegel:
             state.apply_event(path, self.values[path])
         return state
 
+    # True: every poll fails as if the event queue is gone (e.g. HTTP 500)
+    queue_broken = False
+
     async def subscribe(self, paths=EVENT_PATHS) -> str:
         self._check()
+        self.calls.append(("subscribe",))
         return "{queue}"
 
     async def poll(self, queue_id: str, timeout: int = 30) -> list[dict]:
+        if FakeHegel.queue_broken:
+            raise HegelQueueLost("500")
         return [await self._events.get()]
 
     def push(self, path: str, value: Any) -> None:
@@ -152,6 +158,7 @@ def fake_hegel():
     FakeHegel.reachable = True
     FakeHegel.model = "H150"
     FakeHegel.uid = "00000000-0000-0000-0000-000000000000"
+    FakeHegel.queue_broken = False
     FakeHegel.rows = {}
     FakeHegel.raw = {}
     instances: list[FakeHegel] = []

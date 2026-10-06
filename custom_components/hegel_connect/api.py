@@ -399,9 +399,11 @@ class HegelClient:
         return data if isinstance(data, dict) else {}
 
     async def set_value(self, path: str, value: dict[str, Any]) -> None:
+        """Write a typed value (e.g. {"type": "i32_", "i32_": 20}) to a path."""
         await self._request("POST", "setData", payload={"path": path, "role": "value", "value": value})
 
     async def activate(self, path: str, value: dict[str, Any] | None = None, **extra: Any) -> None:
+        """Trigger an action path (power, play, ...); ``extra`` adds keys to the request like the web client."""
         payload = {"path": path, "role": "activate", "value": value or {}, **extra}
         await self._request("POST", "setData", payload=payload)
 
@@ -415,6 +417,7 @@ class HegelClient:
         return name.strip()
 
     async def device_name(self) -> str | None:
+        """Name given to the amplifier in the Hegel app (None if not set)."""
         try:
             name = await self.get_value(PATH_DEVICE_NAME)
         except HegelError:
@@ -446,6 +449,7 @@ class HegelClient:
         return player_id if isinstance(player_id, str) and player_id else None
 
     async def firmware(self) -> str | None:
+        """Firmware version for the device info (None if not readable)."""
         try:
             version = await self.get_value(PATH_FIRMWARE)
         except HegelError:
@@ -453,6 +457,7 @@ class HegelClient:
         return str(version) if version else None
 
     async def sources(self) -> list[HegelSource]:
+        """The inputs as (index, name), in the amplifier's order."""
         data = await self.get_rows(PATH_SOURCES)
         result: list[HegelSource] = []
         for row in data.get("rows", []):
@@ -476,6 +481,7 @@ class HegelClient:
             return 100
 
     async def play_time(self) -> Any:
+        """Position in the current track (typed value, milliseconds); not pushed, read on demand."""
         return await self.get_value(PATH_PLAY_TIME)
 
     async def fetch_state(self) -> HegelState:
@@ -566,6 +572,7 @@ class HegelClient:
         await self._play(rows[0], parent, index)
 
     async def _play(self, track: dict[str, Any], parent: dict[str, Any] | None, index: int) -> None:
+        """Send the play command (see play_request)."""
         # Same request as the Hegel web client (including "platform"), live-tested
         # with radio favorites and media server albums.
         await self.activate(PATH_CONTROL, play_request(track, parent, index), platform="windows")

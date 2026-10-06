@@ -41,6 +41,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def queue_lost_delay(lost: int) -> float:
+    """Wait before subscribing again after the event queue was lost ``lost`` times in a row.
+
+    The first time at once (normal after a reboot of the amplifier), then
+    BACKOFF_START, doubling up to BACKOFF_MAX.
+    """
+    if lost <= 1:
+        return 0
+    return min(BACKOFF_START * 2 ** (lost - 2), BACKOFF_MAX)
+
+
 class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     """Keeps the amplifier state up to date via the event queue (no polling)."""
 
@@ -160,11 +171,13 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                         self.hass.async_create_task(self.async_refresh_favorites())
                 self.connected = True
                 backoff = BACKOFF_START
-                lost = 0
                 self.async_set_updated_data(state)
                 while True:
                     started = time.monotonic()
                     events = await self.client.poll(queue_id, POLL_TIMEOUT)
+                    # Only a poll that worked counts as "queue is fine again"
+                    # (subscribe can succeed while every poll fails).
+                    lost = 0
                     if events:
                         self._apply(events)
                     elif time.monotonic() - started < 1:
@@ -176,8 +189,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 # If it keeps happening (e.g. HTTP 500 on every poll), back off.
                 lost += 1
                 _LOGGER.debug("Event queue lost on %s (%s), subscribing again", self.client.host, lost)
-                if lost > 1:
-                    await asyncio.sleep(min(BACKOFF_START * 2 ** (lost - 2), BACKOFF_MAX))
+                if delay := queue_lost_delay(lost):
+                    await asyncio.sleep(delay)
                 continue
             except HegelError as err:
                 await self._async_connection_lost(str(err))

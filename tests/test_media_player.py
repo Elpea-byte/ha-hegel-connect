@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -16,6 +18,11 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+import pytest
+
+from custom_components.hegel_connect.api import HegelError
+from custom_components.hegel_connect.coordinator import queue_lost_delay
 
 from .conftest import FakeHegel
 
@@ -54,6 +61,40 @@ async def test_listener_survives_unexpected_event(hass: HomeAssistant, fake_hege
     fake.push("player:volume", {"type": "i32_", "i32_": 25})
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY).attributes["volume_level"] == 0.25
+
+
+async def test_broken_event_queue_backs_off(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Every poll failing (e.g. HTTP 500) must not hammer the amplifier with subscribes."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    FakeHegel.queue_broken = True
+    fake.push("player:volume", {"type": "i32_", "i32_": 20})  # wake the poll that is waiting
+    await asyncio.sleep(0.3)
+    # Once at once, then it waits (BACKOFF_START seconds) before the next try.
+    assert fake.calls.count(("subscribe",)) <= 3
+
+
+def test_queue_lost_delay_grows() -> None:
+    assert [queue_lost_delay(n) for n in range(1, 7)] == [0, 5, 10, 20, 40, 60]
+
+
+async def test_play_error_with_known_service_is_reported(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """No Spotify resume attempt when another service refuses play."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {"state": "paused", "trackRoles": {"mediaData": {"metaData": {"serviceName": "TIDAL"}}}},
+    )
+    await hass.async_block_till_done()
+
+    async def refuse(command: str) -> None:
+        raise HegelError("refused")
+
+    fake.control = refuse
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert ("resume_spotify",) not in fake.calls
 
 
 async def test_max_volume_attribute_follows_number(hass: HomeAssistant, fake_hegel, config_entry) -> None:

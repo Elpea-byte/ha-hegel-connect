@@ -11,6 +11,7 @@ Thanks for helping out! The most useful contributions right now:
 ```bash
 pip install -r requirements_test.txt
 ruff check
+ruff format        # CI runs "ruff format --check": format before you push
 pytest
 ```
 

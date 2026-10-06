@@ -259,8 +259,10 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             await client.control("play")
         except HegelError as err:
             # The service name can be gone while paused; the amplifier then answers
-            # with an error (e.g. "Directory is empty"). Try the Spotify resume
-            # before giving up, without depending on the exact error text.
+            # with an error (e.g. "Directory is empty"). Only then (service unknown)
+            # try the Spotify resume, without depending on the exact error text.
+            if data and (data.player.service or data.last_service):
+                raise _command_failed(err) from err
             try:
                 await client.resume_spotify()
             except HegelError:
