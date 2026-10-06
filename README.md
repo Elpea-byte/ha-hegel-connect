@@ -52,7 +52,7 @@ The H150, H400 and H600 share the same software platform (they are supported by 
 - **Found automatically**, the same way the Hegel Control app finds it; a changed IP address is picked up by itself
 - Older Hegel amplifiers are recognised during setup and pointed to the right integration
 - **Diagnostics** download without IP address or device ids
-- English and Dutch
+- English, Dutch, Norwegian (Bokmål), German, French and Spanish
 
 <br clear="right">
 

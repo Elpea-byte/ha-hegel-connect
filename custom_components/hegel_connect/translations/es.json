@@ -1,0 +1,86 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Hegel Connect",
+        "description": "Integración no oficial para los amplificadores de streaming Hegel H150, H400 y H600. Introduce la dirección IP del amplificador (asígnale una dirección fija en tu router).",
+        "data": {
+          "host": "Host"
+        },
+        "data_description": {
+          "host": "Dirección IP o nombre de host del amplificador, p. ej. 192.168.1.50"
+        }
+      },
+      "reconfigure": {
+        "title": "Cambiar dirección",
+        "data": {
+          "host": "Host"
+        }
+      },
+      "discovery_confirm": {
+        "title": "Hegel Connect",
+        "description": "Se ha encontrado **{name}** en {host}. ¿Añadirlo a Home Assistant?\n\nConsejo: asigna al amplificador una dirección fija en tu router. Si la dirección cambia, Home Assistant detecta la nueva automáticamente en cuanto vuelve a ver el amplificador."
+      }
+    },
+    "error": {
+      "cannot_connect": "No se puede conectar con el amplificador en esta dirección. ¿Está conectado a la red (también funciona en reposo)?",
+      "not_supported": "Un dispositivo ha respondido, pero no parece un Hegel H150, H400 o H600.",
+      "unknown": "Error inesperado, consulta el registro.",
+      "legacy_model": "Es un amplificador Hegel más antiguo (H95, H120, H190, H390, H590 o Röst). Se controla con el protocolo de control IP de Hegel: usa la [integración Hegel]({core_url}) incluida en Home Assistant. Hegel Connect es para el H150, H400 y H600."
+    },
+    "abort": {
+      "already_configured": "Este amplificador ya está configurado.",
+      "reconfigure_successful": "Dirección actualizada.",
+      "cannot_connect": "El amplificador ha dejado de responder.",
+      "not_supported": "Este dispositivo no parece un Hegel H150, H400 o H600.",
+      "not_ipv4": "Solo se admiten direcciones IPv4.",
+      "already_in_progress": "Este amplificador ya se está configurando."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "fixed_volume": {
+        "name": "Volumen fijo"
+      },
+      "network": {
+        "name": "Red"
+      }
+    },
+    "sensor": {
+      "audio_quality": {
+        "name": "Calidad de audio",
+        "state": {
+          "hi_res": "Hi-Res",
+          "cd": "Calidad CD",
+          "lossless": "Sin pérdida",
+          "lossy": "Con pérdida",
+          "dsd": "DSD"
+        }
+      },
+      "codec": {
+        "name": "Codec"
+      },
+      "sample_rate": {
+        "name": "Frecuencia de muestreo"
+      },
+      "bit_depth": {
+        "name": "Profundidad de bits"
+      },
+      "bitrate": {
+        "name": "Tasa de bits"
+      },
+      "streaming_service": {
+        "name": "Servicio de streaming"
+      },
+      "radio_favorites": {
+        "name": "Radios favoritas"
+      }
+    },
+    "number": {
+      "max_volume": {
+        "name": "Volumen máximo"
+      }
+    }
+  }
+}
