@@ -24,11 +24,11 @@ Quick check: if `http://<amplifier-address>/webclient/` opens a Hegel page, the 
 | Model | Status |
 | :---- | :---- |
 | H150 | ✅ Tested by the maintainer |
-| H200 | 🟡 Expected to work, not tested yet (new in 2026) |
+| H200 | 🟡 Expected to work, not tested yet |
 | H400 | 🟡 Expected to work, not tested yet |
 | H600 | 🟡 Expected to work, not tested yet |
 
-The H150, H400 and H600 share the same software platform (they are supported by the same Hegel Control app). The H200 is newer; the current Hegel Control app finds amplifiers the same way for all models and already lists a phono input (the H200 is the first streaming model with a phono stage), so it very likely uses the same platform. If you own an H200, H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
+The H150, H200, H400 and H600 are supported by the same Hegel Control app, which finds and controls them the same way, so they very likely share the same software platform. If you own an H200, H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
 
 ## Features
 
