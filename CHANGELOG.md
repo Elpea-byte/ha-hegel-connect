@@ -4,6 +4,17 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-06
+
+### Fixed
+- Options: after an error (duplicate name) the form keeps what you typed instead of showing the stored values again.
+- Options: a stored hidden input that the amplifier no longer has no longer breaks the form.
+- Wrong input from the user (unknown input, fixed volume, item that cannot be played) is now reported as a service validation error instead of a general error.
+
+### Tests
+- The back-off test patches only the coordinator's own wait, not `asyncio.sleep` everywhere.
+- Options keep typed input after an error and skip stale hidden inputs; an unknown input is a user error.
+
 ## [0.2.0] - 2026-10-06
 
 ### Added
@@ -51,6 +62,7 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
 [Unreleased]: ../../compare/v0.2.0...HEAD
+[0.2.1]: ../../compare/v0.2.0...v0.2.1
 [0.2.0]: ../../compare/v0.1.2...v0.2.0
 [0.1.2]: ../../compare/v0.1.1...v0.1.2
 [0.1.1]: ../../compare/v0.1.0...v0.1.1

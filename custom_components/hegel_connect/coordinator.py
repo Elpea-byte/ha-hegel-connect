@@ -159,6 +159,10 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
 
     # ------------------------------------------------------------------ push
 
+    async def _wait(self, delay: float) -> None:
+        """Wait between listener attempts (own method, so tests can patch it per coordinator)."""
+        await asyncio.sleep(delay)
+
     async def async_listen(self) -> None:
         """Run forever: subscribe, wait for events, reconnect with backoff."""
         backoff = BACKOFF_START
@@ -183,7 +187,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                     if events:
                         self._apply(events)
                     elif time.monotonic() - started < 1:
-                        await asyncio.sleep(2)  # never spin if the device answers at once
+                        await self._wait(2)  # never spin if the device answers at once
             except asyncio.CancelledError:
                 raise
             except HegelQueueLost:
@@ -192,18 +196,18 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 lost += 1
                 _LOGGER.debug("Event queue lost on %s (%s), subscribing again", self.client.host, lost)
                 if delay := queue_lost_delay(lost):
-                    await asyncio.sleep(delay)
+                    await self._wait(delay)
                 continue
             except HegelError as err:
                 await self._async_connection_lost(str(err))
-                await asyncio.sleep(backoff)
+                await self._wait(backoff)
                 backoff = min(backoff * 2, BACKOFF_MAX)
             except Exception:
                 # Safety net: an unexpected answer must never stop push updates
                 # until a restart. Log it, then reconnect like a lost connection.
                 _LOGGER.exception("Unexpected error in the Hegel listener for %s", self.client.host)
                 await self._async_connection_lost("unexpected error")
-                await asyncio.sleep(backoff)
+                await self._wait(backoff)
                 backoff = min(backoff * 2, BACKOFF_MAX)
 
     async def _async_connection_lost(self, reason: str) -> None:

@@ -29,17 +29,16 @@ async def test_broken_event_queue_backs_off(hass: HomeAssistant, fake_hegel, con
     FakeHegel.queue_broken = True
     fake = FakeHegel("192.0.2.10")
     coordinator = HegelCoordinator(hass, config_entry, fake)
-    real_sleep = asyncio.sleep
     delays: list[float] = []
 
-    async def fake_sleep(delay: float, *args, **kwargs) -> None:
+    async def fake_wait(delay: float) -> None:
         delays.append(delay)
         if len(delays) >= 5:
             raise asyncio.CancelledError
-        await real_sleep(0)
+        await asyncio.sleep(0)
 
     with (
-        patch("custom_components.hegel_connect.coordinator.asyncio.sleep", fake_sleep),
+        patch.object(coordinator, "_wait", fake_wait),
         pytest.raises(asyncio.CancelledError),
     ):
         await coordinator.async_listen()

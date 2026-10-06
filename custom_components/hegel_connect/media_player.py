@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HegelConfigEntry
@@ -244,7 +244,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         if self.coordinator.data and self.coordinator.data.volume_fixed:
-            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="fixed_volume")
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="fixed_volume")
         raw = round(volume * self.coordinator.volume_max)
         await self._run(self.coordinator.client.set_volume(max(0, min(raw, self._max_volume))))
 
@@ -254,7 +254,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         name = self.coordinator.source_name_for(source)
         if name is None:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="unknown_source",
                 translation_placeholders={"source": source},
@@ -296,12 +296,12 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):
-            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="not_playable")
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_playable")
         client = self.coordinator.client
         if media_id.startswith(TRACK_PREFIX):
             index, _, folder = media_id[len(TRACK_PREFIX) :].partition(":")
             if not index.isdigit() or not folder:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="unknown_media",
                     translation_placeholders={"media_id": media_id},

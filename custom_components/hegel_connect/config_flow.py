@@ -204,7 +204,7 @@ class HegelOptionsFlow(OptionsFlow):
         # One text field per input, labelled with the amplifier's own name
         # (empty = keep that name), plus the list of inputs to hide.
         schema: dict[Any, Any] = {
-            vol.Optional(CONF_HIDDEN_SOURCES, default=list(options.get(CONF_HIDDEN_SOURCES) or [])): SelectSelector(
+            vol.Optional(CONF_HIDDEN_SOURCES): SelectSelector(
                 SelectSelectorConfig(
                     options=[SelectOptionDict(value=str(s.index), label=s.name) for s in sources],
                     multiple=True,
@@ -213,5 +213,16 @@ class HegelOptionsFlow(OptionsFlow):
             )
         }
         for source in sources:
-            schema[vol.Optional(source.name, description={"suggested_value": names.get(str(source.index), "")})] = str
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema), errors=errors)
+            schema[vol.Optional(source.name)] = str
+        # Prefill with what is stored, or with what was just typed after an
+        # error. Only inputs the amplifier still has: a stale index would make
+        # the selector refuse the form.
+        known = {str(s.index) for s in sources}
+        suggested: dict[str, Any] = {
+            CONF_HIDDEN_SOURCES: [i for i in options.get(CONF_HIDDEN_SOURCES) or [] if i in known],
+            **{s.name: names.get(str(s.index), "") for s in sources},
+        }
+        if user_input is not None:
+            suggested.update(user_input)
+        data_schema = self.add_suggested_values_to_schema(vol.Schema(schema), suggested)
+        return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors)

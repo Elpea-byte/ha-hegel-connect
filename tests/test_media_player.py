@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import pytest
 
 from custom_components.hegel_connect.api import HegelError
@@ -303,3 +303,36 @@ async def test_options_refuse_duplicate_names(hass: HomeAssistant, fake_hegel, c
     result = await hass.config_entries.options.async_configure(result["flow_id"], {"RCA": "XLR"})
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "duplicate_name"}
+
+
+async def test_options_keep_typed_input_on_error(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """After a duplicate name the form shows what was typed, not the stored values."""
+    await _setup(hass, config_entry)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"hidden_sources": ["5"], "RCA": "XLR", "Phono": "Turntable"}
+    )
+    assert result["errors"] == {"base": "duplicate_name"}
+    suggested = {str(key): key.description["suggested_value"] for key in result["data_schema"].schema}
+    assert suggested["RCA"] == "XLR"
+    assert suggested["Phono"] == "Turntable"
+    assert suggested["hidden_sources"] == ["5"]
+
+
+async def test_options_ignore_stale_hidden_inputs(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """A stored input the amplifier no longer has is left out of the form."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, options={"hidden_sources": ["5", "99"]})
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    suggested = {str(key): key.description["suggested_value"] for key in result["data_schema"].schema}
+    assert suggested["hidden_sources"] == ["5"]
+
+
+async def test_unknown_source_is_a_user_error(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: ENTITY, ATTR_INPUT_SOURCE: "Cassette"}, blocking=True
+        )
