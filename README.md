@@ -2,7 +2,7 @@
 
 > **Unofficial community integration.** Not affiliated with, endorsed or supported by Hegel Music Systems AS. Hegel is a trademark of its owner.
 
-Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifiers. It talks to the amplifier over your own network, the same way the amplifier's built-in web app does. No cloud, no account, and no polling: changes made on the amplifier, with its remote or in the Hegel Control app show up in Home Assistant within a second.
+Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifiers. It talks to the amplifier over your own network, the same way the amplifier's built-in web app does. No cloud, no account, and no polling: changes made on the amplifier, with its remote or in the Hegel Control app show up in Home Assistant right away (within a second on the maintainer's H150).
 
 ## Why this project
 
@@ -10,14 +10,14 @@ I bought a new Hegel H150 and found that my Logitech Harmony Elite could not con
 
 ## Which integration for my Hegel?
 
-Hegel has two generations of network amplifiers, controlled in different ways:
+Hegel network amplifiers are controlled in two different ways:
 
 | Generation | Models | How it is controlled | Use |
 | :---- | :---- | :---- | :---- |
-| **Streaming generation** | H150, H200, H400, H600 | Built-in streamer with a web API (the same one the Hegel Control app and the amplifier's web page use) | **Hegel Connect** (this integration) |
-| **IP control generation** | Röst, H95, H120, H190, H190V, H390, H590 | Hegel IP control protocol on TCP port 50001 | The built-in [Hegel integration](https://www.home-assistant.io/integrations/hegel/) in Home Assistant |
+| **Streaming platform** | H150, H400, H600 (H200 expected) | Built-in streamer with a web API (the same one the Hegel Control app and the amplifier's web page use) | **Hegel Connect** (this integration) |
+| **IP control** | Röst, H95, H120, H190, H190V, H390, H590 | Hegel IP control protocol on TCP port 50001 | The built-in [Hegel integration](https://www.home-assistant.io/integrations/hegel/) in Home Assistant (since 2026.3) |
 
-Quick check: if `http://<amplifier-address>/webclient/` opens a Hegel page, the amplifier belongs to the streaming generation. If you try to add an older amplifier to Hegel Connect, setup recognises it (it answers a read-only IP control status query) and points you to the built-in integration.
+Quick check: on the H150, `http://<amplifier-address>/webclient/` opens a Hegel page; an amplifier that does this uses the streaming platform. If you try to add an older amplifier to Hegel Connect, setup recognises it (it answers a read-only IP control status query) and points you to the built-in integration.
 
 ## Supported models
 
@@ -28,7 +28,7 @@ Quick check: if `http://<amplifier-address>/webclient/` opens a Hegel page, the 
 | H400 | 🟡 Expected to work, not tested yet |
 | H600 | 🟡 Expected to work, not tested yet |
 
-The H150, H200, H400 and H600 are supported by the same Hegel Control app, which finds and controls them the same way, so they very likely share the same software platform. If you own an H200, H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
+Hegel groups the H150, H400 and H600 together for home automation ([Hegel support](https://support.hegel.com/product-articles/custom-install-sue)), so they are expected to behave the same. The H200 is a newer streaming model and is expected to work the same way; this is not confirmed yet. If you own an H200, H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
 
 ## Features
 
@@ -38,9 +38,9 @@ The H150, H200, H400 and H600 are supported by the same Hegel Control app, which
 - **Power**: on and network standby (the amplifier stays reachable in standby, so Home Assistant can switch it on)
 - **Volume** (set and step) and **mute**, with a **maximum volume** that Home Assistant never exceeds
 - **Inputs** read from the amplifier, so every model shows its own inputs
-- **Reliable input switching**: waits until the amplifier is on, pauses a running stream and checks the input stays selected (after power-on the amplifier otherwise jumps back to Network)
+- **Reliable input switching**: waits until the amplifier is on, pauses a running stream and checks the input stays selected (seen on the H150: right after power-on it otherwise jumps back to Network)
 - **Playback**: play, pause, next, previous and stop, **only where the current service allows it** (see below)
-- **Media browser**: your internet radio favorites, all internet radio, **media servers** (UPnP/DLNA, e.g. your NAS), a **USB stick** in the amplifier and recently played. Nothing to set up: Hegel Connect shows the servers the amplifier finds itself. Albums play as a whole and continue with the next track; photo and video folders are left out
+- **Media browser**: your internet radio favorites, all internet radio, **media servers** (UPnP/DLNA, e.g. your NAS), a **USB stick** in the amplifier (not tested yet) and recently played. Nothing to set up: Hegel Connect shows the servers the amplifier finds itself. Albums are started the same way as in the Hegel web client, so the amplifier continues with the next track; photo and video folders are left out
 - **Radio favorites sensor** with the stations saved in the Hegel Control app, to build radio buttons on a dashboard
 
 **Now playing and stream format**
@@ -48,7 +48,7 @@ The H150, H200, H400 and H600 are supported by the same Hegel Control app, which
 - Sensors: **audio quality** (Hi-Res, CD quality, Lossless, Lossy, DSD), **codec**, **sample rate**, **bit depth**, **bitrate**, **streaming service**. The codec decides first, so 16-bit/48 kHz MP3 radio is *Lossy*, not *CD quality*
 
 **Status you can trust**
-- **Instant updates** (local push): changes made with the remote, on the front panel or in an app show up within a second, no polling
+- **Instant updates** (local push): changes made with the remote, on the front panel or in an app show up right away, no polling
 - **Network sensor**: standby (still on the network) and switched off at the mains are told apart; the media player then shows *off*, not *unavailable*
 - **Starts while the amplifier is off at the mains** (e.g. a power strip switched off at night) and connects as soon as it is back
 - **Fixed volume** indicator for inputs set to home theater bypass
@@ -63,18 +63,18 @@ The H150, H200, H400 and H600 are supported by the same Hegel Control app, which
 
 ### What each streaming service allows
 
-The amplifier reports per service which controls work; Hegel Connect follows it, so buttons that would fail are not offered.
+The amplifier reports per service which controls work; Hegel Connect follows it, so buttons that would fail are not offered. Tested on the H150; "not tested yet" means what the code expects, not what was seen.
 
 | Source | Format shown | Next / previous | Stop |
 | :---- | :---- | :---- | :---- |
-| Spotify Connect | Service and quality only (Spotify sends no codec or bitrate) | No: the amplifier refuses it | No: would end the session with your phone |
-| Internet radio | Codec, bit depth, sample rate, bitrate | No | Yes |
+| Spotify Connect | Service and quality only (Spotify sends no codec or bitrate) | No: the amplifier refuses it | Not offered (to keep the session with your phone) |
+| Internet radio | Codec, bit depth, sample rate, bitrate | No | Offered |
 | Media server (UPnP/DLNA, e.g. FLAC from a NAS) | Codec, bit depth, sample rate, bitrate | Yes (tested) | Offered (not tested yet) |
-| TIDAL / Qobuz Connect | Codec, bit depth, sample rate | Expected (not tested yet) | Offered (not tested yet) |
-| AirPlay (e.g. Apple Music) | AirPlay's own label (Lossless, Hi-Res Lossless) | Expected (not tested yet) | Offered (not tested yet) |
-| Google Cast (e.g. YouTube Music) | Codec | Not tested yet | Offered (not tested yet) |
+| TIDAL / Qobuz Connect | Not tested yet | Not tested yet | Offered (not tested yet) |
+| AirPlay (e.g. Apple Music) | AirPlay's own label, like the Hegel web client (not tested yet) | Not tested yet | Offered (not tested yet) |
+| Google Cast (e.g. YouTube Music) | Not tested yet | Not tested yet | Offered (not tested yet) |
 
-With Spotify Connect, *play* after *pause* uses Spotify's own resume action; a plain play command would stop the session.
+With Spotify Connect, *play* after *pause* uses Spotify's own resume action; on the H150 a plain play command was refused there and stopped the session.
 
 ### Entities
 
@@ -121,7 +121,7 @@ data:
   media_content_id: "{{ state_attr('sensor.hegel_h150_radio_favorites', 'favorites')[0].path }}"
 ```
 
-Play an album from your NAS from a script or button. In the script editor, add the action *Media player: Play media*, choose the Hegel and click *Pick media*: you browse the same folders as in the media browser. The result looks like this (the id stays the same as long as the server does):
+Play an album from your NAS from a script or button. In the script editor, add the action *Media player: Play media*, choose the Hegel and click *Pick media*: you browse the same folders as in the media browser. The result looks like this (the id comes from your media server; if the server re-indexes your library it can change):
 
 ```yaml
 action: media_player.play_media
@@ -134,7 +134,7 @@ data:
 
 ## Installation
 
-Requires Home Assistant 2025.2 or newer. The integration's own icon is shown from Home Assistant 2026.3 (older versions work the same, without the icon).
+Developed and tested on Home Assistant 2026.9; HACS allows installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
 
 ### HACS (recommended)
 
@@ -173,7 +173,7 @@ Then open an [issue](../../issues/new/choose) with the log and the diagnostics f
 
 - Spotify Connect: next/previous and stop are not available through the amplifier (it only allows pause); use the Spotify app or Home Assistant's Spotify integration for skipping.
 - Radio favorites are managed in the Hegel Control app; Home Assistant shows and plays them.
-- The DAC and display buttons of the Hegel remote have no network command.
+- No network command is known for the DAC and display buttons of the Hegel remote, so Hegel Connect does not offer them.
 - Tested on the H150 only; H200, H400 and H600 reports are very welcome.
 - The network input is recognised by its name "Network", as the amplifier reports it. If a future firmware renames it, now playing and the stream sensors stay empty; please open an issue.
 - The amplifier's local API has no password. Hegel Connect checks that a device really is your amplifier (its id) before using a new address, but a device on your network that imitates the whole Hegel API cannot be told apart. Keep the amplifier on a trusted network.
