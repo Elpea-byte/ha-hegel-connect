@@ -91,7 +91,11 @@ class FakeHegel:
         return "{queue}"
 
     async def poll(self, queue_id: str, timeout: int = 30) -> list[dict]:
+        self.calls.append(("poll",))
         if FakeHegel.queue_broken:
+            if self.calls.count(("poll",)) > 50:
+                # Safety stop: a listener without back-off would loop here forever.
+                raise asyncio.CancelledError
             raise HegelQueueLost("500")
         return [await self._events.get()]
 

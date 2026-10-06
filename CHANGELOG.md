@@ -4,6 +4,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 ## [Unreleased]
 
+### Tests
+- The back-off test now drives the listener itself with a failing poll and checks the waits (5, 10, 20, 40, 60 s); without back-off it fails.
+
 ## [0.1.2] - 2026-10-06
 
 ### Fixed
