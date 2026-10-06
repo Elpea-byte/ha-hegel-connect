@@ -99,6 +99,29 @@
     },
     "browse_failed": {
       "message": "Deze map op de Hegel kon niet worden geopend: {error}"
+    },
+    "unknown_source": {
+      "message": "Onbekende ingang: {source}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ingangen",
+        "description": "Verberg ingangen die je niet gebruikt en geef ingangen een eigen naam. Dit verandert alleen hoe Home Assistant ze toont (bronnenlijst, dashboards), niet de versterker. Laat een naam leeg om de naam van de versterker te houden.",
+        "data": {
+          "hidden_sources": "Deze ingangen verbergen"
+        },
+        "data_description": {
+          "hidden_sources": "Verborgen ingangen verdwijnen uit de bronnenlijst en dashboards; automatiseringen kunnen ze nog wel kiezen."
+        }
+      }
+    },
+    "error": {
+      "duplicate_name": "Twee ingangen zouden dezelfde naam krijgen."
+    },
+    "abort": {
+      "no_inputs": "De ingangen zijn nog niet bekend. Probeer het opnieuw als de versterker verbonden is."
     }
   }
 }

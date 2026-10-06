@@ -99,6 +99,29 @@
     },
     "browse_failed": {
       "message": "No se ha podido abrir esta carpeta en el Hegel: {error}"
+    },
+    "unknown_source": {
+      "message": "Entrada desconocida: {source}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Entradas",
+        "description": "Oculta las entradas que no usas y ponles tu propio nombre. Esto solo cambia cómo las muestra Home Assistant (lista de fuentes, paneles), no el amplificador. Deja un nombre vacío para mantener el nombre del amplificador.",
+        "data": {
+          "hidden_sources": "Ocultar estas entradas"
+        },
+        "data_description": {
+          "hidden_sources": "Las entradas ocultas desaparecen de la lista de fuentes y de los paneles; las automatizaciones aún pueden seleccionarlas."
+        }
+      }
+    },
+    "error": {
+      "duplicate_name": "Dos entradas tendrían el mismo nombre."
+    },
+    "abort": {
+      "no_inputs": "Las entradas aún no se conocen. Inténtalo de nuevo cuando el amplificador esté conectado."
     }
   }
 }

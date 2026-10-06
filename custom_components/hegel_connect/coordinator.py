@@ -29,6 +29,8 @@ from .const import (
     BACKOFF_MAX,
     BACKOFF_START,
     CACHE_KEY,
+    CONF_HIDDEN_SOURCES,
+    CONF_SOURCE_NAMES,
     DEFAULT_MAX_VOLUME,
     DOMAIN,
     FAVORITES_INTERVAL,
@@ -253,8 +255,30 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     # -------------------------------------------------------------- commands
 
     def source_name(self, index: int | None) -> str | None:
-        """Name of the input with this index (None if unknown)."""
+        """The amplifier's own name of the input with this index (None if unknown)."""
         return next((s.name for s in self.sources if s.index == index), None)
+
+    # Inputs as shown to the user (options: own names, hidden inputs). Logic such
+    # as "is this the network input" keeps using source_name().
+
+    def source_label(self, index: int | None) -> str | None:
+        """Name shown for an input: the user's own name if set, else the amplifier's."""
+        names = self.config_entry.options.get(CONF_SOURCE_NAMES) or {}
+        return names.get(str(index)) or self.source_name(index)
+
+    @property
+    def visible_sources(self) -> list[HegelSource]:
+        """Inputs that are not hidden in the options, in the amplifier's order."""
+        hidden = set(self.config_entry.options.get(CONF_HIDDEN_SOURCES) or [])
+        return [s for s in self.sources if str(s.index) not in hidden]
+
+    def source_name_for(self, label: str) -> str | None:
+        """Amplifier name for a shown name; the amplifier's own name is accepted too
+        (so scripts that use "Network" keep working after a rename)."""
+        for source in self.sources:
+            if self.source_label(source.index) == label:
+                return source.name
+        return label if any(s.name == label for s in self.sources) else None
 
     async def async_wait_for(self, check: Callable[[HegelState], bool], timeout: float) -> bool:
         """Wait until ``check(state)`` is true or the timeout passes."""

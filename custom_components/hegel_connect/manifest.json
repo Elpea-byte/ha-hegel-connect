@@ -28,7 +28,7 @@
       "modelName": "H600"
     }
   ],
-  "version": "0.1.2",
+  "version": "0.2.0",
   "zeroconf": [
     {
       "type": "_sues800device._tcp.local.",

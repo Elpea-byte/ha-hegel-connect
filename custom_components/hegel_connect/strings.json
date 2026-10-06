@@ -99,6 +99,29 @@
     },
     "browse_failed": {
       "message": "Could not open this folder on the Hegel: {error}"
+    },
+    "unknown_source": {
+      "message": "Unknown input: {source}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Inputs",
+        "description": "Hide inputs you do not use and give inputs your own name. This only changes how Home Assistant shows them (source list, dashboards), not the amplifier. Leave a name empty to keep the amplifier's name.",
+        "data": {
+          "hidden_sources": "Hide these inputs"
+        },
+        "data_description": {
+          "hidden_sources": "Hidden inputs disappear from the source list and dashboards; automations can still select them."
+        }
+      }
+    },
+    "error": {
+      "duplicate_name": "Two inputs would get the same name."
+    },
+    "abort": {
+      "no_inputs": "The inputs are not known yet. Try again when the amplifier is connected."
     }
   }
 }

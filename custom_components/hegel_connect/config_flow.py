@@ -7,17 +7,26 @@ from typing import Any
 from urllib.parse import urlparse
 
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 import voluptuous as vol
 
 from .api import HegelClient, HegelConnectionError, HegelError, async_has_ip_control
-from .const import CORE_HEGEL_URL, DOMAIN, SUPPORTED_MODELS
+from .const import CONF_HIDDEN_SOURCES, CONF_SOURCE_NAMES, CORE_HEGEL_URL, DOMAIN, SUPPORTED_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +35,12 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Add a Hegel H150/H200/H400/H600."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> HegelOptionsFlow:
+        """Rename and hide inputs."""
+        return HegelOptionsFlow()
 
     def __init__(self) -> None:
         self._host: str | None = None
@@ -156,3 +171,47 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}),
             errors=errors,
         )
+
+
+class HegelOptionsFlow(OptionsFlow):
+    """Hide inputs you do not use and give inputs your own name.
+
+    Only how Home Assistant shows them changes (source list, dashboards); the
+    amplifier itself is not changed. Hidden inputs can still be selected by
+    automations. Renamed inputs also keep answering to their original name.
+    """
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        coordinator = getattr(self.config_entry, "runtime_data", None)
+        sources = coordinator.sources if coordinator is not None else []
+        if not sources:
+            return self.async_abort(reason="no_inputs")
+        options = self.config_entry.options
+        names: dict[str, str] = dict(options.get(CONF_SOURCE_NAMES) or {})
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            hidden = [str(i) for i in user_input.get(CONF_HIDDEN_SOURCES, [])]
+            new_names: dict[str, str] = {}
+            for source in sources:
+                label = str(user_input.get(source.name) or "").strip()
+                if label and label != source.name:
+                    new_names[str(source.index)] = label
+            shown = [new_names.get(str(s.index), s.name) for s in sources]
+            if len(set(shown)) != len(shown):
+                errors["base"] = "duplicate_name"
+            else:
+                return self.async_create_entry(data={CONF_HIDDEN_SOURCES: hidden, CONF_SOURCE_NAMES: new_names})
+        # One text field per input, labelled with the amplifier's own name
+        # (empty = keep that name), plus the list of inputs to hide.
+        schema: dict[Any, Any] = {
+            vol.Optional(CONF_HIDDEN_SOURCES, default=list(options.get(CONF_HIDDEN_SOURCES) or [])): SelectSelector(
+                SelectSelectorConfig(
+                    options=[SelectOptionDict(value=str(s.index), label=s.name) for s in sources],
+                    multiple=True,
+                    mode=SelectSelectorMode.LIST,
+                )
+            )
+        }
+        for source in sources:
+            schema[vol.Optional(source.name, description={"suggested_value": names.get(str(source.index), "")})] = str
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema), errors=errors)

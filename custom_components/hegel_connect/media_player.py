@@ -160,15 +160,18 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         data = self.coordinator.data
-        return self.coordinator.source_name(data.source_index) if data else None
+        return self.coordinator.source_label(data.source_index) if data else None
 
     @property
     def source_list(self) -> list[str]:
-        return [source.name for source in self.coordinator.sources]
+        return [self.coordinator.source_label(s.index) or s.name for s in self.coordinator.visible_sources]
 
     def _playing_network(self) -> bool:
         data = self.coordinator.data
-        return bool(data and data.is_on and self.coordinator.connected) and self.source == NETWORK_SOURCE_NAME
+        return (
+            bool(data and data.is_on and self.coordinator.connected)
+            and self.coordinator.source_name(data.source_index) == NETWORK_SOURCE_NAME
+        )
 
     @property
     def media_title(self) -> str | None:
@@ -218,6 +221,10 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             "audio_format": data.player.codec if self._playing_network() else None,
             "volume_raw": data.volume,
             "max_volume": self._max_volume,
+            # Shown name -> amplifier name, so cards can keep icons for renamed inputs.
+            "input_names": {
+                self.coordinator.source_label(s.index) or s.name: s.name for s in self.coordinator.visible_sources
+            },
         }
 
     # --------------------------------------------------------------- commands
@@ -245,7 +252,14 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.client.set_mute(mute))
 
     async def async_select_source(self, source: str) -> None:
-        await self._run(self.coordinator.async_select_source(source))
+        name = self.coordinator.source_name_for(source)
+        if name is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_source",
+                translation_placeholders={"source": source},
+            )
+        await self._run(self.coordinator.async_select_source(name))
 
     async def async_media_play(self) -> None:
         """Resume. Spotify Connect needs its own resume action; a bare "play"

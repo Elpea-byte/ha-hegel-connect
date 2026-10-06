@@ -20,6 +20,10 @@ SUPPORTED_MODELS = ("H150", "H200", "H400", "H600")
 CORE_HEGEL_URL = "https://www.home-assistant.io/integrations/hegel/"
 
 CONF_MAX_VOLUME = "max_volume"
+# Options: inputs hidden from the source list (by index, as text) and own names
+# for inputs ({index: name}). The amplifier's own names stay in use internally.
+CONF_HIDDEN_SOURCES = "hidden_sources"
+CONF_SOURCE_NAMES = "source_names"
 # Saved in the config entry: inputs, volume range and firmware, so the
 # integration can start while the amplifier is off at the mains.
 CACHE_KEY = "cache"

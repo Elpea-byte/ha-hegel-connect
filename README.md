@@ -37,7 +37,7 @@ Hegel groups the H150, H400 and H600 together for home automation ([Hegel suppor
 **Control**
 - **Power**: on and network standby (the amplifier stays reachable in standby, so Home Assistant can switch it on)
 - **Volume** (set and step) and **mute**, with a **maximum volume** that Home Assistant never exceeds
-- **Inputs** read from the amplifier, so every model shows its own inputs
+- **Inputs** read from the amplifier, so every model shows its own inputs; hide the ones you do not use and rename the others
 - **Reliable input switching**: waits until the amplifier is on, pauses a running stream and checks the input stays selected (seen on the H150: right after power-on it otherwise jumps back to Network)
 - **Playback**: play, pause, next, previous and stop, **only where the current service allows it** (see below)
 - **Media browser**: your internet radio favorites, all internet radio, **media servers** (UPnP/DLNA, e.g. your NAS), a **USB stick** in the amplifier (not tested yet) and recently played. Nothing to set up: Hegel Connect shows the servers the amplifier finds itself. Albums are started the same way as in the Hegel web client, so the amplifier continues with the next track; photo and video folders are left out
@@ -153,6 +153,8 @@ The amplifier is **discovered automatically**, the same way the Hegel Control ap
 Not discovered (other subnet/VLAN, multicast blocked)? Add it by hand: *Add integration* > **Hegel Connect** > enter the IP address.
 
 A fixed IP address (DHCP reservation in your router) is still recommended. If the address does change, Home Assistant picks up the new one by itself the next time it sees the amplifier on the network.
+
+**Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names.
 
 **Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never set the volume above it; the amplifier's own remote and knob are not limited.
 

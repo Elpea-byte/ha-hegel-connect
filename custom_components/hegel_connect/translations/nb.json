@@ -99,6 +99,29 @@
     },
     "browse_failed": {
       "message": "Kunne ikke åpne denne mappen på Hegel: {error}"
+    },
+    "unknown_source": {
+      "message": "Ukjent inngang: {source}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Innganger",
+        "description": "Skjul innganger du ikke bruker, og gi innganger egne navn. Dette endrer bare hvordan Home Assistant viser dem (kildeliste, dashbord), ikke forsterkeren. La et navn stå tomt for å beholde forsterkerens navn.",
+        "data": {
+          "hidden_sources": "Skjul disse inngangene"
+        },
+        "data_description": {
+          "hidden_sources": "Skjulte innganger forsvinner fra kildelisten og dashbord; automasjoner kan fortsatt velge dem."
+        }
+      }
+    },
+    "error": {
+      "duplicate_name": "To innganger ville fått samme navn."
+    },
+    "abort": {
+      "no_inputs": "Inngangene er ikke kjent ennå. Prøv igjen når forsterkeren er tilkoblet."
     }
   }
 }

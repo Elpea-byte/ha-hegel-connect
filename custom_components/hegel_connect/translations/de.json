@@ -99,6 +99,29 @@
     },
     "browse_failed": {
       "message": "Dieser Ordner auf dem Hegel konnte nicht geöffnet werden: {error}"
+    },
+    "unknown_source": {
+      "message": "Unbekannter Eingang: {source}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Eingänge",
+        "description": "Blende Eingänge aus, die du nicht nutzt, und gib Eingängen eigene Namen. Das ändert nur die Anzeige in Home Assistant (Quellenliste, Dashboards), nicht den Verstärker. Lass einen Namen leer, um den Namen des Verstärkers zu behalten.",
+        "data": {
+          "hidden_sources": "Diese Eingänge ausblenden"
+        },
+        "data_description": {
+          "hidden_sources": "Ausgeblendete Eingänge verschwinden aus der Quellenliste und den Dashboards; Automationen können sie weiterhin wählen."
+        }
+      }
+    },
+    "error": {
+      "duplicate_name": "Zwei Eingänge würden denselben Namen bekommen."
+    },
+    "abort": {
+      "no_inputs": "Die Eingänge sind noch nicht bekannt. Versuche es erneut, wenn der Verstärker verbunden ist."
     }
   }
 }

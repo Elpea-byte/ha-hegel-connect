@@ -4,8 +4,15 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-06
+
+### Added
+- Options: hide inputs you do not use and give inputs your own name (shown in the source list and on dashboards; the amplifier's own names keep working in automations). Changes apply at once, without a reload.
+- Attribute `input_names` (shown name -> amplifier name), so custom cards can keep icons for renamed inputs.
+
 ### Tests
 - The back-off test now drives the listener itself with a failing poll and checks the waits (5, 10, 20, 40, 60 s); without back-off it fails.
+- Options: hiding and renaming inputs, and refusing duplicate names.
 
 ## [0.1.2] - 2026-10-06
 
@@ -43,7 +50,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.1.2...HEAD
+[Unreleased]: ../../compare/v0.2.0...HEAD
+[0.2.0]: ../../compare/v0.1.2...v0.2.0
 [0.1.2]: ../../compare/v0.1.1...v0.1.2
 [0.1.1]: ../../compare/v0.1.0...v0.1.1
 [0.1.0]: ../../releases/tag/v0.1.0

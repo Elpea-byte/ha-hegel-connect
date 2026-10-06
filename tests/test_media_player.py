@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 import pytest
 
@@ -266,3 +267,39 @@ async def test_browse_media_servers(hass: HomeAssistant, fake_hegel, config_entr
         blocking=True,
     )
     assert ("play_in_container", ALBUM, 1) in fake_hegel[-1].calls
+
+
+async def test_options_hide_and_rename_inputs(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Hidden inputs leave the source list; own names are shown and can be selected."""
+    await _setup(hass, config_entry)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"hidden_sources": ["5", "6"], "RCA": "TV", "Network": ""},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    sources = hass.states.get(ENTITY).attributes["source_list"]
+    assert "Optical 1" not in sources and "Optical 2" not in sources
+    assert "TV" in sources and "RCA" not in sources
+    assert "Network" in sources
+    names = hass.states.get(ENTITY).attributes["input_names"]
+    assert names["TV"] == "RCA" and "Optical 1" not in names.values()
+
+    # The own name and the amplifier's name both select RCA (index 2)
+    await hass.services.async_call(
+        MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: ENTITY, ATTR_INPUT_SOURCE: "TV"}, blocking=True
+    )
+    assert ("set_source", 2) in fake_hegel[-1].calls
+    # The current input is shown with its own name
+    assert hass.states.get(ENTITY).attributes["source"] == "TV"
+
+
+async def test_options_refuse_duplicate_names(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {"RCA": "XLR"})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "duplicate_name"}

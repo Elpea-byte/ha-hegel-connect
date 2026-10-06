@@ -99,6 +99,29 @@
     },
     "browse_failed": {
       "message": "Impossible d'ouvrir ce dossier sur le Hegel : {error}"
+    },
+    "unknown_source": {
+      "message": "Entrée inconnue : {source}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Entrées",
+        "description": "Masquez les entrées que vous n'utilisez pas et donnez aux entrées votre propre nom. Cela ne change que l'affichage dans Home Assistant (liste des sources, tableaux de bord), pas l'amplificateur. Laissez un nom vide pour garder le nom de l'amplificateur.",
+        "data": {
+          "hidden_sources": "Masquer ces entrées"
+        },
+        "data_description": {
+          "hidden_sources": "Les entrées masquées disparaissent de la liste des sources et des tableaux de bord ; les automatisations peuvent toujours les sélectionner."
+        }
+      }
+    },
+    "error": {
+      "duplicate_name": "Deux entrées auraient le même nom."
+    },
+    "abort": {
+      "no_inputs": "Les entrées ne sont pas encore connues. Réessayez lorsque l'amplificateur est connecté."
     }
   }
 }
