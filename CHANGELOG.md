@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Added
+- Media player: `media_playlist` shows what the track plays from (a playlist or album), when the service reports it.
+
 ## [0.3.1] - 2026-10-07
 
 ### Changed

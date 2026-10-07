@@ -146,6 +146,12 @@ class PlayerData:
         return self._meta.get("serviceName") or None
 
     @property
+    def playback_source(self) -> str | None:
+        """What the track plays from: a playlist or album (e.g. "New Dance 2026")."""
+        value = self._meta.get("playbackSource")
+        return value if isinstance(value, str) and value else None
+
+    @property
     def media_id(self) -> str | None:
         """Id of what is playing (e.g. a radio station); matches the id of a favorites row."""
         media_id = _dig(self.raw, "mediaRoles", "id")

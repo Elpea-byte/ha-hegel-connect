@@ -27,6 +27,7 @@ def test_snapshot_state() -> None:
     assert state.volume_fixed is False
     assert state.player.title == "Marido Dansa"
     assert state.player.artist == "Franky Rizardo"
+    assert state.player.playback_source == "New Dance 2026"
     assert state.player.image_url.startswith("https://")
 
 
