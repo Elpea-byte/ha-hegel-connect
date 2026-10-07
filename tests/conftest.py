@@ -132,6 +132,9 @@ class FakeHegel:
     async def resume_spotify(self) -> None:
         self.calls.append(("resume_spotify",))
 
+    async def seek(self, position_ms: int) -> None:
+        self.calls.append(("seek", position_ms))
+
     async def favorites(self) -> list[dict]:
         return [{"title": "Qmusic", "path": "airable:fav/qmusic", "id": "fav-1", "icon": None}]
 

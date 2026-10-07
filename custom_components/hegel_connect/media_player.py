@@ -120,6 +120,9 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
                 features |= MediaPlayerEntityFeature.NEXT_TRACK
             if data.player.control_allowed("previous"):
                 features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+            # Seeking only where the amplifier allows it (media server, USB; not Spotify or radio)
+            if data.player.control_allowed("seekTime"):
+                features |= MediaPlayerEntityFeature.SEEK
             # Stop ends the stream (radio). Not for Spotify Connect: like a bare
             # "play" it would drop the session with the phone.
             if (data.player.service or data.last_service) != "Spotify" and data.player.state in (
@@ -294,6 +297,10 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_media_previous_track(self) -> None:
         await self._run(self.coordinator.client.control("previous"))
+
+    async def async_media_seek(self, position: float) -> None:
+        """Jump to a position in seconds."""
+        await self._run(self.coordinator.client.seek(round(position * 1000)))
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):

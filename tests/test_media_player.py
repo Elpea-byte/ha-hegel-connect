@@ -351,3 +351,23 @@ async def test_stream_detail_sensors_on_without_statistics(hass: HomeAssistant, 
         state = hass.states.get(f"sensor.hegel_h150_{key}")
         assert state is not None
         assert "state_class" not in state.attributes
+
+
+async def test_seek_only_where_the_amplifier_allows_it(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Spotify Connect cannot seek; a track from a media server can (controls.seekTime)."""
+    await _setup(hass, config_entry)
+    assert not hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.SEEK
+    track = {
+        "state": "playing",
+        "controls": {"pause": True, "next_": True, "previous": True, "seekTime": True},
+        "status": {"duration": 240000},
+        "trackRoles": {"title": "So What", "mediaData": {"metaData": {"serviceName": "UPnP"}}},
+    }
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", track)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.SEEK
+    await hass.services.async_call(
+        MP_DOMAIN, "media_seek", {ATTR_ENTITY_ID: ENTITY, "seek_position": 92.5}, blocking=True
+    )
+    assert ("seek", 92500) in fake.calls

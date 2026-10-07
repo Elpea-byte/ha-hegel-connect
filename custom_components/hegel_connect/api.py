@@ -551,6 +551,10 @@ class HegelClient:
         """play, pause, next or previous."""
         await self.activate(PATH_CONTROL, {"control": command})
 
+    async def seek(self, position_ms: int) -> None:
+        """Jump to a position in the current track, in milliseconds (like the web client's progress bar)."""
+        await self.activate(PATH_CONTROL, {"control": "seekTime", "time": max(0, int(position_ms))})
+
     async def resume_spotify(self) -> None:
         """Resume a paused Spotify Connect session."""
         await self.activate(PATH_SPOTIFY_RESUME, {})
