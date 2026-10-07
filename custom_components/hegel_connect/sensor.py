@@ -42,11 +42,13 @@ SENSORS: tuple[HegelSensorDescription, ...] = (
     HegelSensorDescription(
         key="codec",
         translation_key="codec",
+        entity_registry_enabled_default=False,
         value_fn=lambda p: p.short_codec,
     ),
     HegelSensorDescription(
         key="sample_rate",
         translation_key="sample_rate",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.KILOHERTZ,
         state_class=SensorStateClass.MEASUREMENT,
@@ -56,6 +58,7 @@ SENSORS: tuple[HegelSensorDescription, ...] = (
     HegelSensorDescription(
         key="bit_depth",
         translation_key="bit_depth",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement="bit",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda p: p.bit_depth,
@@ -63,6 +66,7 @@ SENSORS: tuple[HegelSensorDescription, ...] = (
     HegelSensorDescription(
         key="bitrate",
         translation_key="bitrate",
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -100,8 +104,7 @@ class HegelSensor(HegelEntity, SensorEntity):
         coordinator = self.coordinator
         data = coordinator.data
         if (
-            data is None
-            or not coordinator.connected
+            not coordinator.connected
             or not data.is_on
             or coordinator.source_name(data.source_index) != NETWORK_SOURCE_NAME
             or data.player.state not in ("playing", "paused")

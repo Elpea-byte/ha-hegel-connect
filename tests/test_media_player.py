@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 import pytest
 
 from custom_components.hegel_connect.api import HegelError
@@ -336,3 +337,17 @@ async def test_unknown_source_is_a_user_error(hass: HomeAssistant, fake_hegel, c
         await hass.services.async_call(
             MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: ENTITY, ATTR_INPUT_SOURCE: "Cassette"}, blocking=True
         )
+
+
+async def test_stream_detail_sensors_disabled_by_default(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Codec, sample rate, bit depth and bitrate are opt-in; quality and service are on."""
+    await _setup(hass, config_entry)
+    registry = er.async_get(hass)
+    for key in ("codec", "sample_rate", "bit_depth", "bitrate"):
+        entry = registry.async_get(f"sensor.hegel_h150_{key}")
+        assert entry is not None
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    for key in ("audio_quality", "streaming_service"):
+        entry = registry.async_get(f"sensor.hegel_h150_{key}")
+        assert entry is not None
+        assert entry.disabled_by is None

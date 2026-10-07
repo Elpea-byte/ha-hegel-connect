@@ -6,6 +6,21 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.3.0] - 2026-10-07
+
+### Fixed
+- A manually entered IPv6 address now works: it is put in square brackets in URLs (it may also be typed as `[address]`). Discovery still uses IPv4 only.
+
+### Changed
+- Dependabot opens its pull requests against `dev`.
+- Codec, sample rate, bit depth and bitrate sensors are disabled by default on new installs (enable them on the device page). Existing installs keep their current setting. Audio quality and streaming service stay on.
+
+### Added
+- Issue template for feature requests.
+- `quality_scale.yaml`: honest self-assessment against Home Assistant's integration quality scale.
+- CI: strict type check (mypy), coverage report with a floor, and 100% coverage required for the config flow.
+- README: how to remove the integration, and a note on the built-in Hegel integration's discovery.
+
 ## [0.2.1] - 2026-10-06
 
 ### Fixed
@@ -63,7 +78,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.2.1...dev
+[Unreleased]: ../../compare/v0.3.0...dev
+[0.3.0]: ../../compare/v0.2.1...v0.3.0
 [0.2.1]: ../../compare/v0.2.0...v0.2.1
 [0.2.0]: ../../compare/v0.1.2...v0.2.0
 [0.1.2]: ../../compare/v0.1.1...v0.1.2

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from custom_components.hegel_connect.api import EVENT_PATHS, HegelState, PlayerData, play_request, unwrap
+from custom_components.hegel_connect.api import EVENT_PATHS, HegelState, PlayerData, play_request, unwrap, url_host
 
 from .conftest import FIXTURE, snapshot_value
 
@@ -143,3 +143,10 @@ def test_play_request_keeps_album_together() -> None:
     }
     assert play_request(station, album, 0)["type"] is None
     assert play_request(track, None, 0)["mediaRoles"] is track
+
+
+def test_url_host_brackets_ipv6() -> None:
+    assert url_host("192.0.2.10") == "192.0.2.10"
+    assert url_host("h150.local") == "h150.local"
+    assert url_host("2001:db8::10") == "[2001:db8::10]"
+    assert url_host("fe80::1%eth0") == "[fe80::1%25eth0]"

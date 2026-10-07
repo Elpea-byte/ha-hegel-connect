@@ -84,7 +84,8 @@ For an amplifier named *Hegel H150*:
 | :---- | :---- |
 | `media_player.hegel_h150` | Power, volume, mute, input, playback, now playing, media browser |
 | `sensor.hegel_h150_audio_quality` | Hi-Res, CD quality, Lossless, Lossy, DSD (while the streamer plays) |
-| `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate`, `_streaming_service` | Stream details, when the service reports them |
+| `sensor.hegel_h150_streaming_service` | The service that plays (TIDAL, Spotify, radio, ...) |
+| `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them. **Disabled by default**: enable them on the device page if you want them |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for radio buttons on a dashboard |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
@@ -158,6 +159,10 @@ A fixed IP address (DHCP reservation in your router) is still recommended. If th
 
 **Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never set the volume above it; the amplifier's own remote and knob are not limited.
 
+### Removing
+
+Settings > Devices & services > Hegel Connect > ⋮ > *Delete*. This removes the amplifier and its entities from Home Assistant; nothing on the amplifier changes. Installed through HACS? Remove the integration there as well and restart Home Assistant.
+
 ## Troubleshooting
 
 Enable debug logging and reproduce the problem:
@@ -176,6 +181,7 @@ Then open an [issue](../../issues/new/choose) with the log and the diagnostics f
 - Spotify Connect: next/previous and stop are not available through the amplifier (it only allows pause); use the Spotify app or Home Assistant's Spotify integration for skipping.
 - Radio favorites are managed in the Hegel Control app; Home Assistant shows and plays them.
 - No network command is known for the DAC and display buttons of the Hegel remote, so Hegel Connect does not offer them.
+- Home Assistant's built-in *Hegel Amplifier* integration also listens for Hegel UPnP announcements. On the maintainer's H150 (Home Assistant 2026.9) it did not offer itself, but if it shows up as *Discovered* for a streaming model, choose *Ignore*: that integration is meant for the IP-control models (see the table at the top).
 - Tested on the H150 only; H200, H400 and H600 reports are very welcome.
 - The network input is recognised by its name "Network", as the amplifier reports it. If a future firmware renames it, now playing and the stream sensors stay empty; please open an issue.
 - The amplifier's local API has no password. Hegel Connect checks that a device really is your amplifier (its id) before using a new address, but a device on your network that imitates the whole Hegel API cannot be told apart. Keep the amplifier on a trusted network.
