@@ -338,11 +338,10 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.client.set_play_mode(mode))
 
     async def async_media_seek(self, position: float) -> None:
-        """Jump to a position in seconds, then read the position back."""
-        await self._run(self.coordinator.client.seek(round(position * 1000)))
-        # The amplifier does not always send an event after a seek; without this
-        # the progress bar would jump back to the old position.
-        await self.coordinator.async_update_position()
+        """Jump to a position in seconds; show it at once, check it shortly after."""
+        position_ms = round(position * 1000)
+        await self._run(self.coordinator.client.seek(position_ms))
+        self.coordinator.position_seeked(position_ms)
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):

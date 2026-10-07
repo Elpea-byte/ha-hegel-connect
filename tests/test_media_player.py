@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -19,7 +21,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 import pytest
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.hegel_connect.api import HegelError
 
@@ -372,7 +376,11 @@ async def test_seek_only_where_the_amplifier_allows_it(hass: HomeAssistant, fake
     await hass.services.async_call(
         MP_DOMAIN, "media_seek", {ATTR_ENTITY_ID: ENTITY, "seek_position": 92.5}, blocking=True
     )
-    assert [c for c in fake.calls if c[0] != "poll"] == [("seek", 92500), ("play_time",)]  # position read back
+    assert [c for c in fake.calls if c[0] != "poll"] == [("seek", 92500)]
+    assert hass.states.get(ENTITY).attributes["media_position"] == 92  # shown at once, no jump back
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    assert ("play_time",) in fake.calls  # read back once the amplifier has buffered
 
 
 async def test_shuffle_and_repeat_on_a_media_server(hass: HomeAssistant, fake_hegel, config_entry) -> None:
