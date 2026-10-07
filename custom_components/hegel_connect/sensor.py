@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
 from homeassistant.const import UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
@@ -42,34 +41,27 @@ SENSORS: tuple[HegelSensorDescription, ...] = (
     HegelSensorDescription(
         key="codec",
         translation_key="codec",
-        entity_registry_enabled_default=False,
         value_fn=lambda p: p.short_codec,
     ),
     HegelSensorDescription(
         key="sample_rate",
         translation_key="sample_rate",
-        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.KILOHERTZ,
-        state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda p: p.sample_rate,
     ),
     HegelSensorDescription(
         key="bit_depth",
         translation_key="bit_depth",
-        entity_registry_enabled_default=False,
         native_unit_of_measurement="bit",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda p: p.bit_depth,
     ),
     HegelSensorDescription(
         key="bitrate",
         translation_key="bitrate",
-        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda p: p.bitrate,
     ),
     HegelSensorDescription(

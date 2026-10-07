@@ -339,15 +339,14 @@ async def test_unknown_source_is_a_user_error(hass: HomeAssistant, fake_hegel, c
         )
 
 
-async def test_stream_detail_sensors_disabled_by_default(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    """Codec, sample rate, bit depth and bitrate are opt-in; quality and service are on."""
+async def test_stream_detail_sensors_on_without_statistics(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Stream details are on by default (hi-fi users want them) but keep no long-term statistics."""
     await _setup(hass, config_entry)
     registry = er.async_get(hass)
-    for key in ("codec", "sample_rate", "bit_depth", "bitrate"):
-        entry = registry.async_get(f"sensor.hegel_h150_{key}")
-        assert entry is not None
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    for key in ("audio_quality", "streaming_service"):
+    for key in ("audio_quality", "codec", "sample_rate", "bit_depth", "bitrate", "streaming_service"):
         entry = registry.async_get(f"sensor.hegel_h150_{key}")
         assert entry is not None
         assert entry.disabled_by is None
+        state = hass.states.get(f"sensor.hegel_h150_{key}")
+        assert state is not None
+        assert "state_class" not in state.attributes

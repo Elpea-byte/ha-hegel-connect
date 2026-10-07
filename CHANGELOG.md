@@ -6,6 +6,12 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.3.1] - 2026-10-07
+
+### Changed
+- Codec, sample rate, bit depth and bitrate sensors are on by default again: owners of a hi-fi amplifier want to see them. This reverts the change in 0.3.0.
+- Sample rate, bit depth and bitrate no longer keep long-term statistics (an average sample rate means nothing). Their history is kept as before. Home Assistant may offer to delete the old statistics under *Developer tools > Statistics*; that is safe.
+
 ## [0.3.0] - 2026-10-07
 
 ### Fixed
@@ -80,7 +86,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.3.0...dev
+[Unreleased]: ../../compare/v0.3.1...dev
+[0.3.1]: ../../compare/v0.3.0...v0.3.1
 [0.3.0]: ../../compare/v0.2.1...v0.3.0
 [0.2.1]: ../../compare/v0.2.0...v0.2.1
 [0.2.0]: ../../compare/v0.1.2...v0.2.0
