@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Uoffisiell integrasjon for Hegel H150, H200, H400 og H600 strømmeforsterkere. Skriv inn IP-adressen til forsterkeren (gi den en fast adresse i ruteren).",
+        "description": "Skriv inn IP-adressen til din Hegel H150, H200, H400 eller H600.\n\nTips: gi den en fast adresse i ruteren.\n\n*Uoffisiell integrasjon, ikke tilknyttet Hegel.*",
         "data": {
           "host": "Vert"
         },
@@ -20,7 +20,7 @@
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "Fant **{name}** på {host}. Vil du legge den til i Home Assistant?\n\nTips: gi forsterkeren en fast adresse i ruteren. Hvis adressen endres, finner Home Assistant den nye automatisk neste gang den ser forsterkeren."
+        "description": "Fant **{name}** på {host}.\n\nLegge den til i Home Assistant?"
       }
     },
     "error": {

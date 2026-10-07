@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Onofficiële integratie voor de Hegel H150, H200, H400 en H600. Vul het IP-adres van de versterker in (geef hem een vast adres in je router).",
+        "description": "Vul het IP-adres in van je Hegel H150, H200, H400 of H600.\n\nTip: geef hem een vast adres in je router.\n\n*Onofficiële integratie, niet verbonden aan Hegel.*",
         "data": {
           "host": "Adres"
         },
@@ -20,7 +20,7 @@
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "**{name}** gevonden op {host}. Toevoegen aan Home Assistant?\n\nTip: geef de versterker een vast adres in je router; verandert het adres toch, dan neemt Home Assistant het nieuwe adres vanzelf over zodra hij de versterker weer ziet."
+        "description": "**{name}** gevonden op {host}.\n\nToevoegen aan Home Assistant?"
       }
     },
     "error": {

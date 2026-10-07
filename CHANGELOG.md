@@ -6,6 +6,10 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Changed
+- New icon in a calm black, white and grey style, with a variant for dark themes.
+- Shorter, calmer texts when adding the amplifier (all six languages).
+
 ### Added
 - Media player: `media_playlist` shows what the track plays from (a playlist or album), when the service reports it.
 

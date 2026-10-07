@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Hegel Connect",
-        "description": "Intégration non officielle pour les amplificateurs de streaming Hegel H150, H200, H400 et H600. Saisissez l'adresse IP de l'amplificateur (attribuez-lui une adresse fixe dans votre routeur).",
+        "description": "Saisissez l'adresse IP de votre Hegel H150, H200, H400 ou H600.\n\nAstuce : attribuez-lui une adresse fixe dans votre routeur.\n\n*Intégration non officielle, sans lien avec Hegel.*",
         "data": {
           "host": "Hôte"
         },
@@ -20,7 +20,7 @@
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "**{name}** trouvé à l'adresse {host}. L'ajouter à Home Assistant ?\n\nAstuce : attribuez à l'amplificateur une adresse fixe dans votre routeur. Si l'adresse change, Home Assistant reprend automatiquement la nouvelle dès qu'il revoit l'amplificateur."
+        "description": "**{name}** trouvé à l'adresse {host}.\n\nL'ajouter à Home Assistant ?"
       }
     },
     "error": {
