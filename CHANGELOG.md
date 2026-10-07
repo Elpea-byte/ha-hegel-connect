@@ -6,6 +6,12 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Fixed
+- A manually entered IPv6 address now works: it is put in square brackets in URLs (it may also be typed as `[address]`). Discovery still uses IPv4 only.
+
+### Added
+- Issue template for feature requests.
+
 ## [0.2.1] - 2026-10-06
 
 ### Fixed

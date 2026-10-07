@@ -26,6 +26,14 @@ async def test_user_flow_creates_entry(hass: HomeAssistant, fake_hegel) -> None:
     assert result["result"].unique_id == "00000000-0000-0000-0000-000000000000"
 
 
+async def test_user_flow_accepts_bracketed_ipv6(hass: HomeAssistant, fake_hegel) -> None:
+    """An IPv6 address typed as [addr] is stored without brackets (the client adds them in URLs)."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "[2001:db8::10]"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["host"] == "2001:db8::10"
+
+
 async def test_user_flow_cannot_connect(hass: HomeAssistant, fake_hegel) -> None:
     FakeHegel.reachable = False
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})

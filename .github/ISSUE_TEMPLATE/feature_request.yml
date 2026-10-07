@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest an idea or improvement for Hegel Connect
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Hegel Connect can only do what the amplifier's own network API offers
+        (the same one the Hegel app uses). If you are not sure whether your amplifier can do it, just describe what you want.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe the situation, not the solution. For example "I want my turntable to start the amplifier on Phono".
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could Hegel Connect help?
+      description: An entity, a service, an option, a dashboard idea... Anything goes.
+  - type: input
+    id: model
+    attributes:
+      label: Amplifier model
+      placeholder: "H150"
+  - type: dropdown
+    id: hegel_app
+    attributes:
+      label: Can the Hegel app do this on your amplifier?
+      options:
+        - "Yes"
+        - "No"
+        - "I don't know"
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send
+      options:
+        - label: I searched the existing issues and this is not a duplicate.
+          required: true

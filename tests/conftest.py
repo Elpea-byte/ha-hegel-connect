@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.hegel_connect.api import EVENT_PATHS, HegelConnectionError, HegelQueueLost, HegelSource
+from custom_components.hegel_connect.api import EVENT_PATHS, HegelConnectionError, HegelQueueLost, HegelSource, url_host
 from custom_components.hegel_connect.const import DOMAIN
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -38,6 +38,7 @@ class FakeHegel:
 
     def __init__(self, host: str, session: Any = None, **_: Any) -> None:
         self.host = host
+        self.base_url = f"http://{url_host(host)}"
         self.calls: list[tuple] = []
         self.values = {path: snapshot_value(path) for path in FIXTURE["snap"]}
         self._events: asyncio.Queue = asyncio.Queue()

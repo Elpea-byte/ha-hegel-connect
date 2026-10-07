@@ -68,7 +68,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST].strip()
+            host = user_input[CONF_HOST].strip().strip("[]")  # IPv6 may be typed as [addr]
             try:
                 model, title, unique_id = await self._async_probe(host)
             except HegelConnectionError:
@@ -151,7 +151,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST].strip()
+            host = user_input[CONF_HOST].strip().strip("[]")  # IPv6 may be typed as [addr]
             try:
                 _model, _title, unique_id = await self._async_probe(host)
             except HegelConnectionError:

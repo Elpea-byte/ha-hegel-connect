@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+import ipaddress
 import json
 import logging
 from typing import Any
@@ -336,11 +337,21 @@ def play_request(track: dict[str, Any], parent: dict[str, Any] | None, index: in
     return {"control": "play", "mediaRoles": media, "trackRoles": track, "type": kind, "index": index}
 
 
+def url_host(host: str) -> str:
+    """Host as it goes into a URL: IPv6 addresses need square brackets."""
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return host
+    return f"[{host.replace('%', '%25')}]" if address.version == 6 else host
+
+
 class HegelClient:
     """Async client for one amplifier."""
 
     def __init__(self, host: str, session: aiohttp.ClientSession, request_timeout: float = 10) -> None:
         self.host = host
+        self.base_url = f"http://{url_host(host)}"
         self._session = session
         self._timeout = request_timeout
 
@@ -355,7 +366,7 @@ class HegelClient:
         payload: dict[str, Any] | None = None,
         timeout: float | None = None,
     ) -> Any:
-        url = f"http://{self.host}/api/{endpoint}"
+        url = f"{self.base_url}/api/{endpoint}"
         try:
             async with self._session.request(
                 method,
