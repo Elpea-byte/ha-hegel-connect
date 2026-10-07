@@ -6,6 +6,11 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.3.3] - 2026-10-07
+
+### Fixed
+- Icon: no tile behind the knob any more, so it no longer shows as a white square in the integrations list on dark themes; light and dark variants now match other integrations.
+
 ## [0.3.2] - 2026-10-07
 
 ### Changed
@@ -95,7 +100,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.3.2...dev
+[Unreleased]: ../../compare/v0.3.3...dev
+[0.3.3]: ../../compare/v0.3.2...v0.3.3
 [0.3.2]: ../../compare/v0.3.1...v0.3.2
 [0.3.1]: ../../compare/v0.3.0...v0.3.1
 [0.3.0]: ../../compare/v0.2.1...v0.3.0
