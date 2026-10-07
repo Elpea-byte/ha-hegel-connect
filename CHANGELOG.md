@@ -4,6 +4,8 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 ## [Unreleased]
 
+Changes on the `dev` branch that are not in a release yet.
+
 ## [0.2.1] - 2026-10-06
 
 ### Fixed
@@ -61,7 +63,7 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.2.0...HEAD
+[Unreleased]: ../../compare/v0.2.1...dev
 [0.2.1]: ../../compare/v0.2.0...v0.2.1
 [0.2.0]: ../../compare/v0.1.2...v0.2.0
 [0.1.2]: ../../compare/v0.1.1...v0.1.2

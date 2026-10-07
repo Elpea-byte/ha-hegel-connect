@@ -18,3 +18,10 @@ pytest
 - Keep `api.py` free of Home Assistant imports.
 - Never commit IP addresses, serial numbers or other personal data (also not in test fixtures).
 - One topic per pull request; describe on which amplifier you tested.
+- Open pull requests against the `dev` branch.
+
+## Branches and releases
+
+- `dev`: day-to-day work, tested on the maintainer's own amplifier first. Changes are listed under *Unreleased* in the changelog.
+- `main`: only what has been tested; updated from `dev` with a pull request.
+- Releases are made from `main` and bundle several changes. HACS offers releases only, so pushes to `dev` or `main` never reach users by themselves. Bug fixes can get their own patch release; larger changes may first ship as a pre-release (for example `v0.3.0b1`).
