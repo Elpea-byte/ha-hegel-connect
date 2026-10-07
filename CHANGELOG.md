@@ -12,6 +12,9 @@ Changes on the `dev` branch that are not in a release yet.
 - Shuffle and repeat (`shuffle_set`, `repeat_set`), where the amplifier allows them (media server, USB), using the same play modes as the Hegel web client.
 - Seeking within a track (media player `media_seek`), where the amplifier allows it: tracks from a media server or USB. Not for Spotify Connect or radio, like the Hegel web client.
 
+### Fixed
+- At a track change the position starts at 0 at once; before, the new track briefly showed the old track's position, so progress bars ran backwards.
+
 ## [0.3.3] - 2026-10-07
 
 ### Fixed
