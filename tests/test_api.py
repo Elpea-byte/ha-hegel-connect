@@ -51,6 +51,19 @@ def test_play_mode_event() -> None:
     assert play_mode_parts("somethingNew") == (False, "off")
 
 
+def test_next_track_starts_at_zero() -> None:
+    state = HegelState()
+    track = {"state": "playing", "status": {"duration": 180000}, "trackRoles": {"title": "One"}}
+    state.apply_event("player:player/data", track)
+    state.set_play_time(179000)
+    assert state.position == 179
+    state.apply_event("player:player/data", {**track, "trackRoles": {"title": "Two"}})
+    assert state.position == 0
+    state.set_play_time(5000)
+    state.apply_event("player:player/data", {**track, "trackRoles": {"title": "Two"}, "state": "paused"})
+    assert state.position == 5  # same track: position kept
+
+
 def test_replay_recorded_events() -> None:
     state = HegelState()
     seen_states = set()

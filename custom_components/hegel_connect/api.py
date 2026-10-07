@@ -350,7 +350,12 @@ class HegelState:
             data = unwrap(value)
             if isinstance(data, dict) and "playLogicData" in data:
                 data = data["playLogicData"]
+            old = self.player
             self.player = PlayerData(data if isinstance(data, dict) else {})
+            if (self.player.title, self.player.duration) != (old.title, old.duration):
+                # Next track: start at 0 at once instead of showing the old track's
+                # position until it is read again (the progress bar would run backwards).
+                self.set_play_time(0)
             if self.player.service:
                 self.last_service = self.player.service
             return True
