@@ -6,10 +6,6 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
-### Added
-- README: "At a glance" summary and a plain-language disclaimer.
-- `AGENTS.md` with checks and rules for AI coding agents.
-
 ## [0.3.0] - 2026-10-07
 
 ### Fixed
@@ -24,6 +20,8 @@ Changes on the `dev` branch that are not in a release yet.
 - `quality_scale.yaml`: honest self-assessment against Home Assistant's integration quality scale.
 - CI: strict type check (mypy), coverage report with a floor, and 100% coverage required for the config flow.
 - README: how to remove the integration, and a note on the built-in Hegel integration's discovery.
+- README: "At a glance" summary and a plain-language disclaimer.
+- `AGENTS.md` with checks and rules for AI coding agents.
 
 ## [0.2.1] - 2026-10-06
 
