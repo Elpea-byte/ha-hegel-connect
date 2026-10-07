@@ -4,6 +4,20 @@
 
 Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifiers. It talks to the amplifier over your own network, the same way the amplifier's built-in web app does. No cloud, no account, and no polling: changes made on the amplifier, with its remote or in the Hegel Control app show up in Home Assistant right away (within a second on the maintainer's H150).
 
+## At a glance
+
+| | |
+| :---- | :---- |
+| **What** | Home Assistant custom integration (HACS) for Hegel streaming amplifiers |
+| **Models** | H150 (tested); H200, H400, H600 (expected) |
+| **Domain** | `hegel_connect` |
+| **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number` |
+| **Connection** | Local push over the amplifier's own web API (`iot_class: local_push`); no cloud, no account |
+| **Discovery** | mDNS `_sues800device._tcp`, UPnP/DLNA (SSDP), Google Cast |
+| **Not for** | Older IP-control models (Röst, H95, H120, H190, H390, H590): use the built-in Hegel integration |
+| **Install** | HACS custom repository, or copy `custom_components/hegel_connect` |
+| **License** | MIT |
+
 ## Why this project
 
 I bought a new Hegel H150 and found that my Logitech Harmony Elite could not control it. In mid-September 2026 I started with Home Assistant to bring all my devices together. I looked for an integration for the new streaming Hegels and could not find one in HACS, so I built Hegel Connect for my own H150. It works well enough that I decided to share it with the community.
@@ -205,13 +219,21 @@ pytest
 
 ## Contributing
 
-Bug reports, model reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Changes per version are in [CHANGELOG.md](CHANGELOG.md).
+Bug reports, model reports and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). AI coding agents: see [AGENTS.md](AGENTS.md). Changes per version are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Support the project
 
 Hegel Connect is free and stays free. If it makes your listening a bit easier and you want to say thanks, you can buy me a coffee. It helps me keep testing, fixing and adding support for more models.
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/elpeabyte)
+
+## Disclaimer
+
+Hegel Connect is a hobby project, shared for free and **used at your own risk**. It is provided "as is", without any warranty, and the maintainer and contributors are **not liable for any damage** to your amplifier, speakers, hearing, other equipment or data, or for any other loss, however caused. See the [MIT license](LICENSE) for the full terms.
+
+Hegel Connect only uses the amplifier's own local API, the same one the Hegel Control app and the amplifier's web page use. It does not change firmware or settings stored in the amplifier; it only switches power, input, volume, mute and playback, like the app does. Volume commands from Home Assistant (including your automations) can be loud: set **Maximum volume** on the device page to protect your speakers and ears.
+
+This is not an official Hegel product, and Hegel Music Systems AS does not support it. For problems with the integration, open an issue here, not with Hegel support.
 
 ## License
 

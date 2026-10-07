@@ -6,6 +6,10 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Added
+- README: "At a glance" summary and a plain-language disclaimer.
+- `AGENTS.md` with checks and rules for AI coding agents.
+
 ## [0.3.0] - 2026-10-07
 
 ### Fixed
