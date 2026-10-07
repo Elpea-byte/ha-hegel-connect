@@ -140,8 +140,6 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         data = self.coordinator.data
-        if data is None:
-            return None
         if not data.is_on or not self.coordinator.connected:
             return MediaPlayerState.OFF
         if self.coordinator.source_name(data.source_index) == NETWORK_SOURCE_NAME:
@@ -212,8 +210,6 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         data = self.coordinator.data
-        if data is None:
-            return {}
         return {
             "fixed_volume": data.volume_fixed,
             "service": data.player.service if self._playing_network() else None,
@@ -316,7 +312,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         self, media_content_type: MediaType | str | None = None, media_content_id: str | None = None
     ) -> BrowseMedia:
         """Radio favorites, internet radio, media servers, USB and recently played."""
-        if media_content_id in (None, ROOT_ID):
+        if media_content_id is None or media_content_id == ROOT_ID:
             return await self._browse_root()
         path = media_content_id
         try:
@@ -403,7 +399,8 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             if not page:
                 break
             rows.extend(page)
-        folder = data.get("roles") if isinstance(data.get("roles"), dict) else {}
+        roles = data.get("roles")
+        folder: dict[str, Any] = roles if isinstance(roles, dict) else {}
         if path.startswith(("upnp:", "musiclibrary:", "playhistory:", "ui:/playHistory")) and not folder.get("title"):
             try:
                 raw = await client.get_raw(path)

@@ -450,8 +450,9 @@ class HegelClient:
             member = None
         if isinstance(member, dict) and isinstance(member.get("systemMember"), dict):
             member = member["systemMember"]
-        if isinstance(member, dict) and isinstance(member.get("id"), str) and member["id"]:
-            return member["id"]
+        member_id = member.get("id") if isinstance(member, dict) else None
+        if isinstance(member_id, str) and member_id:
+            return member_id
         try:
             data = await self.get_value(PATH_PLAYER)
         except HegelError:

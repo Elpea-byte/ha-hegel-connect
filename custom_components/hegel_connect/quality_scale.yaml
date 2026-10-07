@@ -51,7 +51,7 @@ rules:
     comment: The amplifier's local API has no authentication.
   test-coverage:
     status: todo
-    comment: Coverage is measured in CI; a minimum (95%) is set once the first measurement is in.
+    comment: 73% (CI fails below that). The HTTP client in api.py is still mostly tested through a fake amplifier; client tests against recorded responses come next, towards 95%.
 
   # Gold
   devices: done

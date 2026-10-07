@@ -8,8 +8,17 @@ strict = true
 warn_unreachable = true
 explicit_package_bases = true
 
+[[tool.mypy.overrides]]
+# Home Assistant re-exports names from its packages without __all__
+module = "homeassistant.*"
+implicit_reexport = true
+
 [tool.coverage.run]
 branch = true
+
+[tool.coverage.report]
+# Floor at today's level so coverage cannot drop; raised step by step towards 95%.
+fail_under = 73
 
 [tool.ruff]
 target-version = "py313"

@@ -8,6 +8,7 @@ import contextlib
 from datetime import datetime
 import logging
 import time
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -51,7 +52,7 @@ def queue_lost_delay(lost: int) -> float:
     """
     if lost <= 1:
         return 0
-    return min(BACKOFF_START * 2 ** (lost - 2), BACKOFF_MAX)
+    return float(min(BACKOFF_START * 2 ** (lost - 2), BACKOFF_MAX))
 
 
 class HegelCoordinator(DataUpdateCoordinator[HegelState]):
@@ -219,7 +220,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             self.connected = False
             self.async_update_listeners()
 
-    def _apply(self, events: list[dict]) -> None:
+    def _apply(self, events: list[dict[str, Any]]) -> None:
         state = self.data or HegelState()
         was_on = state.is_on
         changed = False
