@@ -86,5 +86,5 @@ rules:
   async-dependency: done
   inject-websession: done
   strict-typing:
-    status: todo
-    comment: mypy (strict) runs in CI; remaining findings are being fixed.
+    status: done
+    comment: mypy --strict (with warn_unreachable) runs in CI on every push.
