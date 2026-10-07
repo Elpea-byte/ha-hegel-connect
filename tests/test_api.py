@@ -4,7 +4,16 @@ from __future__ import annotations
 
 import json
 
-from custom_components.hegel_connect.api import EVENT_PATHS, HegelState, PlayerData, play_request, unwrap, url_host
+from custom_components.hegel_connect.api import (
+    EVENT_PATHS,
+    PATH_PLAY_MODE,
+    HegelState,
+    PlayerData,
+    play_mode_parts,
+    play_request,
+    unwrap,
+    url_host,
+)
 
 from .conftest import FIXTURE, snapshot_value
 
@@ -18,8 +27,10 @@ def test_unwrap_typed_values() -> None:
 
 def test_snapshot_state() -> None:
     state = HegelState()
+    # The recording predates play mode support; paths it lacks are covered below.
     for path in EVENT_PATHS:
-        state.apply_event(path, snapshot_value(path))
+        if path in FIXTURE["snap"]:
+            state.apply_event(path, snapshot_value(path))
     assert state.is_on
     assert state.volume == 17
     assert state.muted is False
@@ -29,6 +40,15 @@ def test_snapshot_state() -> None:
     assert state.player.artist == "Franky Rizardo"
     assert state.player.playback_source == "New Dance 2026"
     assert state.player.image_url.startswith("https://")
+
+
+def test_play_mode_event() -> None:
+    state = HegelState()
+    assert state.play_mode is None
+    assert state.apply_event(PATH_PLAY_MODE, {"type": "playerPlayMode", "playerPlayMode": "shuffleRepeatAll"})
+    assert state.play_mode == "shuffleRepeatAll"
+    assert play_mode_parts(state.play_mode) == (True, "all")
+    assert play_mode_parts(None) == (False, "off")
 
 
 def test_replay_recorded_events() -> None:
