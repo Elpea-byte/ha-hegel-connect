@@ -231,7 +231,7 @@ Hegel Connect is free and stays free. If it makes your listening a bit easier an
 
 Hegel Connect is a hobby project, shared for free and **used at your own risk**. It is provided "as is", without any warranty, and the maintainer and contributors are **not liable for any damage** to your amplifier, speakers, hearing, other equipment or data, or for any other loss, however caused. See the [MIT license](LICENSE) for the full terms.
 
-Hegel Connect only uses the amplifier's own local API, the same one the Hegel Control app and the amplifier's web page use. It does not change firmware or settings stored in the amplifier; it only switches power, input, volume, mute and playback, like the app does. Volume commands from Home Assistant (including your automations) can be loud: set **Maximum volume** on the device page to protect your speakers and ears.
+Hegel Connect only uses the amplifier's own local API, the same one the Hegel Control app and the amplifier's web page use. It makes no firmware or configuration changes; it only switches power, input, volume, mute and playback, like the app does. Volume commands from Home Assistant (including your automations) can be loud: set **Maximum volume** on the device page to protect your speakers and ears.
 
 This is not an official Hegel product, and Hegel Music Systems AS does not support it. For problems with the integration, open an issue here, not with Hegel support.
 
