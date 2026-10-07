@@ -115,7 +115,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         """Next/previous only when the current service allows it (not Spotify, not radio)."""
         features = self._BASE_FEATURES
         data = self.coordinator.data
-        if data and self._playing_network():
+        if self._playing_network():
             if data.player.control_allowed("next_"):
                 features |= MediaPlayerEntityFeature.NEXT_TRACK
             if data.player.control_allowed("previous"):
@@ -148,17 +148,16 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     @property
     def volume_level(self) -> float | None:
-        volume = self.coordinator.data.volume if self.coordinator.data else None
+        volume = self.coordinator.data.volume
         return None if volume is None else volume / self.coordinator.volume_max
 
     @property
     def is_volume_muted(self) -> bool | None:
-        return self.coordinator.data.muted if self.coordinator.data else None
+        return self.coordinator.data.muted
 
     @property
     def source(self) -> str | None:
-        data = self.coordinator.data
-        return self.coordinator.source_label(data.source_index) if data else None
+        return self.coordinator.source_label(self.coordinator.data.source_index)
 
     @property
     def source_list(self) -> list[str]:
@@ -167,7 +166,8 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     def _playing_network(self) -> bool:
         data = self.coordinator.data
         return (
-            bool(data and data.is_on and self.coordinator.connected)
+            data.is_on
+            and self.coordinator.connected
             and self.coordinator.source_name(data.source_index) == NETWORK_SOURCE_NAME
         )
 
@@ -239,7 +239,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.client.power_off())
 
     async def async_set_volume_level(self, volume: float) -> None:
-        if self.coordinator.data and self.coordinator.data.volume_fixed:
+        if self.coordinator.data.volume_fixed:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="fixed_volume")
         raw = round(volume * self.coordinator.volume_max)
         await self._run(self.coordinator.client.set_volume(max(0, min(raw, self._max_volume))))
@@ -262,7 +262,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         answers "Directory is empty" there and stops the session."""
         data = self.coordinator.data
         client = self.coordinator.client
-        if data and (data.player.service or data.last_service) == "Spotify":
+        if (data.player.service or data.last_service) == "Spotify":
             await self._run(client.resume_spotify())
             return
         try:

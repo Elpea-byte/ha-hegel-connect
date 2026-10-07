@@ -104,8 +104,7 @@ class HegelSensor(HegelEntity, SensorEntity):
         coordinator = self.coordinator
         data = coordinator.data
         if (
-            data is None
-            or not coordinator.connected
+            not coordinator.connected
             or not data.is_on
             or coordinator.source_name(data.source_index) != NETWORK_SOURCE_NAME
             or data.player.state not in ("playing", "paused")

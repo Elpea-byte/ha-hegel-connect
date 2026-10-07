@@ -33,7 +33,7 @@ class HegelFixedVolume(HegelEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        return self.coordinator.data.volume_fixed if self.coordinator.data else None
+        return self.coordinator.data.volume_fixed
 
 
 class HegelNetwork(HegelEntity, BinarySensorEntity):

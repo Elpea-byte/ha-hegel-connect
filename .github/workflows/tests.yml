@@ -27,6 +27,8 @@ jobs:
           cache: pip
       - run: pip install -r requirements_test.txt
       - run: pytest -q --cov=custom_components.hegel_connect --cov-report=term-missing
+      # Quality scale rule config-flow-test-coverage: the config flow is fully tested
+      - run: coverage report --include="custom_components/hegel_connect/config_flow.py" --fail-under=100
 
   mypy:
     runs-on: ubuntu-latest

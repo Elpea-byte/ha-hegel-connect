@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import contextlib
 from ipaddress import ip_address
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+import pytest
 
 from custom_components.hegel_connect.const import DOMAIN
 
@@ -258,3 +260,93 @@ async def test_user_flow_recognises_older_hegel(hass: HomeAssistant, fake_hegel)
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.40"})
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "legacy_model"}
+
+
+# ------------------------------------------------------- remaining branches
+
+
+async def test_user_flow_no_stable_id(hass: HomeAssistant, fake_hegel) -> None:
+    """Without an id the amplifier cannot be told apart from others: refuse."""
+    FakeHegel.uid = ""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.10"})
+    assert result["errors"] == {"base": "not_supported"}
+
+
+async def test_user_flow_unexpected_error(hass: HomeAssistant, fake_hegel) -> None:
+    with patch.object(FakeHegel, "product_name", AsyncMock(side_effect=RuntimeError("boom"))):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.10"})
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_sues800device_discovery_without_uuid(hass: HomeAssistant, fake_hegel) -> None:
+    """No uuid in the TXT record: the id is read from the amplifier itself."""
+    info = ZeroconfServiceInfo(
+        ip_address=SUE_INFO.ip_address,
+        ip_addresses=SUE_INFO.ip_addresses,
+        hostname=SUE_INFO.hostname,
+        name=SUE_INFO.name,
+        port=SUE_INFO.port,
+        type=SUE_INFO.type,
+        properties={"manufacturer": "Hegel"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info
+    )
+    assert result["step_id"] == "discovery_confirm"
+
+
+async def test_discovery_ipv6_only_is_skipped(hass: HomeAssistant, fake_hegel) -> None:
+    info = ZeroconfServiceInfo(
+        ip_address=ip_address("2001:db8::10"),
+        ip_addresses=[ip_address("2001:db8::10")],
+        hostname="h150.local.",
+        name=ZEROCONF_INFO.name,
+        port=8009,
+        type="_googlecast._tcp.local.",
+        properties={"md": "H150"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_ipv4"
+    assert fake_hegel == []
+
+
+async def test_ssdp_without_location(hass: HomeAssistant, fake_hegel) -> None:
+    info = SsdpServiceInfo(ssdp_usn=SSDP_INFO.ssdp_usn, ssdp_st=SSDP_INFO.ssdp_st, upnp=SSDP_INFO.upnp)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize(
+    ("setup", "error"),
+    [("unreachable", "cannot_connect"), ("other_model", "not_supported"), ("crash", "unknown")],
+)
+async def test_reconfigure_errors(hass: HomeAssistant, fake_hegel, config_entry, setup: str, error: str) -> None:
+    """The form stays open with an error; the stored address is kept."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    if setup == "unreachable":
+        FakeHegel.reachable = False
+    elif setup == "other_model":
+        FakeHegel.model = "TX-RZ810"
+    crash = patch.object(FakeHegel, "product_name", AsyncMock(side_effect=RuntimeError("boom")))
+    with crash if setup == "crash" else contextlib.nullcontext():
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.20"})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    assert config_entry.data["host"] == "192.0.2.10"
+
+
+async def test_options_need_known_inputs(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Before the amplifier was ever reached its inputs are unknown: nothing to configure yet."""
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_inputs"

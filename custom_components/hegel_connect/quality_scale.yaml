@@ -9,12 +9,14 @@ rules:
     comment: No custom actions; only the standard media player and number actions.
   appropriate-polling:
     status: done
-    comment: Local push (event queue). Only radio favorites are refreshed every few minutes, while connected.
+    comment: Local push (event queue). Only the radio favorites list is re-read every 6 hours, and only while connected.
   brands: done
   common-modules:
     status: done
     comment: coordinator.py and entity.py.
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: done
+    comment: 100% line and branch coverage of config_flow.py (checked per file in the CI coverage report).
   config-flow: done
   dependency-transparency:
     status: todo
@@ -42,7 +44,13 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: done
+    comment: >-
+      Deliberate deviation from the letter of the rule: when the amplifier cannot be reached
+      (switched off at the mains, unplugged) the media player shows "off" instead of
+      "unavailable", because for users that is what it is. The network binary sensor
+      tells standby and unreachable apart.
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done

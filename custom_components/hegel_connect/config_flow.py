@@ -43,9 +43,10 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         return HegelOptionsFlow()
 
     def __init__(self) -> None:
-        self._host: str | None = None
-        self._model: str | None = None
-        self._title: str | None = None
+        # Set by _async_step_discovered before discovery_confirm is shown.
+        self._host = ""
+        self._model = ""
+        self._title = ""
 
     async def _async_probe(self, host: str) -> tuple[str, str, str]:
         """Ask the amplifier who it is: (model, title, unique id).
@@ -136,8 +137,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Ask the user to confirm adding a discovered amplifier."""
-        if self._host is None or self._title is None:
-            return self.async_abort(reason="cannot_connect")
         if user_input is not None:
             return self.async_create_entry(title=self._title, data={CONF_HOST: self._host, "model": self._model})
         self._set_confirm_only()

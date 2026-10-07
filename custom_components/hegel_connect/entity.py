@@ -27,8 +27,3 @@ class HegelEntity(CoordinatorEntity[HegelCoordinator]):
             sw_version=coordinator.firmware,
             configuration_url=f"{coordinator.client.base_url}/webclient/",
         )
-
-    @property
-    def available(self) -> bool:
-        """Unavailable only before the first state is known (offline shows as off)."""
-        return super().available and self.coordinator.data is not None
