@@ -6,6 +6,8 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.4.0] - 2026-10-07
+
 ### Added
 - Shuffle and repeat (`shuffle_set`, `repeat_set`), where the amplifier allows them (media server, USB), using the same play modes as the Hegel web client.
 - Seeking within a track (media player `media_seek`), where the amplifier allows it: tracks from a media server or USB. Not for Spotify Connect or radio, like the Hegel web client.
@@ -104,7 +106,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.3.3...dev
+[Unreleased]: ../../compare/v0.4.0...dev
+[0.4.0]: ../../compare/v0.3.3...v0.4.0
 [0.3.3]: ../../compare/v0.3.2...v0.3.3
 [0.3.2]: ../../compare/v0.3.1...v0.3.2
 [0.3.1]: ../../compare/v0.3.0...v0.3.1
