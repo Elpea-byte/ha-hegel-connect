@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -19,7 +21,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 import pytest
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.hegel_connect.api import HegelError
 
@@ -351,3 +355,88 @@ async def test_stream_detail_sensors_on_without_statistics(hass: HomeAssistant, 
         state = hass.states.get(f"sensor.hegel_h150_{key}")
         assert state is not None
         assert "state_class" not in state.attributes
+
+
+async def test_seek_only_where_the_amplifier_allows_it(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Spotify Connect cannot seek; a track from a media server can (controls.seekTime)."""
+    await _setup(hass, config_entry)
+    assert not hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.SEEK
+    track = {
+        "state": "playing",
+        "controls": {"pause": True, "next_": True, "previous": True, "seekTime": True},
+        "status": {"duration": 240000},
+        "trackRoles": {"title": "So What", "mediaData": {"metaData": {"serviceName": "UPnP"}}},
+    }
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", track)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.SEEK
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    await hass.services.async_call(
+        MP_DOMAIN, "media_seek", {ATTR_ENTITY_ID: ENTITY, "seek_position": 95.25}, blocking=True
+    )
+    assert [c for c in fake.calls if c[0] != "poll"] == [("seek", 95250)]
+    assert hass.states.get(ENTITY).attributes["media_position"] == 95  # shown at once, no jump back
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    assert ("play_time",) in fake.calls  # read back once the amplifier has buffered
+
+
+async def test_shuffle_and_repeat_on_a_media_server(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Spotify Connect: no play modes. A media server: shuffle and repeat, combined as the amplifier names them."""
+    await _setup(hass, config_entry)
+    features = hass.states.get(ENTITY).attributes["supported_features"]
+    assert not features & MediaPlayerEntityFeature.SHUFFLE_SET
+    assert not features & MediaPlayerEntityFeature.REPEAT_SET
+    modes = {"shuffle": True, "repeatOne": True, "repeatAll": True, "shuffleRepeatOne": True, "shuffleRepeatAll": True}
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"pause": True, "seekTime": True, "playMode": modes},
+            "status": {"duration": 240000},
+            "trackRoles": {"title": "So What", "mediaData": {"metaData": {"serviceName": "Media Servers"}}},
+        },
+    )
+    fake.push("player:player/data/playMode", {"type": "playerPlayMode", "playerPlayMode": "normal"})
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state.attributes["supported_features"] & MediaPlayerEntityFeature.SHUFFLE_SET
+    assert state.attributes["supported_features"] & MediaPlayerEntityFeature.REPEAT_SET
+    assert state.attributes["shuffle"] is False
+    assert state.attributes["repeat"] == "off"
+
+    await hass.services.async_call(MP_DOMAIN, "shuffle_set", {ATTR_ENTITY_ID: ENTITY, "shuffle": True}, blocking=True)
+    await hass.async_block_till_done()
+    assert ("play_mode", "shuffle") in fake.calls
+    await hass.services.async_call(MP_DOMAIN, "repeat_set", {ATTR_ENTITY_ID: ENTITY, "repeat": "all"}, blocking=True)
+    await hass.async_block_till_done()
+    assert ("play_mode", "shuffleRepeatAll") in fake.calls
+    state = hass.states.get(ENTITY)
+    assert state.attributes["shuffle"] is True
+    assert state.attributes["repeat"] == "all"
+
+
+async def test_play_mode_combination_not_allowed(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Repeat one is offered by the amplifier, shuffle + repeat one is not: refuse before sending."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"pause": True, "playMode": {"shuffle": True, "repeatOne": True, "repeatAll": True}},
+            "status": {"duration": 240000},
+            "trackRoles": {"title": "So What", "mediaData": {"metaData": {"serviceName": "Media Servers"}}},
+        },
+    )
+    fake.push("player:player/data/playMode", {"type": "playerPlayMode", "playerPlayMode": "shuffle"})
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MP_DOMAIN, "repeat_set", {ATTR_ENTITY_ID: ENTITY, "repeat": "one"}, blocking=True
+        )
+    assert not any(call[0] == "play_mode" for call in fake.calls)

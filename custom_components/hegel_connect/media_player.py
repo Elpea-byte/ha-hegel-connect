@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -27,7 +28,9 @@ from .api import (
     PATH_MEDIA_SERVERS,
     PATH_PLAY_HISTORY,
     PATH_USB,
+    PLAY_MODES,
     HegelError,
+    play_mode_parts,
 )
 from .const import DOMAIN
 from .coordinator import HegelCoordinator
@@ -120,6 +123,14 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
                 features |= MediaPlayerEntityFeature.NEXT_TRACK
             if data.player.control_allowed("previous"):
                 features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+            # Seeking only where the amplifier allows it (media server, USB; not Spotify or radio)
+            if data.player.control_allowed("seekTime"):
+                features |= MediaPlayerEntityFeature.SEEK
+            # Shuffle / repeat only where the source offers them (media server, USB)
+            if data.player.play_mode_allowed("shuffle"):
+                features |= MediaPlayerEntityFeature.SHUFFLE_SET
+            if data.player.play_mode_allowed("repeatOne") or data.player.play_mode_allowed("repeatAll"):
+                features |= MediaPlayerEntityFeature.REPEAT_SET
             # Stop ends the stream (radio). Not for Spotify Connect: like a bare
             # "play" it would drop the session with the phone.
             if (data.player.service or data.last_service) != "Spotify" and data.player.state in (
@@ -294,6 +305,43 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_media_previous_track(self) -> None:
         await self._run(self.coordinator.client.control("previous"))
+
+    @property
+    def shuffle(self) -> bool | None:
+        if not self._playing_network():
+            return None
+        return play_mode_parts(self.coordinator.data.play_mode)[0]
+
+    @property
+    def repeat(self) -> RepeatMode | None:
+        if not self._playing_network():
+            return None
+        return RepeatMode(play_mode_parts(self.coordinator.data.play_mode)[1])
+
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        repeat = play_mode_parts(self.coordinator.data.play_mode)[1]
+        await self._set_play_mode(shuffle, repeat)
+
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        shuffle = play_mode_parts(self.coordinator.data.play_mode)[0]
+        await self._set_play_mode(shuffle, str(repeat.value))
+
+    async def _set_play_mode(self, shuffle: bool, repeat: str) -> None:
+        """Send a shuffle/repeat combination, if the current source allows exactly that one."""
+        mode = PLAY_MODES[(shuffle, repeat)]
+        if not self.coordinator.data.player.play_mode_allowed(mode):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="play_mode_not_allowed",
+                translation_placeholders={"mode": mode},
+            )
+        await self._run(self.coordinator.client.set_play_mode(mode))
+
+    async def async_media_seek(self, position: float) -> None:
+        """Jump to a position in seconds; show it at once, check it shortly after."""
+        position_ms = round(position * 1000)
+        await self._run(self.coordinator.client.seek(position_ms))
+        self.coordinator.position_seeked(position_ms)
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):

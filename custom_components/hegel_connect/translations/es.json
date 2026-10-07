@@ -102,6 +102,9 @@
     },
     "unknown_source": {
       "message": "Entrada desconocida: {source}"
+    },
+    "play_mode_not_allowed": {
+      "message": "El amplificador no permite esta combinación de reproducción aleatoria y repetición ({mode}) para lo que suena ahora."
     }
   },
   "options": {

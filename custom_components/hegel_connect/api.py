@@ -36,6 +36,7 @@ PATH_VOLUME_TYPE = "settings:/hegel/volumeType"
 PATH_PLAYER = "player:player/data"
 # Position in ms. Not subscribed (changes several times a second); read after player events.
 PATH_PLAY_TIME = "player:player/data/playTime"
+PATH_PLAY_MODE = "player:player/data/playMode"
 PATH_CONTROL = "player:player/control"
 # Resume a paused Spotify Connect session. A bare "play" control breaks it
 # ("Directory is empty"); this is the "Resume Playback" action of the Spotify UI.
@@ -56,7 +57,27 @@ EVENT_PATHS: tuple[str, ...] = (
     PATH_SOURCE,
     PATH_VOLUME_TYPE,
     PATH_PLAYER,
+    PATH_PLAY_MODE,
 )
+
+# Play modes as the amplifier names them (shuffle x repeat).
+PLAY_MODES: dict[tuple[bool, str], str] = {
+    (False, "off"): "normal",
+    (True, "off"): "shuffle",
+    (False, "one"): "repeatOne",
+    (True, "one"): "shuffleRepeatOne",
+    (False, "all"): "repeatAll",
+    (True, "all"): "shuffleRepeatAll",
+}
+
+
+def play_mode_parts(mode: str | None) -> tuple[bool, str]:
+    """(shuffle, repeat) of a play mode; repeat is "off", "one" or "all"."""
+    for parts, name in PLAY_MODES.items():
+        if name == mode:
+            return parts
+    return False, "off"
+
 
 LOSSY_CODECS = ("mp3", "mpeg", "aac", "ogg", "vorbis", "opus", "wma")
 LOSSLESS_CODECS = ("flac", "alac", "wav", "pcm", "aiff", "lpcm", "mqa")
@@ -168,6 +189,12 @@ class PlayerData:
                 return icon
         return None
 
+    def play_mode_allowed(self, mode: str) -> bool:
+        """Whether the current source allows a play mode (controls.playMode), e.g. "shuffle"."""
+        controls = self.raw.get("controls")
+        modes = controls.get("playMode") if isinstance(controls, dict) else None
+        return mode == "normal" or (isinstance(modes, dict) and bool(modes.get(mode)))
+
     def control_allowed(self, name: str) -> bool:
         """Whether the current service allows a control (e.g. "next_", "previous").
 
@@ -274,6 +301,8 @@ class HegelState:
     source_index: int | None = None
     volume_fixed: bool | None = None
     player: PlayerData = field(default_factory=PlayerData)
+    # normal, shuffle, repeatOne, repeatAll, shuffleRepeatOne, shuffleRepeatAll
+    play_mode: str | None = None
     # Last streaming service seen (player data can lose it while paused).
     last_service: str | None = None
     # Playback position (seconds) and when it was read.
@@ -313,11 +342,20 @@ class HegelState:
         if path == PATH_VOLUME_TYPE:
             self.volume_fixed = int(unwrap(value)) == 1
             return True
+        if path == PATH_PLAY_MODE:
+            mode = unwrap(value)
+            self.play_mode = mode if isinstance(mode, str) else None
+            return True
         if path == PATH_PLAYER:
             data = unwrap(value)
             if isinstance(data, dict) and "playLogicData" in data:
                 data = data["playLogicData"]
+            old = self.player
             self.player = PlayerData(data if isinstance(data, dict) else {})
+            if (self.player.title, self.player.duration) != (old.title, old.duration):
+                # Next track: start at 0 at once instead of showing the old track's
+                # position until it is read again (the progress bar would run backwards).
+                self.set_play_time(0)
             if self.player.service:
                 self.last_service = self.player.service
             return True
@@ -523,6 +561,12 @@ class HegelClient:
                 raise
             except HegelError as err:
                 _LOGGER.debug("Player data not available: %s", err)
+            try:
+                state.apply_event(PATH_PLAY_MODE, await self.get_value(PATH_PLAY_MODE))
+            except HegelConnectionError:
+                raise
+            except HegelError as err:
+                _LOGGER.debug("Play mode not available: %s", err)
         return state
 
     # --------------------------------------------------------------- commands
@@ -550,6 +594,14 @@ class HegelClient:
     async def control(self, command: str) -> None:
         """play, pause, next or previous."""
         await self.activate(PATH_CONTROL, {"control": command})
+
+    async def seek(self, position_ms: int) -> None:
+        """Jump to a position in the current track, in milliseconds (like the web client's progress bar)."""
+        await self.activate(PATH_CONTROL, {"control": "seekTime", "time": max(0, int(position_ms))})
+
+    async def set_play_mode(self, mode: str) -> None:
+        """Shuffle/repeat, as the web client does: one of the PLAY_MODES names."""
+        await self.activate(PATH_CONTROL, {"control": "changePlayMode", "playMode": mode})
 
     async def resume_spotify(self) -> None:
         """Resume a paused Spotify Connect session."""

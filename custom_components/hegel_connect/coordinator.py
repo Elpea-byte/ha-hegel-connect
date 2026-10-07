@@ -12,7 +12,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
@@ -42,6 +42,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Seconds after a seek before the position is read back (the amplifier buffers first).
+SEEK_CHECK_DELAY = 2.5
 
 
 def queue_lost_delay(lost: int) -> float:
@@ -77,6 +80,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         # Volume ceiling, set by the "Maximum volume" number entity.
         self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
+        # Pending position check after a seek (cancel callback), see position_seeked().
+        self._seek_check: Callable[[], None] | None = None
 
     async def _async_setup(self) -> None:
         """Read the static facts; fall back to the copy saved at the last start.
@@ -103,6 +108,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self.config_entry.async_on_unload(
             async_track_time_interval(self.hass, self._async_favorites_tick, FAVORITES_INTERVAL)
         )
+        self.config_entry.async_on_unload(self._cancel_seek_check)
 
     async def _async_favorites_tick(self, _now: datetime) -> None:
         """Periodic favorites refresh (only while connected; offline is skipped)."""
@@ -235,9 +241,10 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                     continue
                 changed |= applied
                 player_changed |= applied and path == PATH_PLAYER
-        if player_changed and state.is_on:
+        # Just after a seek the amplifier is still buffering; the seek check reads the position.
+        if player_changed and state.is_on and self._seek_check is None:
             if state.player.duration:
-                self.hass.async_create_task(self._async_update_position())
+                self.hass.async_create_task(self.async_update_position())
             else:
                 state.set_play_time(None)
         if not was_on and state.is_on:
@@ -246,8 +253,29 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         if changed:
             self.async_set_updated_data(state)
 
-    async def _async_update_position(self) -> None:
-        """Read the playback position once (it is not pushed)."""
+    def position_seeked(self, position_ms: int) -> None:
+        """Show the new position at once and read it back a moment later.
+
+        Right after a seek the amplifier still reports the old position while it
+        buffers. Reading it at once makes the progress bar spring back and forth.
+        """
+        if self.data is not None:
+            self.data.set_play_time(position_ms)
+            self.async_set_updated_data(self.data)
+        self._cancel_seek_check()
+        self._seek_check = async_call_later(self.hass, SEEK_CHECK_DELAY, self._async_seek_check)
+
+    async def _async_seek_check(self, _now: datetime) -> None:
+        self._seek_check = None
+        await self.async_update_position()
+
+    def _cancel_seek_check(self) -> None:
+        if self._seek_check is not None:
+            self._seek_check()
+            self._seek_check = None
+
+    async def async_update_position(self) -> None:
+        """Read the playback position once (it is not pushed; also used right after a seek)."""
         try:
             value = await self.client.play_time()
         except HegelError as err:

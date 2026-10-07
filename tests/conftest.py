@@ -80,7 +80,8 @@ class FakeHegel:
 
         state = HegelState()
         for path in EVENT_PATHS:
-            state.apply_event(path, self.values[path])
+            if path in self.values:
+                state.apply_event(path, self.values[path])
         return state
 
     # True: every poll fails as if the event queue is gone (e.g. HTTP 500)
@@ -127,10 +128,18 @@ class FakeHegel:
         self.calls.append(("control", command))
 
     async def play_time(self) -> dict:
+        self.calls.append(("play_time",))
         return {"type": "i64_", "i64_": 30000}
 
     async def resume_spotify(self) -> None:
         self.calls.append(("resume_spotify",))
+
+    async def seek(self, position_ms: int) -> None:
+        self.calls.append(("seek", position_ms))
+
+    async def set_play_mode(self, mode: str) -> None:
+        self.calls.append(("play_mode", mode))
+        self.push("player:player/data/playMode", {"type": "playerPlayMode", "playerPlayMode": mode})
 
     async def favorites(self) -> list[dict]:
         return [{"title": "Qmusic", "path": "airable:fav/qmusic", "id": "fav-1", "icon": None}]

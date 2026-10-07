@@ -4,7 +4,16 @@ from __future__ import annotations
 
 import json
 
-from custom_components.hegel_connect.api import EVENT_PATHS, HegelState, PlayerData, play_request, unwrap, url_host
+from custom_components.hegel_connect.api import (
+    EVENT_PATHS,
+    PATH_PLAY_MODE,
+    HegelState,
+    PlayerData,
+    play_mode_parts,
+    play_request,
+    unwrap,
+    url_host,
+)
 
 from .conftest import FIXTURE, snapshot_value
 
@@ -21,6 +30,7 @@ def test_snapshot_state() -> None:
     for path in EVENT_PATHS:
         state.apply_event(path, snapshot_value(path))
     assert state.is_on
+    assert state.play_mode == "normal"
     assert state.volume == 17
     assert state.muted is False
     assert state.source_index == 9
@@ -29,6 +39,29 @@ def test_snapshot_state() -> None:
     assert state.player.artist == "Franky Rizardo"
     assert state.player.playback_source == "New Dance 2026"
     assert state.player.image_url.startswith("https://")
+
+
+def test_play_mode_event() -> None:
+    state = HegelState()
+    assert state.play_mode is None
+    assert state.apply_event(PATH_PLAY_MODE, {"type": "playerPlayMode", "playerPlayMode": "shuffleRepeatAll"})
+    assert state.play_mode == "shuffleRepeatAll"
+    assert play_mode_parts(state.play_mode) == (True, "all")
+    assert play_mode_parts(None) == (False, "off")
+    assert play_mode_parts("somethingNew") == (False, "off")
+
+
+def test_next_track_starts_at_zero() -> None:
+    state = HegelState()
+    track = {"state": "playing", "status": {"duration": 180000}, "trackRoles": {"title": "One"}}
+    state.apply_event("player:player/data", track)
+    state.set_play_time(179000)
+    assert state.position == 179
+    state.apply_event("player:player/data", {**track, "trackRoles": {"title": "Two"}})
+    assert state.position == 0
+    state.set_play_time(5000)
+    state.apply_event("player:player/data", {**track, "trackRoles": {"title": "Two"}, "state": "paused"})
+    assert state.position == 5  # same track: position kept
 
 
 def test_replay_recorded_events() -> None:

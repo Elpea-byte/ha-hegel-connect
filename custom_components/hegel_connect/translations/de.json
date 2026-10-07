@@ -102,6 +102,9 @@
     },
     "unknown_source": {
       "message": "Unbekannter Eingang: {source}"
+    },
+    "play_mode_not_allowed": {
+      "message": "Der Verstärker erlaubt diese Kombination aus Zufallswiedergabe und Wiederholung ({mode}) für die aktuelle Wiedergabe nicht."
     }
   },
   "options": {
