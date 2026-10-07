@@ -6,6 +6,15 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.3.2] - 2026-10-07
+
+### Changed
+- New icon in a calm black, white and grey style, with a variant for dark themes.
+- Shorter, calmer texts when adding the amplifier (all six languages).
+
+### Added
+- Media player: `media_playlist` shows what the track plays from (a playlist or album), when the service reports it.
+
 ## [0.3.1] - 2026-10-07
 
 ### Changed
@@ -86,7 +95,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.3.1...dev
+[Unreleased]: ../../compare/v0.3.2...dev
+[0.3.2]: ../../compare/v0.3.1...v0.3.2
 [0.3.1]: ../../compare/v0.3.0...v0.3.1
 [0.3.0]: ../../compare/v0.2.1...v0.3.0
 [0.2.1]: ../../compare/v0.2.0...v0.2.1

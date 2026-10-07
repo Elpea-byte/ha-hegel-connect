@@ -42,6 +42,7 @@ async def test_state_from_device(hass: HomeAssistant, fake_hegel, config_entry) 
     assert state.attributes["source"] == "Network"
     assert state.attributes["volume_level"] == 0.17
     assert state.attributes["media_title"] == "Marido Dansa"
+    assert state.attributes["media_playlist"] == "New Dance 2026"
     assert "RCA" in state.attributes["source_list"]
 
 

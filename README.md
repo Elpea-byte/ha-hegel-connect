@@ -58,7 +58,7 @@ Hegel groups the H150, H400 and H600 together for home automation ([Hegel suppor
 - **Radio favorites sensor** with the stations saved in the Hegel Control app, to build radio buttons on a dashboard
 
 **Now playing and stream format**
-- Title, artist, album, cover art, streaming service, track length and position
+- Title, artist, album, the playlist or album it plays from, cover art, streaming service, track length and position
 - Sensors: **audio quality** (Hi-Res, CD quality, Lossless, Lossy, DSD), **codec**, **sample rate**, **bit depth**, **bitrate**, **streaming service**. The codec decides first, so 16-bit/48 kHz MP3 radio is *Lossy*, not *CD quality*
 
 **Status you can trust**

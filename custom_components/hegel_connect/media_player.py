@@ -184,6 +184,11 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return self.coordinator.data.player.album if self._playing_network() else None
 
     @property
+    def media_playlist(self) -> str | None:
+        """The playlist or album the track plays from, as the service reports it."""
+        return self.coordinator.data.player.playback_source if self._playing_network() else None
+
+    @property
     def media_image_url(self) -> str | None:
         return self.coordinator.data.player.image_url if self._playing_network() else None
 
