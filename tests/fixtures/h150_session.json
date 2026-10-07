@@ -37,6 +37,10 @@
   "settings:/system/manufacturer": {
    "status": 200,
    "body": "{\"value\":{\"type\":\"string_\",\"string_\":\"Hegel\"},\"defaultValue\":{\"type\":\"string_\",\"string_\":\"Hegel\"},\"type\":\"value\",\"title\":\"Device Manufacturer\",\"path\":\"settings:/system/manufacturer\"}"
+  },
+  "player:player/data/playMode": {
+   "status": 200,
+   "body": "{\"value\":{\"type\":\"playerPlayMode\",\"playerPlayMode\":\"normal\"},\"type\":\"value\",\"path\":\"player:player/data/playMode\"}"
   }
  },
  "rows": {
@@ -1551,5 +1555,8 @@
     }
    }
   }
- ]
+ ],
+ "recorded_later": {
+  "player:player/data/playMode": "2026-10-07"
+ }
 }

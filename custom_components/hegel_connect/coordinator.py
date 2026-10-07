@@ -237,7 +237,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 player_changed |= applied and path == PATH_PLAYER
         if player_changed and state.is_on:
             if state.player.duration:
-                self.hass.async_create_task(self._async_update_position())
+                self.hass.async_create_task(self.async_update_position())
             else:
                 state.set_play_time(None)
         if not was_on and state.is_on:
@@ -246,8 +246,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         if changed:
             self.async_set_updated_data(state)
 
-    async def _async_update_position(self) -> None:
-        """Read the playback position once (it is not pushed)."""
+    async def async_update_position(self) -> None:
+        """Read the playback position once (it is not pushed; also used right after a seek)."""
         try:
             value = await self.client.play_time()
         except HegelError as err:

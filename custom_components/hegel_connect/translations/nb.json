@@ -102,6 +102,9 @@
     },
     "unknown_source": {
       "message": "Ukjent inngang: {source}"
+    },
+    "play_mode_not_allowed": {
+      "message": "Forsterkeren tillater ikke denne kombinasjonen av tilfeldig rekkefølge og gjentakelse ({mode}) for det som spilles nå."
     }
   },
   "options": {

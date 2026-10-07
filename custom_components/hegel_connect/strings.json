@@ -102,6 +102,9 @@
     },
     "unknown_source": {
       "message": "Unknown input: {source}"
+    },
+    "play_mode_not_allowed": {
+      "message": "The amplifier does not allow this shuffle and repeat combination ({mode}) for what is playing now."
     }
   },
   "options": {

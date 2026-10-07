@@ -27,11 +27,10 @@ def test_unwrap_typed_values() -> None:
 
 def test_snapshot_state() -> None:
     state = HegelState()
-    # The recording predates play mode support; paths it lacks are covered below.
     for path in EVENT_PATHS:
-        if path in FIXTURE["snap"]:
-            state.apply_event(path, snapshot_value(path))
+        state.apply_event(path, snapshot_value(path))
     assert state.is_on
+    assert state.play_mode == "normal"
     assert state.volume == 17
     assert state.muted is False
     assert state.source_index == 9
@@ -49,6 +48,7 @@ def test_play_mode_event() -> None:
     assert state.play_mode == "shuffleRepeatAll"
     assert play_mode_parts(state.play_mode) == (True, "all")
     assert play_mode_parts(None) == (False, "off")
+    assert play_mode_parts("somethingNew") == (False, "off")
 
 
 def test_replay_recorded_events() -> None:

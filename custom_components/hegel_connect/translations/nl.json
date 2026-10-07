@@ -102,6 +102,9 @@
     },
     "unknown_source": {
       "message": "Onbekende ingang: {source}"
+    },
+    "play_mode_not_allowed": {
+      "message": "De versterker staat deze combinatie van shuffle en herhalen ({mode}) niet toe voor wat er nu speelt."
     }
   },
   "options": {

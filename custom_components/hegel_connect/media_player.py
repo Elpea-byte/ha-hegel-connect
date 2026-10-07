@@ -320,15 +320,29 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         repeat = play_mode_parts(self.coordinator.data.play_mode)[1]
-        await self._run(self.coordinator.client.set_play_mode(PLAY_MODES[(shuffle, repeat)]))
+        await self._set_play_mode(shuffle, repeat)
 
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         shuffle = play_mode_parts(self.coordinator.data.play_mode)[0]
-        await self._run(self.coordinator.client.set_play_mode(PLAY_MODES[(shuffle, str(repeat.value))]))
+        await self._set_play_mode(shuffle, str(repeat.value))
+
+    async def _set_play_mode(self, shuffle: bool, repeat: str) -> None:
+        """Send a shuffle/repeat combination, if the current source allows exactly that one."""
+        mode = PLAY_MODES[(shuffle, repeat)]
+        if not self.coordinator.data.player.play_mode_allowed(mode):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="play_mode_not_allowed",
+                translation_placeholders={"mode": mode},
+            )
+        await self._run(self.coordinator.client.set_play_mode(mode))
 
     async def async_media_seek(self, position: float) -> None:
-        """Jump to a position in seconds."""
+        """Jump to a position in seconds, then read the position back."""
         await self._run(self.coordinator.client.seek(round(position * 1000)))
+        # The amplifier does not always send an event after a seek; without this
+        # the progress bar would jump back to the old position.
+        await self.coordinator.async_update_position()
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):

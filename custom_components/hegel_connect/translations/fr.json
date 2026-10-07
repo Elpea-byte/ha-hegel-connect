@@ -102,6 +102,9 @@
     },
     "unknown_source": {
       "message": "Entrée inconnue : {source}"
+    },
+    "play_mode_not_allowed": {
+      "message": "L'amplificateur n'autorise pas cette combinaison de lecture aléatoire et de répétition ({mode}) pour ce qui est en cours de lecture."
     }
   },
   "options": {

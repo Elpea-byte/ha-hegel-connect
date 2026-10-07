@@ -367,10 +367,12 @@ async def test_seek_only_where_the_amplifier_allows_it(hass: HomeAssistant, fake
     fake.push("player:player/data", track)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY).attributes["supported_features"] & MediaPlayerEntityFeature.SEEK
+    await hass.async_block_till_done()
+    fake.calls.clear()
     await hass.services.async_call(
         MP_DOMAIN, "media_seek", {ATTR_ENTITY_ID: ENTITY, "seek_position": 92.5}, blocking=True
     )
-    assert ("seek", 92500) in fake.calls
+    assert [c for c in fake.calls if c[0] != "poll"] == [("seek", 92500), ("play_time",)]  # position read back
 
 
 async def test_shuffle_and_repeat_on_a_media_server(hass: HomeAssistant, fake_hegel, config_entry) -> None:
@@ -407,3 +409,26 @@ async def test_shuffle_and_repeat_on_a_media_server(hass: HomeAssistant, fake_he
     state = hass.states.get(ENTITY)
     assert state.attributes["shuffle"] is True
     assert state.attributes["repeat"] == "all"
+
+
+async def test_play_mode_combination_not_allowed(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Repeat one is offered by the amplifier, shuffle + repeat one is not: refuse before sending."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"pause": True, "playMode": {"shuffle": True, "repeatOne": True, "repeatAll": True}},
+            "status": {"duration": 240000},
+            "trackRoles": {"title": "So What", "mediaData": {"metaData": {"serviceName": "Media Servers"}}},
+        },
+    )
+    fake.push("player:player/data/playMode", {"type": "playerPlayMode", "playerPlayMode": "shuffle"})
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MP_DOMAIN, "repeat_set", {ATTR_ENTITY_ID: ENTITY, "repeat": "one"}, blocking=True
+        )
+    assert not any(call[0] == "play_mode" for call in fake.calls)
