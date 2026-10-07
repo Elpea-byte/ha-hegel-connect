@@ -371,3 +371,39 @@ async def test_seek_only_where_the_amplifier_allows_it(hass: HomeAssistant, fake
         MP_DOMAIN, "media_seek", {ATTR_ENTITY_ID: ENTITY, "seek_position": 92.5}, blocking=True
     )
     assert ("seek", 92500) in fake.calls
+
+
+async def test_shuffle_and_repeat_on_a_media_server(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Spotify Connect: no play modes. A media server: shuffle and repeat, combined as the amplifier names them."""
+    await _setup(hass, config_entry)
+    features = hass.states.get(ENTITY).attributes["supported_features"]
+    assert not features & MediaPlayerEntityFeature.SHUFFLE_SET
+    assert not features & MediaPlayerEntityFeature.REPEAT_SET
+    modes = {"shuffle": True, "repeatOne": True, "repeatAll": True, "shuffleRepeatOne": True, "shuffleRepeatAll": True}
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"pause": True, "seekTime": True, "playMode": modes},
+            "status": {"duration": 240000},
+            "trackRoles": {"title": "So What", "mediaData": {"metaData": {"serviceName": "Media Servers"}}},
+        },
+    )
+    fake.push("player:player/data/playMode", {"type": "playerPlayMode", "playerPlayMode": "normal"})
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY)
+    assert state.attributes["supported_features"] & MediaPlayerEntityFeature.SHUFFLE_SET
+    assert state.attributes["supported_features"] & MediaPlayerEntityFeature.REPEAT_SET
+    assert state.attributes["shuffle"] is False
+    assert state.attributes["repeat"] == "off"
+
+    await hass.services.async_call(MP_DOMAIN, "shuffle_set", {ATTR_ENTITY_ID: ENTITY, "shuffle": True}, blocking=True)
+    await hass.async_block_till_done()
+    assert ("play_mode", "shuffle") in fake.calls
+    await hass.services.async_call(MP_DOMAIN, "repeat_set", {ATTR_ENTITY_ID: ENTITY, "repeat": "all"}, blocking=True)
+    await hass.async_block_till_done()
+    assert ("play_mode", "shuffleRepeatAll") in fake.calls
+    state = hass.states.get(ENTITY)
+    assert state.attributes["shuffle"] is True
+    assert state.attributes["repeat"] == "all"

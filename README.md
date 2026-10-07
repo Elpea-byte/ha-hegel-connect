@@ -53,7 +53,7 @@ Hegel groups the H150, H400 and H600 together for home automation ([Hegel suppor
 - **Volume** (set and step) and **mute**, with a **maximum volume** that Home Assistant never exceeds
 - **Inputs** read from the amplifier, so every model shows its own inputs; hide the ones you do not use and rename the others
 - **Reliable input switching**: waits until the amplifier is on, pauses a running stream and checks the input stays selected (seen on the H150: right after power-on it otherwise jumps back to Network)
-- **Playback**: play, pause, next, previous, stop and seeking within a track, **only where the current service allows it** (see below)
+- **Playback**: play, pause, next, previous, stop, seeking within a track, shuffle and repeat, **only where the current service allows it** (see below)
 - **Media browser**: your internet radio favorites, all internet radio, **media servers** (UPnP/DLNA, e.g. your NAS), a **USB stick** in the amplifier (not tested yet) and recently played. Nothing to set up: Hegel Connect shows the servers the amplifier finds itself. Albums are started the same way as in the Hegel web client, so the amplifier continues with the next track; photo and video folders are left out
 - **Radio favorites sensor** with the stations saved in the Hegel Control app, to build radio buttons on a dashboard
 
