@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Fixed
+- Icon: no tile behind the knob any more, so it no longer shows as a white square in the integrations list on dark themes; light and dark variants now match other integrations.
+
 ## [0.3.2] - 2026-10-07
 
 ### Changed
