@@ -78,7 +78,12 @@ rules:
     comment: One config entry is one amplifier.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+    status: done
+    comment: >-
+      All entities are on by default on purpose: owners of a hi-fi amplifier want the stream
+      details (codec, sample rate, bit depth, bitrate). They keep no long-term statistics, so
+      they do not fill the database.
   entity-translations: done
   exception-translations: done
   icon-translations: done

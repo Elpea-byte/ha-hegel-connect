@@ -99,7 +99,7 @@ For an amplifier named *Hegel H150*:
 | `media_player.hegel_h150` | Power, volume, mute, input, playback, now playing, media browser |
 | `sensor.hegel_h150_audio_quality` | Hi-Res, CD quality, Lossless, Lossy, DSD (while the streamer plays) |
 | `sensor.hegel_h150_streaming_service` | The service that plays (TIDAL, Spotify, radio, ...) |
-| `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them. **Disabled by default**: enable them on the device page if you want them |
+| `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them (kept in history, no long-term statistics) |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for radio buttons on a dashboard |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
