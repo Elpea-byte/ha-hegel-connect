@@ -374,10 +374,10 @@ async def test_seek_only_where_the_amplifier_allows_it(hass: HomeAssistant, fake
     await hass.async_block_till_done()
     fake.calls.clear()
     await hass.services.async_call(
-        MP_DOMAIN, "media_seek", {ATTR_ENTITY_ID: ENTITY, "seek_position": 92.5}, blocking=True
+        MP_DOMAIN, "media_seek", {ATTR_ENTITY_ID: ENTITY, "seek_position": 95.25}, blocking=True
     )
-    assert [c for c in fake.calls if c[0] != "poll"] == [("seek", 92500)]
-    assert hass.states.get(ENTITY).attributes["media_position"] == 92  # shown at once, no jump back
+    assert [c for c in fake.calls if c[0] != "poll"] == [("seek", 95250)]
+    assert hass.states.get(ENTITY).attributes["media_position"] == 95  # shown at once, no jump back
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
     assert ("play_time",) in fake.calls  # read back once the amplifier has buffered
