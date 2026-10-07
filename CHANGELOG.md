@@ -9,8 +9,14 @@ Changes on the `dev` branch that are not in a release yet.
 ### Fixed
 - A manually entered IPv6 address now works: it is put in square brackets in URLs (it may also be typed as `[address]`). Discovery still uses IPv4 only.
 
+### Changed
+- Codec, sample rate, bit depth and bitrate sensors are disabled by default on new installs (enable them on the device page). Existing installs keep their current setting. Audio quality and streaming service stay on.
+
 ### Added
 - Issue template for feature requests.
+- `quality_scale.yaml`: honest self-assessment against Home Assistant's integration quality scale.
+- CI: strict type check (mypy) and test coverage report.
+- README: how to remove the integration, and a note on the built-in Hegel integration's discovery.
 
 ## [0.2.1] - 2026-10-06
 

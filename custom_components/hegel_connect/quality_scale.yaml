@@ -1,0 +1,90 @@
+# Self-assessment against the Home Assistant integration quality scale
+# (https://developers.home-assistant.io/docs/core/integration-quality-scale/).
+# Hegel Connect is a custom integration; this file is an honest checklist, not
+# an official rating. "todo" items are known gaps.
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom actions; only the standard media player and number actions.
+  appropriate-polling:
+    status: done
+    comment: Local push (event queue). Only radio favorites are refreshed every few minutes, while connected.
+  brands: done
+  common-modules:
+    status: done
+    comment: coordinator.py and entity.py.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: todo
+    comment: The client lives in api.py (no Home Assistant imports). Before a core submission it moves to its own PyPI library, released from CI.
+  docs-actions:
+    status: exempt
+    comment: No custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events themselves; the coordinator pushes updates.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: Setup fails (retry) when the amplifier cannot be reached, unless a saved copy of its inputs exists (amplifier switched off at the mains); it then starts as unavailable/off and connects when it is back.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The amplifier's local API has no authentication.
+  test-coverage:
+    status: todo
+    comment: Coverage is measured in CI; a minimum (95%) is set once the first measurement is in.
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: One config entry is one amplifier.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No situation needs a repair; setup points owners of IP-control models to the built-in integration.
+  stale-devices:
+    status: exempt
+    comment: One config entry is one amplifier; removing the entry removes the device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: mypy (strict) runs in CI; remaining findings are being fixed.

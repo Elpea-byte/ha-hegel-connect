@@ -26,4 +26,15 @@ jobs:
           python-version: "3.13"
           cache: pip
       - run: pip install -r requirements_test.txt
-      - run: pytest -q
+      - run: pytest -q --cov=custom_components.hegel_connect --cov-report=term-missing
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements_test.txt
+      - run: mypy custom_components/hegel_connect
