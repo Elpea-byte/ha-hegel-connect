@@ -474,3 +474,33 @@ async def test_play_mode_combination_not_allowed(hass: HomeAssistant, fake_hegel
             MP_DOMAIN, "repeat_set", {ATTR_ENTITY_ID: ENTITY, "repeat": "one"}, blocking=True
         )
     assert not any(call[0] == "play_mode" for call in fake.calls)
+
+
+async def test_radio_has_no_pause_and_pause_stops(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Live radio reports no pause control: no pause button, and pause stops like the web client."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"next_": False, "previous": False, "seekTime": False},
+            "trackRoles": {"title": "Qmusic", "mediaData": {"metaData": {"serviceName": "Airable"}}},
+        },
+    )
+    await hass.async_block_till_done()
+    features = hass.states.get(ENTITY).attributes["supported_features"]
+    assert not features & MediaPlayerEntityFeature.PAUSE
+    assert features & MediaPlayerEntityFeature.STOP
+    fake.calls.clear()
+    await hass.services.async_call(MP_DOMAIN, "media_pause", {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert [c for c in fake.calls if c[0] != "poll"] == [("control", "stop")]
+
+
+def test_browse_skips_amplifier_placeholders() -> None:
+    """A placeholder row like "hegel:emptyServer" is not offered to open or play."""
+    from custom_components.hegel_connect.media_player import _child
+
+    assert _child({"path": "hegel:emptyServer", "title": "No servers found"}, "ui:/upnp", 0, {}) is None
+    assert _child({"path": "upnp:/x", "title": "Info", "type": "value"}, "upnp:/folder", 0, {}) is None
+    assert _child({"path": "upnp:/x/1", "title": "So What", "type": "audio"}, "upnp:/folder", 0, {}) is not None

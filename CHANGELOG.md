@@ -9,6 +9,8 @@ Changes on the `dev` branch that are not in a release yet.
 ### Fixed
 - Play after pause no longer fails with "Directory is empty" (Qobuz Connect, media servers and other services, #17). Hegel Connect now resumes the way the Hegel web client does: by sending pause again, which the amplifier treats as a toggle. Spotify Connect keeps its own resume action.
 - Play while nothing is paused now explains that there is nothing to resume, instead of sending a command that the amplifier refuses.
+- Internet radio: no pause button any more (the amplifier has no pause for live radio and answered "Control is not supported"). Pause, for example from an automation or a remote, now stops the stream, like the Hegel web client.
+- Media browser: placeholder rows of the amplifier (such as an empty media server list) are no longer shown as playable items.
 
 ## [0.4.0] - 2026-10-07
 

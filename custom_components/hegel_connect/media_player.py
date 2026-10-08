@@ -103,7 +103,6 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.PLAY
-        | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.PLAY_MEDIA
     )
@@ -118,6 +117,10 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         """Next/previous only when the current service allows it (not Spotify, not radio)."""
         features = self._BASE_FEATURES
         data = self.coordinator.data
+        # Pause only where the service allows it: live radio has no pause (the
+        # amplifier answers "Control is not supported"); its web client shows Stop.
+        if not self._playing_network() or data.player.control_allowed("pause"):
+            features |= MediaPlayerEntityFeature.PAUSE
         if self._playing_network():
             if data.player.control_allowed("next_"):
                 features |= MediaPlayerEntityFeature.NEXT_TRACK
@@ -298,6 +301,11 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.client.control("stop"))
 
     async def async_media_pause(self) -> None:
+        """Pause; where the service has no pause (live radio) stop, like the web client."""
+        data = self.coordinator.data
+        if self._playing_network() and not data.player.control_allowed("pause"):
+            await self._run(self.coordinator.client.control("stop"))
+            return
         await self._run(self.coordinator.client.control("pause"))
 
     async def async_media_next_track(self) -> None:
@@ -489,6 +497,10 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
     kind = row.get("type")
     if kind in ("action", "image", "video"):
         return None
+    if row["path"].startswith("hegel:"):
+        # Placeholders of the amplifier itself (e.g. "hegel:emptyServer" while it
+        # still looks for media servers): nothing to open or play.
+        return None
     media_data = row.get("mediaData")
     meta = media_data.get("metaData") if isinstance(media_data, dict) else None
     if not isinstance(meta, dict):
@@ -509,6 +521,8 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
             can_expand=is_folder and not playable,
             thumbnail=thumbnail,
         )
+    if kind not in ("container", "audio"):
+        return None  # text rows and other non-media items
     if kind == "container":
         # Albums, artists, folders: open to see the tracks (and play the album there)
         return BrowseMedia(
