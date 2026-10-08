@@ -105,6 +105,9 @@
     },
     "play_mode_not_allowed": {
       "message": "Forsterkeren tillater ikke denne kombinasjonen av tilfeldig rekkefølge og gjentakelse ({mode}) for det som spilles nå."
+    },
+    "nothing_to_resume": {
+      "message": "Det er ingenting å fortsette. Start musikk fra mediebrowseren eller en app først."
     }
   },
   "options": {

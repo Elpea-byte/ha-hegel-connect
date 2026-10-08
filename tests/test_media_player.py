@@ -68,7 +68,7 @@ async def test_listener_survives_unexpected_event(hass: HomeAssistant, fake_hege
 
 
 async def test_play_error_with_known_service_is_reported(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    """No Spotify resume attempt when another service refuses play."""
+    """No Spotify resume attempt when another service refuses to resume."""
     await _setup(hass, config_entry)
     fake = fake_hegel[-1]
     fake.push(
@@ -84,6 +84,40 @@ async def test_play_error_with_known_service_is_reported(hass: HomeAssistant, fa
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
     assert ("resume_spotify",) not in fake.calls
+
+
+async def test_play_after_pause_toggles_pause(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Qobuz Connect / media server (#17): resume with "pause" again, never a bare "play"."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "paused",
+            "controls": {"pause": True, "next_": True, "previous": True},
+            "trackRoles": {"title": "So What", "mediaData": {"metaData": {"serviceName": "Qobuz"}}},
+        },
+    )
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert [c for c in fake.calls if c[0] != "poll"] == [("control", "pause"), ("control", "pause")]
+
+
+async def test_play_when_stopped_explains_instead_of_failing(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Nothing to resume: a clear message, and no command that would stop a session."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {"state": "stopped", "trackRoles": {"mediaData": {"metaData": {"serviceName": "Qobuz"}}}},
+    )
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert not any(c[0] in ("control", "resume_spotify") for c in fake.calls)
 
 
 async def test_max_volume_attribute_follows_number(hass: HomeAssistant, fake_hegel, config_entry) -> None:
@@ -440,3 +474,58 @@ async def test_play_mode_combination_not_allowed(hass: HomeAssistant, fake_hegel
             MP_DOMAIN, "repeat_set", {ATTR_ENTITY_ID: ENTITY, "repeat": "one"}, blocking=True
         )
     assert not any(call[0] == "play_mode" for call in fake.calls)
+
+
+async def test_radio_has_no_pause_and_pause_stops(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Live radio has no pause control: can_pause is false, and pause / play-pause stop like the web client."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"next_": False, "previous": False, "seekTime": False},
+            "trackRoles": {
+                "title": "Qmusic",
+                "mediaData": {"metaData": {"serviceName": "Airable", "radioStation": True}},
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    attrs = hass.states.get(ENTITY).attributes
+    assert attrs["can_pause"] is False
+    # PAUSE stays on: Home Assistant only accepts media_play_pause with PLAY and PAUSE.
+    assert attrs["supported_features"] & MediaPlayerEntityFeature.PAUSE
+    assert attrs["supported_features"] & MediaPlayerEntityFeature.STOP
+    for service in ("media_pause", "media_play_pause"):
+        fake.calls.clear()
+        await hass.services.async_call(MP_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+        assert [c for c in fake.calls if c[0] != "poll"] == [("control", "stop")]
+
+
+async def test_service_without_pause_flag_keeps_real_pause(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """A service that reports no pause flag but is not radio (e.g. AirPlay) pauses, it does not stop."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"next_": True, "previous": True},
+            "trackRoles": {"title": "Song", "mediaData": {"metaData": {"serviceName": "AirPlay"}}},
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["can_pause"] is True
+    fake.calls.clear()
+    await hass.services.async_call(MP_DOMAIN, "media_pause", {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert [c for c in fake.calls if c[0] != "poll"] == [("control", "pause")]
+
+
+def test_browse_skips_amplifier_placeholders() -> None:
+    """A placeholder row like "hegel:emptyServer" is not offered to open or play."""
+    from custom_components.hegel_connect.media_player import _child
+
+    assert _child({"path": "hegel:emptyServer", "title": "No servers found"}, "ui:/upnp", 0, {}) is None
+    assert _child({"path": "upnp:/x", "title": "Info", "type": "value"}, "upnp:/folder", 0, {}) is None
+    assert _child({"path": "upnp:/x/1", "title": "So What", "type": "audio"}, "upnp:/folder", 0, {}) is not None
