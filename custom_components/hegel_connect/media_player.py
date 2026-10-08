@@ -274,25 +274,25 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         await self._run(self.coordinator.async_select_source(name))
 
     async def async_media_play(self) -> None:
-        """Resume. Spotify Connect needs its own resume action; a bare "play"
-        answers "Directory is empty" there and stops the session."""
+        """Resume, the way the Hegel web client does it.
+
+        A bare "play" without a track answers "Directory is empty" and stops the
+        session (seen with Spotify Connect, Qobuz Connect and media servers, #17).
+        The web client resumes a paused stream by sending "pause" again (it is a
+        toggle) and offers nothing to resume when the player is stopped. Spotify
+        Connect keeps its own resume action.
+        """
         data = self.coordinator.data
         client = self.coordinator.client
         if (data.player.service or data.last_service) == "Spotify":
             await self._run(client.resume_spotify())
             return
-        try:
-            await client.control("play")
-        except HegelError as err:
-            # The service name can be gone while paused; the amplifier then answers
-            # with an error (e.g. "Directory is empty"). Only then (service unknown)
-            # try the Spotify resume, without depending on the exact error text.
-            if data and (data.player.service or data.last_service):
-                raise _command_failed(err) from err
-            try:
-                await client.resume_spotify()
-            except HegelError:
-                raise _command_failed(err) from err
+        if data.player.state == "paused":
+            await self._run(client.control("pause"))
+            return
+        if data.player.state in ("playing", "buffering", "transitioning"):
+            return  # already playing
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="nothing_to_resume")
 
     async def async_media_stop(self) -> None:
         await self._run(self.coordinator.client.control("stop"))

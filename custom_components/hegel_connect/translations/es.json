@@ -105,6 +105,9 @@
     },
     "play_mode_not_allowed": {
       "message": "El amplificador no permite esta combinación de reproducción aleatoria y repetición ({mode}) para lo que suena ahora."
+    },
+    "nothing_to_resume": {
+      "message": "No hay nada que reanudar. Inicia primero música desde el explorador multimedia o una aplicación."
     }
   },
   "options": {

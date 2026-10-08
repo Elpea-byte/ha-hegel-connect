@@ -105,6 +105,9 @@
     },
     "play_mode_not_allowed": {
       "message": "L'amplificateur n'autorise pas cette combinaison de lecture aléatoire et de répétition ({mode}) pour ce qui est en cours de lecture."
+    },
+    "nothing_to_resume": {
+      "message": "Il n'y a rien à reprendre. Lancez d'abord de la musique depuis le navigateur multimédia ou une application."
     }
   },
   "options": {

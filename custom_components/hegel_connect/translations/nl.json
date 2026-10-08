@@ -105,6 +105,9 @@
     },
     "play_mode_not_allowed": {
       "message": "De versterker staat deze combinatie van shuffle en herhalen ({mode}) niet toe voor wat er nu speelt."
+    },
+    "nothing_to_resume": {
+      "message": "Er is niets om te hervatten. Start eerst muziek via de mediabrowser of een app."
     }
   },
   "options": {

@@ -6,6 +6,10 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Fixed
+- Play after pause no longer fails with "Directory is empty" (Qobuz Connect, media servers and other services, #17). Hegel Connect now resumes the way the Hegel web client does: by sending pause again, which the amplifier treats as a toggle. Spotify Connect keeps its own resume action.
+- Play while nothing is paused now explains that there is nothing to resume, instead of sending a command that the amplifier refuses.
+
 ## [0.4.0] - 2026-10-07
 
 ### Added

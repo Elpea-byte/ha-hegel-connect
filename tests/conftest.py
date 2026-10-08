@@ -11,7 +11,14 @@ from unittest.mock import patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.hegel_connect.api import EVENT_PATHS, HegelConnectionError, HegelQueueLost, HegelSource, url_host
+from custom_components.hegel_connect.api import (
+    EVENT_PATHS,
+    HegelConnectionError,
+    HegelError,
+    HegelQueueLost,
+    HegelSource,
+    url_host,
+)
 from custom_components.hegel_connect.const import DOMAIN
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -126,6 +133,9 @@ class FakeHegel:
 
     async def control(self, command: str) -> None:
         self.calls.append(("control", command))
+        if command == "play":
+            # Like the real amplifier: a bare play without a track has nothing to play.
+            raise HegelError('setData 500: "Directory is empty. No playable items found."')
 
     async def play_time(self) -> dict:
         self.calls.append(("play_time",))
