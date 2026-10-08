@@ -477,7 +477,7 @@ async def test_play_mode_combination_not_allowed(hass: HomeAssistant, fake_hegel
 
 
 async def test_radio_has_no_pause_and_pause_stops(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    """Live radio reports no pause control: no pause button, and pause stops like the web client."""
+    """Live radio has no pause control: can_pause is false, and pause / play-pause stop like the web client."""
     await _setup(hass, config_entry)
     fake = fake_hegel[-1]
     fake.push(
@@ -489,12 +489,15 @@ async def test_radio_has_no_pause_and_pause_stops(hass: HomeAssistant, fake_hege
         },
     )
     await hass.async_block_till_done()
-    features = hass.states.get(ENTITY).attributes["supported_features"]
-    assert not features & MediaPlayerEntityFeature.PAUSE
-    assert features & MediaPlayerEntityFeature.STOP
-    fake.calls.clear()
-    await hass.services.async_call(MP_DOMAIN, "media_pause", {ATTR_ENTITY_ID: ENTITY}, blocking=True)
-    assert [c for c in fake.calls if c[0] != "poll"] == [("control", "stop")]
+    attrs = hass.states.get(ENTITY).attributes
+    assert attrs["can_pause"] is False
+    # PAUSE stays on: Home Assistant only accepts media_play_pause with PLAY and PAUSE.
+    assert attrs["supported_features"] & MediaPlayerEntityFeature.PAUSE
+    assert attrs["supported_features"] & MediaPlayerEntityFeature.STOP
+    for service in ("media_pause", "media_play_pause"):
+        fake.calls.clear()
+        await hass.services.async_call(MP_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+        assert [c for c in fake.calls if c[0] != "poll"] == [("control", "stop")]
 
 
 def test_browse_skips_amplifier_placeholders() -> None:

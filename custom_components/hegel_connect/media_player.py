@@ -103,6 +103,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.PLAY_MEDIA
     )
@@ -117,10 +118,6 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         """Next/previous only when the current service allows it (not Spotify, not radio)."""
         features = self._BASE_FEATURES
         data = self.coordinator.data
-        # Pause only where the service allows it: live radio has no pause (the
-        # amplifier answers "Control is not supported"); its web client shows Stop.
-        if not self._playing_network() or data.player.control_allowed("pause"):
-            features |= MediaPlayerEntityFeature.PAUSE
         if self._playing_network():
             if data.player.control_allowed("next_"):
                 features |= MediaPlayerEntityFeature.NEXT_TRACK
@@ -231,6 +228,9 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         data = self.coordinator.data
         return {
             "fixed_volume": data.volume_fixed,
+            # Live radio has no pause: media_pause stops it instead (Home Assistant
+            # needs PAUSE for media_play_pause, so the feature stays on).
+            "can_pause": not self._playing_network() or data.player.control_allowed("pause"),
             "service": data.player.service if self._playing_network() else None,
             "media_id": data.player.media_id if self._playing_network() else None,
             "audio_format": data.player.codec if self._playing_network() else None,
