@@ -6,10 +6,12 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.4.1] - 2026-10-08
+
 ### Fixed
 - Play after pause no longer fails with "Directory is empty" (Qobuz Connect, media servers and other services, #17). Hegel Connect now resumes the way the Hegel web client does: by sending pause again, which the amplifier treats as a toggle. Spotify Connect keeps its own resume action.
 - Play while nothing is paused now explains that there is nothing to resume, instead of sending a command that the amplifier refuses.
-- Internet radio: pause gave an error (the amplifier has no pause for live radio and answered "Control is not supported"). Pause and play/pause now stop the stream, like the Hegel web client. New attribute `can_pause` tells cards when to show a stop button instead of pause.
+- Internet radio: pause gave an error (the amplifier has no pause for live radio and answered "Control is not supported"). Pause and play/pause now stop the station, like the Hegel web client; other services keep a real pause. New attribute `can_pause` tells cards when to show a stop button instead of pause.
 - Media browser: placeholder rows of the amplifier (such as an empty media server list) are no longer shown as playable items.
 
 ## [0.4.0] - 2026-10-07
@@ -115,7 +117,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.4.0...dev
+[Unreleased]: ../../compare/v0.4.1...dev
+[0.4.1]: ../../compare/v0.4.0...v0.4.1
 [0.4.0]: ../../compare/v0.3.3...v0.4.0
 [0.3.3]: ../../compare/v0.3.2...v0.3.3
 [0.3.2]: ../../compare/v0.3.1...v0.3.2

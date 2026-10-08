@@ -174,6 +174,15 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     def source_list(self) -> list[str]:
         return [self.coordinator.source_label(s.index) or s.name for s in self.coordinator.visible_sources]
 
+    def _pause_stops(self) -> bool:
+        """Live radio has no pause; there pause stops the stream, like the web client.
+
+        Only for radio: a service that reports no pause flag (AirPlay, Google Cast)
+        keeps a real pause, so its session is not ended.
+        """
+        player = self.coordinator.data.player
+        return self._playing_network() and player.is_radio and not player.control_allowed("pause")
+
     def _playing_network(self) -> bool:
         data = self.coordinator.data
         return (
@@ -230,7 +239,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             "fixed_volume": data.volume_fixed,
             # Live radio has no pause: media_pause stops it instead (Home Assistant
             # needs PAUSE for media_play_pause, so the feature stays on).
-            "can_pause": not self._playing_network() or data.player.control_allowed("pause"),
+            "can_pause": not self._pause_stops(),
             "service": data.player.service if self._playing_network() else None,
             "media_id": data.player.media_id if self._playing_network() else None,
             "audio_format": data.player.codec if self._playing_network() else None,
@@ -302,8 +311,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
     async def async_media_pause(self) -> None:
         """Pause; where the service has no pause (live radio) stop, like the web client."""
-        data = self.coordinator.data
-        if self._playing_network() and not data.player.control_allowed("pause"):
+        if self._pause_stops():
             await self._run(self.coordinator.client.control("stop"))
             return
         await self._run(self.coordinator.client.control("pause"))

@@ -88,7 +88,9 @@ The amplifier reports per service which controls work; Hegel Connect follows it,
 | AirPlay (e.g. Apple Music) | AirPlay's own label, like the Hegel web client (not tested yet) | Not tested yet | Offered (not tested yet) | Not tested yet | Not tested yet |
 | Google Cast (e.g. YouTube Music) | Not tested yet | Not tested yet | Offered (not tested yet) | Not tested yet | Not tested yet |
 
-With Spotify Connect, *play* after *pause* uses Spotify's own resume action; on the H150 a plain play command was refused there and stopped the session.
+With Spotify Connect, *play* after *pause* uses Spotify's own resume action; on the H150 a plain play command was refused there and stopped the session. Other services resume the way the Hegel web client does.
+
+Live internet radio has no pause: *pause* stops the station, like the Hegel web client. After a stop there is nothing to resume, so start the station again from the media browser or a favorite. The media player's `can_pause` attribute is `false` while radio plays, so a card can show a stop button instead of pause.
 
 ### Entities
 
@@ -96,7 +98,7 @@ For an amplifier named *Hegel H150*:
 
 | Entity | |
 | :---- | :---- |
-| `media_player.hegel_h150` | Power, volume, mute, input, playback, now playing, media browser |
+| `media_player.hegel_h150` | Power, volume, mute, input, playback, now playing, media browser. Extra attributes: `service`, `audio_format`, `can_pause`, `max_volume`, `fixed_volume` |
 | `sensor.hegel_h150_audio_quality` | Hi-Res, CD quality, Lossless, Lossy, DSD (while the streamer plays) |
 | `sensor.hegel_h150_streaming_service` | The service that plays (TIDAL, Spotify, radio, ...) |
 | `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them (kept in history, no long-term statistics) |

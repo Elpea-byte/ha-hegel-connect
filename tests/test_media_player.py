@@ -485,7 +485,10 @@ async def test_radio_has_no_pause_and_pause_stops(hass: HomeAssistant, fake_hege
         {
             "state": "playing",
             "controls": {"next_": False, "previous": False, "seekTime": False},
-            "trackRoles": {"title": "Qmusic", "mediaData": {"metaData": {"serviceName": "Airable"}}},
+            "trackRoles": {
+                "title": "Qmusic",
+                "mediaData": {"metaData": {"serviceName": "Airable", "radioStation": True}},
+            },
         },
     )
     await hass.async_block_till_done()
@@ -498,6 +501,25 @@ async def test_radio_has_no_pause_and_pause_stops(hass: HomeAssistant, fake_hege
         fake.calls.clear()
         await hass.services.async_call(MP_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
         assert [c for c in fake.calls if c[0] != "poll"] == [("control", "stop")]
+
+
+async def test_service_without_pause_flag_keeps_real_pause(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """A service that reports no pause flag but is not radio (e.g. AirPlay) pauses, it does not stop."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push(
+        "player:player/data",
+        {
+            "state": "playing",
+            "controls": {"next_": True, "previous": True},
+            "trackRoles": {"title": "Song", "mediaData": {"metaData": {"serviceName": "AirPlay"}}},
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["can_pause"] is True
+    fake.calls.clear()
+    await hass.services.async_call(MP_DOMAIN, "media_pause", {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert [c for c in fake.calls if c[0] != "poll"] == [("control", "pause")]
 
 
 def test_browse_skips_amplifier_placeholders() -> None:
