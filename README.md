@@ -9,7 +9,7 @@ Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifi
 | | |
 | :---- | :---- |
 | **What** | Home Assistant custom integration (HACS) for Hegel streaming amplifiers |
-| **Models** | H150 (tested); H200, H400, H600 (expected) |
+| **Models** | H150 and H200 (tested); H400, H600 (expected) |
 | **Domain** | `hegel_connect` |
 | **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number` |
 | **Connection** | Local push over the amplifier's own web API (`iot_class: local_push`); no cloud, no account |
@@ -28,7 +28,7 @@ Hegel network amplifiers are controlled in two different ways:
 
 | Generation | Models | How it is controlled | Use |
 | :---- | :---- | :---- | :---- |
-| **Streaming platform** | H150, H400, H600 (H200 expected) | Built-in streamer with a web API (the same one the Hegel Control app and the amplifier's web page use) | **Hegel Connect** (this integration) |
+| **Streaming platform** | H150, H200, H400, H600 | Built-in streamer with a web API (the same one the Hegel Control app and the amplifier's web page use) | **Hegel Connect** (this integration) |
 | **IP control** | Röst, H95, H120, H190, H190V, H390, H590 | Hegel IP control protocol on TCP port 50001 | The built-in [Hegel integration](https://www.home-assistant.io/integrations/hegel/) in Home Assistant (since 2026.3) |
 
 Quick check: on the H150, `http://<amplifier-address>/webclient/` opens a Hegel page; an amplifier that does this uses the streaming platform. If you try to add an older amplifier to Hegel Connect, setup recognises it (it answers a read-only IP control status query) and points you to the built-in integration.
@@ -38,11 +38,11 @@ Quick check: on the H150, `http://<amplifier-address>/webclient/` opens a Hegel 
 | Model | Status |
 | :---- | :---- |
 | H150 | ✅ Tested by the maintainer |
-| H200 | 🟡 Expected to work, not tested yet |
+| H200 | ✅ Works, reported by a user ([#17](../../issues/17)): status, artwork, track info and pause/play, also with Qobuz Connect |
 | H400 | 🟡 Expected to work, not tested yet |
 | H600 | 🟡 Expected to work, not tested yet |
 
-Hegel groups the H150, H400 and H600 together for home automation ([Hegel support](https://support.hegel.com/product-articles/custom-install-sue)), so they are expected to behave the same. The H200 is a newer streaming model and is expected to work the same way; this is not confirmed yet. If you own an H200, H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
+Hegel groups the H150, H400 and H600 together for home automation ([Hegel support](https://support.hegel.com/product-articles/custom-install-sue)), so they are expected to behave the same. The H200 is a newer streaming model; a user confirmed it works ([#17](../../issues/17)). If you own an H200, H400 or H600, please [send a model report](../../issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
 
 ## Features
 
@@ -77,7 +77,7 @@ Hegel groups the H150, H400 and H600 together for home automation ([Hegel suppor
 
 ### What each streaming service allows
 
-The amplifier reports per service which controls work; Hegel Connect follows it, so buttons that would fail are not offered. Tested on the H150; "not tested yet" means what the code expects, not what was seen.
+The amplifier reports per service which controls work; Hegel Connect follows it, so buttons that would fail are not offered. Tested on the H150; "not tested yet" means what the code expects, not what was seen. Pause and play with Qobuz Connect were confirmed by a user on an H200.
 
 | Source | Format shown | Next / previous | Stop | Seek | Shuffle / repeat |
 | :---- | :---- | :---- | :---- | :---- | :---- |
@@ -198,7 +198,7 @@ Then open an [issue](../../issues/new/choose) with the log and the diagnostics f
 - Radio favorites are managed in the Hegel Control app; Home Assistant shows and plays them.
 - No network command is known for the DAC and display buttons of the Hegel remote, so Hegel Connect does not offer them.
 - Home Assistant's built-in *Hegel Amplifier* integration also listens for Hegel UPnP announcements. On the maintainer's H150 (Home Assistant 2026.9) it did not offer itself, but if it shows up as *Discovered* for a streaming model, choose *Ignore*: that integration is meant for the IP-control models (see the table at the top).
-- Tested on the H150 only; H200, H400 and H600 reports are very welcome.
+- Tested by the maintainer on the H150 and confirmed by a user on the H200; H400 and H600 reports are very welcome.
 - The network input is recognised by its name "Network", as the amplifier reports it. If a future firmware renames it, now playing and the stream sensors stay empty; please open an issue.
 - The amplifier's local API has no password. Hegel Connect checks that a device really is your amplifier (its id) before using a new address, but a device on your network that imitates the whole Hegel API cannot be told apart. Keep the amplifier on a trusted network.
 

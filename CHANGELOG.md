@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Documentation
+- H200 confirmed working by a user (#17): status, artwork, track info and pause/play, also with Qobuz Connect.
+
 ## [0.4.1] - 2026-10-08
 
 ### Fixed
