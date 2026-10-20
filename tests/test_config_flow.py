@@ -240,6 +240,8 @@ async def test_reconfigure_same_amplifier(hass: HomeAssistant, fake_hegel, confi
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data["host"] == "192.0.2.20"
+    # The entry reloads after a changed address: let that finish inside the test.
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_other_amplifier_refused(hass: HomeAssistant, fake_hegel, config_entry) -> None:

@@ -85,7 +85,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data={CONF_HOST: host, "model": model})
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),  # type: ignore[arg-type]
             errors=errors,
             description_placeholders={"core_url": CORE_HEGEL_URL},
         )
@@ -167,7 +167,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}),  # type: ignore[arg-type]
             errors=errors,
         )
 
@@ -223,5 +223,5 @@ class HegelOptionsFlow(OptionsFlow):
         }
         if user_input is not None:
             suggested.update(user_input)
-        data_schema = self.add_suggested_values_to_schema(vol.Schema(schema), suggested)
+        data_schema = self.add_suggested_values_to_schema(vol.Schema(schema), suggested)  # type: ignore[arg-type]
         return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors)

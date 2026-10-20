@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache: pip
       - run: pip install -r requirements_test.txt
       - run: pytest -q --cov=custom_components.hegel_connect --cov-report=term-missing
@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           cache: pip
       - run: pip install -r requirements_test.txt
       - run: mypy custom_components/hegel_connect
