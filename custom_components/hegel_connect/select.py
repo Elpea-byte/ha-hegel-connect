@@ -110,11 +110,15 @@ class HegelRadioFavorite(HegelEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         # Home Assistant has already checked that the option exists in options.
-        try:
-            await self.coordinator.client.play_path(self._paths()[option])
-        except HegelError as err:
-            raise _command_failed(err) from err
+        # Chosen first: the amplifier reports its switching while the command is still running,
+        # and that must not be written as "unknown" in between.
         self._clear_pending()
         self._pending = option
         self._cancel_pending = async_call_later(self.hass, PENDING_TIMEOUT, self._pending_expired)
         self.async_write_ha_state()
+        try:
+            await self.coordinator.client.play_path(self._paths()[option])
+        except HegelError as err:
+            self._clear_pending()
+            self.async_write_ha_state()
+            raise _command_failed(err) from err

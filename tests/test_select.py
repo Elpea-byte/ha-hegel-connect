@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
@@ -217,3 +218,40 @@ async def test_unload_cancels_the_time_out(hass: HomeAssistant, fake_hegel, conf
     await _choose(hass, "Qmusic")
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_no_unknown_is_written_while_switching(
+    hass: HomeAssistant, fake_hegel, config_entry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The amplifier reports the switch while the command runs; the select never goes through unknown."""
+
+    async def favorites(self) -> list[dict]:
+        return [
+            {"title": "Radio 10", "path": "airable:fav/r10", "id": "r10", "icon": None},
+            {"title": "Qmusic", "path": "airable:fav/q", "id": "q", "icon": None},
+        ]
+
+    monkeypatch.setattr(FakeHegel, "favorites", favorites)
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _radio("r10"))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).state == "Radio 10"
+
+    async def play_path(path: str) -> None:
+        # Like the real amplifier: the old station stops and the new one buffers before the command returns.
+        fake.push("player:player/data", {"state": "stopped"})
+        await asyncio.sleep(0.05)
+        fake.push("player:player/data", _radio("q", state="buffering"))
+        await asyncio.sleep(0.05)
+
+    monkeypatch.setattr(fake, "play_path", play_path)
+    written: list[str] = []
+    hass.bus.async_listen(
+        EVENT_STATE_CHANGED,
+        lambda event: written.append(event.data["new_state"].state) if event.data["entity_id"] == ENTITY else None,
+    )
+    await _choose(hass, "Qmusic")
+    await hass.async_block_till_done()
+    assert written
+    assert set(written) == {"Qmusic"}
