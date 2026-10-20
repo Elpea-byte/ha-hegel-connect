@@ -45,6 +45,11 @@
       "max_volume": {
         "default": "mdi:volume-high"
       }
+    },
+    "select": {
+      "radio_favorite": {
+        "default": "mdi:radio"
+      }
     }
   }
 }
