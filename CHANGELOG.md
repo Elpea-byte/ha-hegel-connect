@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Documentation
+- The README now shows the radio favorite select as the one way to start a station; the older `play_media` example with a template on the favorites sensor is gone (it still works).
+
 ## [0.5.0] - 2026-10-20
 
 ### Added
