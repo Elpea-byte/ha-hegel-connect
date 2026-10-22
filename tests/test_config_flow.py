@@ -352,3 +352,67 @@ async def test_options_need_known_inputs(hass: HomeAssistant, fake_hegel, config
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_inputs"
+
+
+def _sue_with(ip: str, addresses: list[str]) -> ZeroconfServiceInfo:
+    """A _sues800device announcement whose TXT record claims address ``ip``."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(addresses[0]),
+        ip_addresses=[ip_address(a) for a in addresses],
+        hostname=SUE_INFO.hostname,
+        name=SUE_INFO.name,
+        port=SUE_INFO.port,
+        type=SUE_INFO.type,
+        properties={**SUE_INFO.properties, "ip": ip},
+    )
+
+
+@pytest.mark.parametrize("announced", ["10.0.0.5/admin?x=", "evil.example", "10.0.0.5:8080", "2001:db8::1", "1.2.3"])
+async def test_discovery_ignores_injected_ip_property(hass: HomeAssistant, fake_hegel, announced: str) -> None:
+    """The TXT "ip" is only used when it is an IPv4 address; anything else must never reach an HTTP request."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_sue_with(announced, ["192.0.2.10"]),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"]["host"] == "192.0.2.10"
+    assert [fake.host for fake in fake_hegel] == ["192.0.2.10"]
+
+
+async def test_discovery_ip_property_not_announced_falls_back_to_source(hass: HomeAssistant, fake_hegel) -> None:
+    """A valid IPv4 in the TXT record that the announcement did not come from is not asked."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_sue_with("192.0.2.99", ["192.0.2.10"]),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"]["host"] == "192.0.2.10"
+    assert [fake.host for fake in fake_hegel] == ["192.0.2.10"]
+
+
+async def test_discovery_ip_property_among_several_addresses(hass: HomeAssistant, fake_hegel) -> None:
+    """A device with more addresses: the one in the TXT record is used when the announcement carries it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=_sue_with("192.0.2.11", ["192.0.2.10", "192.0.2.11"]),
+    )
+    assert result["description_placeholders"]["host"] == "192.0.2.11"
+
+
+@pytest.mark.parametrize(
+    "location",
+    ["http://evil.example:16500/x.xml", "http://[2001:db8::1/x.xml", "not a url"],
+)
+async def test_ssdp_host_must_be_an_ip_address(hass: HomeAssistant, fake_hegel, location: str) -> None:
+    info = SsdpServiceInfo(
+        ssdp_usn=SSDP_INFO.ssdp_usn, ssdp_st=SSDP_INFO.ssdp_st, ssdp_location=location, upnp=SSDP_INFO.upnp
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert fake_hegel == []
