@@ -4,7 +4,8 @@ Thanks for helping out! The most useful contributions right now:
 
 1. **Model reports** for the H200, H400 and H600 ([open one](../../issues/new?template=model_report.yml)). Also when everything works.
 2. **Bug reports** with the diagnostics file (Settings > Devices & services > Hegel Connect > ⋮ > *Download diagnostics*). The file contains no IP address or device ids.
-3. **Translations**: copy `custom_components/hegel_connect/translations/en.json` to `<language>.json` and translate the values. A test checks that every language has the same keys and placeholders.
+3. **Ideas** go in [Discussions](../../discussions/categories/ideas), where others can vote and comment. Issues are for bugs and model reports.
+4. **Translations**: copy `custom_components/hegel_connect/translations/en.json` to `<language>.json` and translate the values. A test checks that every language has the same keys and placeholders.
 
 ## Code
 
