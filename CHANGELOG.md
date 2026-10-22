@@ -11,6 +11,9 @@ Changes on the `dev` branch that are not in a release yet.
 ### Added
 - Radio favorite select (`select.<name>_radio_favorite`): choose one of the amplifier's radio favorites from a list to start it, in automations, scripts, voice assistants and dashboard cards. It shows the favorite that is playing, and keeps the station you chose selected while the amplifier switches to it (no flicker to unknown). The list follows the favorites in the Hegel Control app (#14).
 
+### Fixed
+- A number that is too large for Python (such as `1e999`) in an answer from the amplifier is skipped like other odd values, instead of restarting the push connection. A media id with a character like a superscript two instead of a digit now gives the normal "unknown media" error.
+
 ### Documentation
 - H200 confirmed working by a user (#17): status, artwork, track info and pause/play, also with Qobuz Connect.
 

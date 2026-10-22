@@ -365,7 +365,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         client = self.coordinator.client
         if media_id.startswith(TRACK_PREFIX):
             index, _, folder = media_id[len(TRACK_PREFIX) :].partition(":")
-            if not index.isdigit() or not folder:
+            if not index.isdecimal() or not folder:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="unknown_media",

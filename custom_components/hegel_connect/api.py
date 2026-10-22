@@ -550,7 +550,7 @@ class HegelClient:
         try:
             data = await self.get_raw(PATH_VOLUME)
             return int(_dig(data, "edit", "max") or 100)
-        except (HegelError, ValueError, TypeError):
+        except (HegelError, ValueError, TypeError, OverflowError):
             return 100
 
     async def play_time(self) -> Any:
@@ -566,7 +566,7 @@ class HegelClient:
                 state.apply_event(path, await self.get_value(path))
             except HegelConnectionError:
                 raise
-            except (HegelError, ValueError, TypeError) as err:
+            except (HegelError, ValueError, TypeError, OverflowError) as err:
                 _LOGGER.debug("Path %s not available: %s", path, err)
         if state.is_on:
             # In network standby this path does not return valid data.
