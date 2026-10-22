@@ -23,6 +23,7 @@ Changes on the `dev` branch that are not in a release yet.
 
 ### Development
 - Tests now run on Python 3.14 against Home Assistant 2026.10 (pytest-homeassistant-custom-component 0.13.373, pytest-cov 7.1.0), with mypy 2.4.0. No change for users.
+- The GitHub workflows run with read-only repository permissions, and every action is pinned to a commit (Dependabot keeps them current).
 
 ## [0.4.1] - 2026-10-08
 
