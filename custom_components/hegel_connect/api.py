@@ -86,6 +86,10 @@ POWER_ONLINE = "online"
 POWER_STANDBY = "networkStandby"
 NETWORK_SOURCE_NAME = "Network"
 
+# Answers are read in chunks and refused above this size (the whole recorded test session is 48 KB).
+READ_CHUNK = 65536
+MAX_RESPONSE = 8 * 1024 * 1024
+
 
 class HegelError(Exception):
     """Generic error returned by the amplifier."""
@@ -381,6 +385,19 @@ def play_request(track: dict[str, Any], parent: dict[str, Any] | None, index: in
     return {"control": "play", "mediaRoles": media, "trackRoles": track, "type": kind, "index": index}
 
 
+async def _read_text(resp: aiohttp.ClientResponse) -> str:
+    """The body as text, read in chunks so a runaway answer cannot fill the memory."""
+    body = bytearray()
+    async for chunk in resp.content.iter_chunked(READ_CHUNK):
+        body += chunk
+        if len(body) > MAX_RESPONSE:
+            raise HegelError("response too large")
+    try:
+        return body.decode(resp.charset or "utf-8", errors="replace")
+    except LookupError:  # a charset Python does not know
+        return body.decode("utf-8", errors="replace")
+
+
 def url_host(host: str) -> str:
     """Host as it goes into a URL: IPv6 addresses need square brackets."""
     try:
@@ -419,7 +436,7 @@ class HegelClient:
                 json=payload,
                 timeout=aiohttp.ClientTimeout(total=timeout or self._timeout),
             ) as resp:
-                text = await resp.text()
+                text = await _read_text(resp)
                 if resp.status >= 400:
                     if endpoint == "event/pollQueue":
                         raise HegelQueueLost(text[:200])

@@ -4,9 +4,20 @@ from __future__ import annotations
 
 import json
 
+import aiohttp
+from aiohttp import web
+from aiohttp.test_utils import TestServer
+import pytest
+
 from custom_components.hegel_connect.api import (
     EVENT_PATHS,
+    MAX_RESPONSE,
     PATH_PLAY_MODE,
+    READ_CHUNK,
+    HegelClient,
+    HegelConnectionError,
+    HegelError,
+    HegelQueueLost,
     HegelState,
     PlayerData,
     play_mode_parts,
@@ -184,3 +195,130 @@ def test_url_host_brackets_ipv6() -> None:
     assert url_host("h150.local") == "h150.local"
     assert url_host("2001:db8::10") == "[2001:db8::10]"
     assert url_host("fe80::1%eth0") == "[fe80::1%25eth0]"
+
+
+class _FakeResponse:
+    """Just enough of aiohttp's ClientResponse for HegelClient._request."""
+
+    def __init__(self, status: int, chunks: list[bytes], charset: str | None = "utf-8") -> None:
+        self.status = status
+        self.charset = charset
+        self.read_chunks = 0
+        self._chunks = chunks
+        self.content = self
+
+    async def iter_chunked(self, size: int):
+        for chunk in self._chunks:
+            self.read_chunks += 1
+            yield chunk
+
+
+class _FakeSession:
+    def __init__(self, response: _FakeResponse | Exception) -> None:
+        self._response = response
+
+    def request(self, *args, **kwargs):
+        response = self._response
+
+        class _Context:
+            async def __aenter__(self_inner):
+                if isinstance(response, Exception):
+                    raise response
+                return response
+
+            async def __aexit__(self_inner, *exc):
+                return False
+
+        return _Context()
+
+
+async def _ask(response: _FakeResponse | Exception, endpoint: str = "getData"):
+    client = HegelClient("192.0.2.10", _FakeSession(response))  # type: ignore[arg-type]
+    return await client._request("GET", endpoint)
+
+
+async def test_request_parses_json_in_chunks() -> None:
+    body = json.dumps({"value": "café"}).encode()
+    result = await _ask(_FakeResponse(200, [body[:5], body[5:]]))
+    assert result == {"value": "café"}
+
+
+async def test_request_empty_body_is_none() -> None:
+    assert await _ask(_FakeResponse(200, [])) is None
+
+
+async def test_request_invalid_json_is_an_error() -> None:
+    with pytest.raises(HegelError, match="invalid JSON"):
+        await _ask(_FakeResponse(200, [b"<html>"]))
+
+
+async def test_request_error_text_is_cut_at_200() -> None:
+    with pytest.raises(HegelError) as err:
+        await _ask(_FakeResponse(500, [b"x" * 500]))
+    assert str(err.value) == "getData 500: " + "x" * 200
+
+
+async def test_request_lost_queue_has_its_own_error() -> None:
+    with pytest.raises(HegelQueueLost):
+        await _ask(_FakeResponse(500, [b"gone"]), endpoint="event/pollQueue")
+
+
+async def test_request_unknown_charset_and_bad_bytes_are_tolerated() -> None:
+    assert await _ask(_FakeResponse(200, [b'{"a": 1}'], charset="no-such-charset")) == {"a": 1}
+    with pytest.raises(HegelError, match="invalid JSON"):
+        await _ask(_FakeResponse(200, [bytes([0xFF, 0xFE])]))
+
+
+async def test_request_connection_problem_is_a_connection_error() -> None:
+    with pytest.raises(HegelConnectionError):
+        await _ask(TimeoutError())
+
+
+async def test_request_too_large_is_refused_and_stops_reading() -> None:
+    chunks = [b"0" * READ_CHUNK] * (MAX_RESPONSE // READ_CHUNK + 50)
+    response = _FakeResponse(200, chunks)
+    with pytest.raises(HegelError, match="response too large"):
+        await _ask(response)
+    assert response.read_chunks == MAX_RESPONSE // READ_CHUNK + 1  # not read to the end
+    # Also for an error answer: nothing of it is used.
+    with pytest.raises(HegelError, match="response too large"):
+        await _ask(_FakeResponse(500, chunks))
+
+
+async def test_request_exactly_at_the_limit_is_accepted() -> None:
+    body = b'"' + b"0" * (MAX_RESPONSE - 2) + b'"'
+    assert len(body) == MAX_RESPONSE
+    chunks = [body[i : i + READ_CHUNK] for i in range(0, len(body), READ_CHUNK)]
+    assert len(await _ask(_FakeResponse(200, chunks))) == MAX_RESPONSE - 2
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_request_against_a_real_http_server() -> None:
+    """The same reading code on real aiohttp (own server on localhost): normal, empty and runaway answers."""
+
+    async def small(request: web.Request) -> web.Response:
+        return web.json_response({"value": "café"})
+
+    async def empty(request: web.Request) -> web.Response:
+        return web.Response(status=200)
+
+    async def runaway(request: web.Request) -> web.StreamResponse:
+        resp = web.StreamResponse()
+        await resp.prepare(request)
+        try:
+            for _ in range(MAX_RESPONSE // READ_CHUNK + 50):
+                await resp.write(b"0" * READ_CHUNK)
+        except ConnectionError:  # the client hung up, as it should
+            pass
+        return resp
+
+    app = web.Application()
+    app.router.add_get("/api/small", small)
+    app.router.add_get("/api/empty", empty)
+    app.router.add_get("/api/runaway", runaway)
+    async with TestServer(app) as server, aiohttp.ClientSession() as session:
+        client = HegelClient(f"{server.host}:{server.port}", session)
+        assert await client._request("GET", "small") == {"value": "café"}
+        assert await client._request("GET", "empty") is None
+        with pytest.raises(HegelError, match="response too large"):
+            await client._request("GET", "runaway")
