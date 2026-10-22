@@ -17,6 +17,7 @@ Changes on the `dev` branch that are not in a release yet.
 
 ### Documentation
 - H200 confirmed working by a user (#17): status, artwork, track info and pause/play, also with Qobuz Connect.
+- Tested on Home Assistant 2026.10.
 
 ### Security
 - Discovery only connects to an IP address: the address in the _sues800device announcement is used only when it is an IPv4 address that the announcement came from, and a UPnP (SSDP) announcement with a host name or a broken address is ignored. Before, a device on your network could announce a different target for Home Assistant to contact. Manual setup is unchanged.

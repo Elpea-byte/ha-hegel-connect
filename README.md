@@ -163,7 +163,7 @@ data:
 
 ## Installation
 
-Developed and tested on Home Assistant 2026.9; HACS allows installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
+Developed and tested on Home Assistant 2026.10; HACS allows installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
 
 ### HACS (recommended)
 
