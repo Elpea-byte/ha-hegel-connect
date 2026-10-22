@@ -80,6 +80,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         # Volume ceiling, set by the "Maximum volume" number entity.
         self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
+        # Set by a refresh (homeassistant.update_entity) while the listener waits to reconnect.
+        self._reconnect_now = asyncio.Event()
         # Pending position check after a seek (cancel callback), see position_seeked().
         self._seek_check: Callable[[], None] | None = None
 
@@ -148,6 +150,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         return True
 
     async def _async_update_data(self) -> HegelState:
+        # Every entity shares this refresh, so homeassistant.update_entity on any of them lands here.
+        self.request_reconnect()
         try:
             return self._carry_over(await self.client.fetch_state())
         except HegelConnectionError as err:
@@ -166,14 +170,38 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
 
     # ------------------------------------------------------------------ push
 
-    async def _wait(self, delay: float) -> None:
-        """Wait between listener attempts (own method, so tests can patch it per coordinator)."""
-        await asyncio.sleep(delay)
+    def request_reconnect(self) -> None:
+        """Ask the listener to stop waiting and try again now; nothing happens while connected."""
+        if not self.connected:
+            self._reconnect_now.set()
+
+    async def _wait(self, delay: float) -> bool:
+        """Wait between listener attempts (own method, so tests can patch it per coordinator).
+
+        Ends early, returning True, when a refresh asks to reconnect.
+        """
+        try:
+            async with asyncio.timeout(delay):
+                await self._reconnect_now.wait()
+        except TimeoutError:
+            return False
+        return True
+
+    async def _backoff_wait(self, backoff: float) -> float:
+        """Wait before the next attempt; returns the wait after that.
+
+        A reconnect request ends the wait and starts over at the shortest wait.
+        """
+        if await self._wait(backoff):
+            self._reconnect_now.clear()
+            return BACKOFF_START
+        return min(backoff * 2, BACKOFF_MAX)
 
     async def async_listen(self) -> None:
         """Run forever: subscribe, wait for events, reconnect with backoff."""
-        backoff = BACKOFF_START
+        backoff: float = BACKOFF_START
         lost = 0
+        self._reconnect_now.clear()  # a request from before the listener existed does not count
         while True:
             try:
                 queue_id = await self.client.subscribe()
@@ -183,6 +211,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                     if not self.favorites:
                         self.hass.async_create_task(self.async_refresh_favorites())
                 self.connected = True
+                self._reconnect_now.clear()
                 backoff = BACKOFF_START
                 self.async_set_updated_data(state)
                 while True:
@@ -207,15 +236,13 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 continue
             except HegelError as err:
                 await self._async_connection_lost(str(err))
-                await self._wait(backoff)
-                backoff = min(backoff * 2, BACKOFF_MAX)
+                backoff = await self._backoff_wait(backoff)
             except Exception:
                 # Safety net: an unexpected answer must never stop push updates
                 # until a restart. Log it, then reconnect like a lost connection.
                 _LOGGER.exception("Unexpected error in the Hegel listener for %s", self.client.host)
                 await self._async_connection_lost("unexpected error")
-                await self._wait(backoff)
-                backoff = min(backoff * 2, BACKOFF_MAX)
+                backoff = await self._backoff_wait(backoff)
 
     async def _async_connection_lost(self, reason: str) -> None:
         """Show the amplifier as off (not unavailable) until it answers again."""

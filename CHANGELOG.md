@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Changed
+- `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
+
 ### Documentation
 - Ideas and feature requests now go in GitHub Discussions (Ideas) instead of issues, so the issue list (and the counter HACS shows) only holds bugs and model reports. The "Feature request" issue form is replaced by a link to Discussions.
 - The README has "My Home Assistant" buttons: one to open the repository in HACS, one that asks to set up the integration, to enter the address by hand (usually not needed, because the amplifier is discovered automatically). Both were tried on a Home Assistant instance.

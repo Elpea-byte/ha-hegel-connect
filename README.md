@@ -201,6 +201,16 @@ logger:
     custom_components.hegel_connect: debug
 ```
 
+**Amplifier switched off at the mains or unplugged?** When it comes back, Home Assistant normally notices within a minute (it retries after 5, 10, 20, 40 and then every 60 seconds). To reconnect at once, call the standard action `homeassistant.update_entity` on any Hegel Connect entity, for example from the automation that switches the power strip on:
+
+```yaml
+action: homeassistant.update_entity
+target:
+  entity_id: media_player.hegel_h150
+```
+
+It only helps once the amplifier answers on the network again; right after power-on it needs a little time to start.
+
 Then open an [issue](../../issues/new/choose) with the log and the diagnostics file (Settings > Devices & services > Hegel Connect > ⋮ > *Download diagnostics*).
 
 ## Known limitations
