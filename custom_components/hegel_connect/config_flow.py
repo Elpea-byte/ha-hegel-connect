@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -29,6 +30,23 @@ from .api import HegelClient, HegelConnectionError, HegelError, async_has_ip_con
 from .const import CONF_HIDDEN_SOURCES, CONF_SOURCE_NAMES, CORE_HEGEL_URL, DOMAIN, SUPPORTED_MODELS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _parse_ipv4(value: str) -> ipaddress.IPv4Address | None:
+    """The address when ``value`` is exactly an IPv4 address, otherwise None."""
+    try:
+        return ipaddress.IPv4Address(value)
+    except ValueError:
+        return None
+
+
+def _ssdp_host(location: str | None) -> str | None:
+    """The IP address in a UPnP description URL; a host name or a broken URL gives None."""
+    try:
+        host = urlparse(location or "").hostname
+        return str(ipaddress.ip_address(host)) if host else None
+    except ValueError:
+        return None
 
 
 class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -85,7 +103,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data={CONF_HOST: host, "model": model})
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),  # type: ignore[arg-type]
             errors=errors,
             description_placeholders={"core_url": CORE_HEGEL_URL},
         )
@@ -98,8 +116,8 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     # A known amplifier on a new address gets its address updated silently.
 
     async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> ConfigFlowResult:
-        host = urlparse(discovery_info.ssdp_location or "").hostname
-        return await self._async_step_discovered(host)
+        # Only an IP address is used as host: nothing else in the announcement may decide where we connect.
+        return await self._async_step_discovered(_ssdp_host(discovery_info.ssdp_location))
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
         host = str(discovery_info.ip_address)
@@ -109,13 +127,17 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             props = discovery_info.properties
             if str(props.get("manufacturer") or "").lower() != "hegel":
                 return self.async_abort(reason="not_supported")
-            host = str(props.get("ip") or host)
+            # The "ip" record is only trusted when it is a plain IPv4 address that the
+            # announcement itself came from; anything else could point us at another target.
+            announced = _parse_ipv4(str(props.get("ip") or ""))
+            if announced is not None and announced in discovery_info.ip_addresses:
+                host = str(announced)
             if uuid := props.get("uuid"):
                 # Only to skip duplicate flows. A new address is NOT taken from the
                 # announcement itself: _async_step_discovered first asks the device
                 # at that address for its id, so another device cannot take over.
                 await self.async_set_unique_id(str(uuid))
-        if ":" in host:
+        if _parse_ipv4(host) is None:
             return self.async_abort(reason="not_ipv4")
         return await self._async_step_discovered(host)
 
@@ -167,7 +189,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}),  # type: ignore[arg-type]
             errors=errors,
         )
 
@@ -223,5 +245,5 @@ class HegelOptionsFlow(OptionsFlow):
         }
         if user_input is not None:
             suggested.update(user_input)
-        data_schema = self.add_suggested_values_to_schema(vol.Schema(schema), suggested)
+        data_schema = self.add_suggested_values_to_schema(vol.Schema(schema), suggested)  # type: ignore[arg-type]
         return self.async_show_form(step_id="init", data_schema=data_schema, errors=errors)

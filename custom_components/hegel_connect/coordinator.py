@@ -236,7 +236,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             if isinstance(path, str) and "itemValue" in event:
                 try:
                     applied = state.apply_event(path, event["itemValue"])
-                except (TypeError, ValueError, AttributeError, KeyError) as err:
+                except (TypeError, ValueError, OverflowError, AttributeError, KeyError) as err:
                     _LOGGER.debug("Ignoring event %s: %s", path, err)
                     continue
                 changed |= applied
@@ -353,7 +353,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             await asyncio.sleep(SOURCE_VERIFY_WAIT)
             if not self.connected and self.data is not None:
                 # No push right now: read the input ourselves.
-                with contextlib.suppress(HegelError, TypeError, ValueError):
+                with contextlib.suppress(HegelError, TypeError, ValueError, OverflowError):
                     self.data.source_index = int(await self.client.get_value(PATH_SOURCE))
             if self.data is not None and self.data.source_index == source.index:
                 return

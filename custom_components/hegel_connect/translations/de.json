@@ -82,6 +82,11 @@
       "max_volume": {
         "name": "Maximale Lautstärke"
       }
+    },
+    "select": {
+      "radio_favorite": {
+        "name": "Radio-Favorit"
+      }
     }
   },
   "exceptions": {

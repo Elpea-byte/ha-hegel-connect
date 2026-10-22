@@ -82,6 +82,11 @@
       "max_volume": {
         "name": "Maximaal volume"
       }
+    },
+    "select": {
+      "radio_favorite": {
+        "name": "Radiofavoriet"
+      }
     }
   },
   "exceptions": {

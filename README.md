@@ -56,6 +56,7 @@ Hegel groups the H150, H400 and H600 together for home automation ([Hegel suppor
 - **Playback**: play, pause, next, previous, stop, seeking within a track, shuffle and repeat, **only where the current service allows it** (see below)
 - **Media browser**: your internet radio favorites, all internet radio, **media servers** (UPnP/DLNA, e.g. your NAS), a **USB stick** in the amplifier (not tested yet) and recently played. Nothing to set up: Hegel Connect shows the servers the amplifier finds itself. Albums are started the same way as in the Hegel web client, so the amplifier continues with the next track; photo and video folders are left out
 - **Radio favorites sensor** with the stations saved in the Hegel Control app, to build radio buttons on a dashboard
+- **Radio favorite select**: pick a favorite station from a list, in an automation, a script, a voice command or any dashboard card (tested on an H150: switching stations while playing and starting a favorite from standby)
 
 **Now playing and stream format**
 - Title, artist, album, the playlist or album it plays from, cover art, streaming service, track length and position
@@ -103,6 +104,7 @@ For an amplifier named *Hegel H150*:
 | `sensor.hegel_h150_streaming_service` | The service that plays (TIDAL, Spotify, radio, ...) |
 | `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them (kept in history, no long-term statistics) |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for radio buttons on a dashboard |
+| `select.hegel_h150_radio_favorite` | The radio favorites as options; choosing one starts that station, and it shows the favorite that is playing (unknown when something else plays) |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
 | `binary_sensor.hegel_h150_fixed_volume` | On when the current input uses fixed volume (diagnostic) |
@@ -125,6 +127,16 @@ automation:
           entity_id: number.hegel_h150_maximum_volume
         data:
           value: 40
+```
+
+Start a radio favorite by name (the options follow the favorites in the Hegel Control app):
+
+```yaml
+action: select.select_option
+target:
+  entity_id: select.hegel_h150_radio_favorite
+data:
+  option: "Qmusic"
 ```
 
 Play the first radio favorite from a script or button:
@@ -151,7 +163,7 @@ data:
 
 ## Installation
 
-Developed and tested on Home Assistant 2026.9; HACS allows installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
+Developed and tested on Home Assistant 2026.10; HACS allows installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
 
 ### HACS (recommended)
 

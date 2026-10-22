@@ -6,8 +6,26 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.5.0] - 2026-10-20
+
+### Added
+- Radio favorite select (`select.<name>_radio_favorite`): choose one of the amplifier's radio favorites from a list to start it, in automations, scripts, voice assistants and dashboard cards. It shows the favorite that is playing, and keeps the station you chose selected while the amplifier switches to it (no flicker to unknown). The list follows the favorites in the Hegel Control app (#14).
+
+### Fixed
+- A number that is too large for Python (such as `1e999`) in an answer from the amplifier is skipped like other odd values, instead of restarting the push connection. A media id with a character like a superscript two instead of a digit now gives the normal "unknown media" error.
+- A device answering with a non-finite number (such as 1e999) is now refused as invalid JSON instead of causing repeated errors.
+
 ### Documentation
 - H200 confirmed working by a user (#17): status, artwork, track info and pause/play, also with Qobuz Connect.
+- Tested on Home Assistant 2026.10.
+
+### Security
+- Discovery only connects to an IP address: the address in the _sues800device announcement is used only when it is an IPv4 address that the announcement came from, and a UPnP (SSDP) announcement with a host name or a broken address is ignored. Before, a device on your network could announce a different target for Home Assistant to contact. Manual setup is unchanged.
+- Answers from the amplifier are read in chunks and refused above 8 MiB (a normal answer is a few KB), so a faulty or fake device cannot fill Home Assistant's memory.
+
+### Development
+- Tests now run on Python 3.14 against Home Assistant 2026.10 (pytest-homeassistant-custom-component 0.13.373, pytest-cov 7.1.0), with mypy 2.4.0. No change for users.
+- The GitHub workflows run with read-only repository permissions, and every action is pinned to a commit (Dependabot keeps them current).
 
 ## [0.4.1] - 2026-10-08
 
@@ -120,7 +138,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.4.1...dev
+[Unreleased]: ../../compare/v0.5.0...dev
+[0.5.0]: ../../compare/v0.4.1...v0.5.0
 [0.4.1]: ../../compare/v0.4.0...v0.4.1
 [0.4.0]: ../../compare/v0.3.3...v0.4.0
 [0.3.3]: ../../compare/v0.3.2...v0.3.3

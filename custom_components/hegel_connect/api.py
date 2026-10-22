@@ -19,7 +19,8 @@ from datetime import UTC, datetime
 import ipaddress
 import json
 import logging
-from typing import Any
+import math
+from typing import Any, NoReturn
 
 import aiohttp
 
@@ -86,6 +87,10 @@ POWER_ONLINE = "online"
 POWER_STANDBY = "networkStandby"
 NETWORK_SOURCE_NAME = "Network"
 
+# Answers are read in chunks and refused above this size (the whole recorded test session is 48 KB).
+READ_CHUNK = 65536
+MAX_RESPONSE = 8 * 1024 * 1024
+
 
 class HegelError(Exception):
     """Generic error returned by the amplifier."""
@@ -97,6 +102,19 @@ class HegelConnectionError(HegelError):
 
 class HegelQueueLost(HegelError):
     """The event queue no longer exists on the amplifier (e.g. after a reboot)."""
+
+
+def _finite_float(text: str) -> float:
+    """json.loads hook: a number like 1e999 becomes inf, which later breaks round() and int()."""
+    value = float(text)
+    if not math.isfinite(value):
+        raise ValueError("non-finite number")
+    return value
+
+
+def _reject_constant(name: str) -> NoReturn:
+    """json.loads hook for NaN, Infinity and -Infinity, which are not valid JSON anyway."""
+    raise ValueError(f"non-finite constant {name}")
 
 
 def unwrap(value: Any) -> Any:
@@ -381,6 +399,19 @@ def play_request(track: dict[str, Any], parent: dict[str, Any] | None, index: in
     return {"control": "play", "mediaRoles": media, "trackRoles": track, "type": kind, "index": index}
 
 
+async def _read_text(resp: aiohttp.ClientResponse) -> str:
+    """The body as text, read in chunks so a runaway answer cannot fill the memory."""
+    body = bytearray()
+    async for chunk in resp.content.iter_chunked(READ_CHUNK):
+        body += chunk
+        if len(body) > MAX_RESPONSE:
+            raise HegelError("response too large")
+    try:
+        return body.decode(resp.charset or "utf-8", errors="replace")
+    except LookupError:  # a charset Python does not know
+        return body.decode("utf-8", errors="replace")
+
+
 def url_host(host: str) -> str:
     """Host as it goes into a URL: IPv6 addresses need square brackets."""
     try:
@@ -419,7 +450,7 @@ class HegelClient:
                 json=payload,
                 timeout=aiohttp.ClientTimeout(total=timeout or self._timeout),
             ) as resp:
-                text = await resp.text()
+                text = await _read_text(resp)
                 if resp.status >= 400:
                     if endpoint == "event/pollQueue":
                         raise HegelQueueLost(text[:200])
@@ -429,7 +460,7 @@ class HegelClient:
         if not text:
             return None
         try:
-            return json.loads(text)
+            return json.loads(text, parse_float=_finite_float, parse_constant=_reject_constant)
         except ValueError as err:
             raise HegelError(f"{endpoint}: invalid JSON") from err
 
@@ -533,7 +564,7 @@ class HegelClient:
         try:
             data = await self.get_raw(PATH_VOLUME)
             return int(_dig(data, "edit", "max") or 100)
-        except (HegelError, ValueError, TypeError):
+        except (HegelError, ValueError, TypeError, OverflowError):
             return 100
 
     async def play_time(self) -> Any:
@@ -549,7 +580,7 @@ class HegelClient:
                 state.apply_event(path, await self.get_value(path))
             except HegelConnectionError:
                 raise
-            except (HegelError, ValueError, TypeError) as err:
+            except (HegelError, ValueError, TypeError, OverflowError) as err:
                 _LOGGER.debug("Path %s not available: %s", path, err)
         if state.is_on:
             # In network standby this path does not return valid data.
