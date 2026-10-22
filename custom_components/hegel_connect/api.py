@@ -19,7 +19,8 @@ from datetime import UTC, datetime
 import ipaddress
 import json
 import logging
-from typing import Any
+import math
+from typing import Any, NoReturn
 
 import aiohttp
 
@@ -101,6 +102,19 @@ class HegelConnectionError(HegelError):
 
 class HegelQueueLost(HegelError):
     """The event queue no longer exists on the amplifier (e.g. after a reboot)."""
+
+
+def _finite_float(text: str) -> float:
+    """json.loads hook: a number like 1e999 becomes inf, which later breaks round() and int()."""
+    value = float(text)
+    if not math.isfinite(value):
+        raise ValueError("non-finite number")
+    return value
+
+
+def _reject_constant(name: str) -> NoReturn:
+    """json.loads hook for NaN, Infinity and -Infinity, which are not valid JSON anyway."""
+    raise ValueError(f"non-finite constant {name}")
 
 
 def unwrap(value: Any) -> Any:
@@ -446,7 +460,7 @@ class HegelClient:
         if not text:
             return None
         try:
-            return json.loads(text)
+            return json.loads(text, parse_float=_finite_float, parse_constant=_reject_constant)
         except ValueError as err:
             raise HegelError(f"{endpoint}: invalid JSON") from err
 

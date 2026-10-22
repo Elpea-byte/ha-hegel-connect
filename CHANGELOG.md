@@ -13,6 +13,7 @@ Changes on the `dev` branch that are not in a release yet.
 
 ### Fixed
 - A number that is too large for Python (such as `1e999`) in an answer from the amplifier is skipped like other odd values, instead of restarting the push connection. A media id with a character like a superscript two instead of a digit now gives the normal "unknown media" error.
+- A device answering with a non-finite number (such as 1e999) is now refused as invalid JSON instead of causing repeated errors.
 
 ### Documentation
 - H200 confirmed working by a user (#17): status, artwork, track info and pause/play, also with Qobuz Connect.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import aiohttp
 from aiohttp import web
@@ -20,6 +21,8 @@ from custom_components.hegel_connect.api import (
     HegelQueueLost,
     HegelState,
     PlayerData,
+    _finite_float,
+    _reject_constant,
     play_mode_parts,
     play_request,
     unwrap,
@@ -322,3 +325,42 @@ async def test_request_against_a_real_http_server() -> None:
         assert await client._request("GET", "empty") is None
         with pytest.raises(HegelError, match="response too large"):
             await client._request("GET", "runaway")
+
+
+@pytest.mark.parametrize(
+    "body", [b'{"a": 1e999}', b'{"a": NaN}', b'{"a": Infinity}', b'{"a": -Infinity}', b'{"a": -1e999}']
+)
+async def test_request_refuses_non_finite_numbers(body: bytes) -> None:
+    """json.loads turns 1e999 into inf, which later breaks round() and int(): refuse it as invalid JSON."""
+    with pytest.raises(HegelError, match="getData: invalid JSON"):
+        await _ask(_FakeResponse(200, [body]))
+
+
+async def test_request_ordinary_numbers_are_unchanged() -> None:
+    result = await _ask(_FakeResponse(200, [b'{"a": 1.5, "b": [2, 3.25], "c": -7, "d": 0.0, "e": 1e3}']))
+    assert result == {"a": 1.5, "b": [2, 3.25], "c": -7, "d": 0.0, "e": 1000.0}
+    assert isinstance(result["b"][0], int)
+
+
+def test_recorded_h150_session_has_no_non_finite_numbers() -> None:
+    """The check does not touch the real recording: every body of the session still loads."""
+    session = Path(__file__).parent / "fixtures" / "h150_session.json"
+    text = session.read_text(encoding="utf-8")
+    json.loads(text, parse_float=_finite_float, parse_constant=_reject_constant)
+    # Many values inside it are JSON texts themselves (the recorded answer bodies).
+    checked = 0
+
+    def walk(node: object) -> None:
+        nonlocal checked
+        if isinstance(node, dict):
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+        elif isinstance(node, str) and node.lstrip().startswith(("{", "[")):
+            json.loads(node, parse_float=_finite_float, parse_constant=_reject_constant)
+            checked += 1
+
+    walk(json.loads(text))
+    assert checked > 10
