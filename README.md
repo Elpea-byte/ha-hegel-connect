@@ -55,8 +55,8 @@ Hegel groups the H150, H400 and H600 together for home automation ([Hegel suppor
 - **Reliable input switching**: waits until the amplifier is on, pauses a running stream and checks the input stays selected (seen on the H150: right after power-on it otherwise jumps back to Network)
 - **Playback**: play, pause, next, previous, stop, seeking within a track, shuffle and repeat, **only where the current service allows it** (see below)
 - **Media browser**: your internet radio favorites, all internet radio, **media servers** (UPnP/DLNA, e.g. your NAS), a **USB stick** in the amplifier (not tested yet) and recently played. Nothing to set up: Hegel Connect shows the servers the amplifier finds itself. Albums are started the same way as in the Hegel web client, so the amplifier continues with the next track; photo and video folders are left out
-- **Radio favorites sensor** with the stations saved in the Hegel Control app, to build radio buttons on a dashboard
-- **Radio favorite select**: pick a favorite station from a list, in an automation, a script, a voice command or any dashboard card (tested on an H150: switching stations while playing and starting a favorite from standby)
+- **Radio favorite select**: pick one of the stations saved in the Hegel Control app from a list, in an automation, a script, a voice command or any dashboard card (tested on an H150: switching stations while playing and starting a favorite from standby)
+- **Radio favorites sensor** with the same stations including their logos, for custom dashboard cards
 
 **Now playing and stream format**
 - Title, artist, album, the playlist or album it plays from, cover art, streaming service, track length and position
@@ -103,8 +103,8 @@ For an amplifier named *Hegel H150*:
 | `sensor.hegel_h150_audio_quality` | Hi-Res, CD quality, Lossless, Lossy, DSD (while the streamer plays) |
 | `sensor.hegel_h150_streaming_service` | The service that plays (TIDAL, Spotify, radio, ...) |
 | `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them (kept in history, no long-term statistics) |
-| `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for radio buttons on a dashboard |
 | `select.hegel_h150_radio_favorite` | The radio favorites as options; choosing one starts that station, and it shows the favorite that is playing (unknown when something else plays) |
+| `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for custom dashboard cards that show the station logos |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
 | `binary_sensor.hegel_h150_fixed_volume` | On when the current input uses fixed volume (diagnostic) |
@@ -139,16 +139,7 @@ data:
   option: "Qmusic"
 ```
 
-Play the first radio favorite from a script or button:
-
-```yaml
-action: media_player.play_media
-target:
-  entity_id: media_player.hegel_h150
-data:
-  media_content_type: hegel_path
-  media_content_id: "{{ state_attr('sensor.hegel_h150_radio_favorites', 'favorites')[0].path }}"
-```
+To start a station from a button or a dashboard card, use the select above. The attributes of the radio favorites sensor (title, icon and path of each station) are meant for custom cards that show the logos; such a card can start a station with the same `select.select_option` call.
 
 Play an album from your NAS from a script or button. In the script editor, add the action *Media player: Play media*, choose the Hegel and click *Pick media*: you browse the same folders as in the media browser. The result looks like this (the id comes from your media server; if the server re-indexes your library it can change):
 
