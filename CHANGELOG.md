@@ -10,6 +10,7 @@ Changes on the `dev` branch that are not in a release yet.
 - `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
 
 ### Documentation
+- New [docs/ROADMAP.md](docs/ROADMAP.md): the direction towards 1.0 (plans, not promises).
 - Ideas and feature requests now go in GitHub Discussions (Ideas) instead of issues, so the issue list (and the counter HACS shows) only holds bugs and model reports. The "Feature request" issue form is replaced by a link to Discussions.
 - The README has "My Home Assistant" buttons: one to open the repository in HACS, one that asks to set up the integration, to enter the address by hand (usually not needed, because the amplifier is discovered automatically). Both were tried on a Home Assistant instance.
 - The README now shows the radio favorite select as the one way to start a station; the older `play_media` example with a template on the favorites sensor is gone (it still works).
