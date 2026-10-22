@@ -158,6 +158,10 @@ Developed and tested on Home Assistant 2026.10; HACS allows installing it on 202
 
 ### HACS (recommended)
 
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Elpea-byte&repository=ha-hegel-connect&category=integration)
+
+The button opens this repository in HACS on your own Home Assistant (you enter its address once on the page it opens). Without the button:
+
 1. HACS > ⋮ > *Custom repositories* > add `https://github.com/Elpea-byte/ha-hegel-connect`, type *Integration*.
 2. Search for **Hegel Connect** and download it.
 3. Restart Home Assistant.
@@ -171,6 +175,10 @@ Copy `custom_components/hegel_connect` to the `custom_components` folder of your
 The amplifier is **discovered automatically**, the same way the Hegel Control app finds it (mDNS service `_sues800device._tcp`), with UPnP/DLNA and Google Cast as backups. Home Assistant then shows it under Settings > Devices & services > *Discovered*; click *Add*.
 
 Not discovered (other subnet/VLAN, multicast blocked)? Add it by hand: *Add integration* > **Hegel Connect** > enter the IP address.
+
+Most people do not need this button, because the amplifier shows up under *Discovered* by itself. It only asks *Do you want to set up Hegel Connect?* on your Home Assistant; press *OK* to start the same setup where you enter the address yourself:
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=hegel_connect)
 
 A fixed IP address (DHCP reservation in your router) is still recommended. If the address does change, Home Assistant picks up the new one by itself the next time it sees the amplifier on the network.
 
