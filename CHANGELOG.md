@@ -11,6 +11,7 @@ Changes on the `dev` branch that are not in a release yet.
 
 ### Documentation
 - New [docs/ROADMAP.md](docs/ROADMAP.md): the direction towards 1.0 (plans, not promises).
+- README: a note not to install Hegel Connect together with the similar `hegel_streaming` integration for the same amplifier (both would be offered by discovery).
 - Ideas and feature requests now go in GitHub Discussions (Ideas) instead of issues, so the issue list (and the counter HACS shows) only holds bugs and model reports. The "Feature request" issue form is replaced by a link to Discussions.
 - The README has "My Home Assistant" buttons: one to open the repository in HACS, one that asks to set up the integration, to enter the address by hand (usually not needed, because the amplifier is discovered automatically). Both were tried on a Home Assistant instance.
 - The README now shows the radio favorite select as the one way to start a station; the older `play_media` example with a template on the favorites sensor is gone (it still works).

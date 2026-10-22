@@ -231,6 +231,8 @@ Hegel Connect uses the same local web API as the amplifier's own web page and th
 
 [hegel-home-assistant](https://github.com/zerostorypoints/hegel-home-assistant) (`hegel_streaming`, MIT) targets the same amplifiers through the same local API. Matching discovery on the `manufacturer`/`uuid` TXT records and reading the id from `systemmanager:systemMember` were inspired by it.
 
+Do not install both for the same amplifier: both announce themselves for the same discovery service, so Home Assistant would offer the amplifier twice. Pick one.
+
 ## Development
 
 The client in `custom_components/hegel_connect/api.py` has no Home Assistant dependencies and may move to its own package later. Tests replay a real H150 recording (`tests/fixtures/h150_session.json`):
