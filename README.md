@@ -184,7 +184,7 @@ A fixed IP address (DHCP reservation in your router) is still recommended. If th
 
 **Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names.
 
-**Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never set the volume above it; the amplifier's own remote and knob are not limited.
+**Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never make the volume louder than it; the amplifier's own remote and knob are not limited. If you turned the amplifier above the limit yourself, *louder* from Home Assistant does nothing and *quieter* brings it down to the limit.
 
 ### Removing
 

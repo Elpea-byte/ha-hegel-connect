@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Fixed
+- *Volume up* from Home Assistant no longer turns the amplifier down when it is already above the maximum volume (for example after you turned the knob): *louder* now does nothing there, and *quieter* still goes down to the limit.
+
 ### Changed
 - `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
 

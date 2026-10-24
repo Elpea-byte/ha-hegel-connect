@@ -15,7 +15,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -138,6 +140,60 @@ async def test_volume_respects_ceiling(hass: HomeAssistant, fake_hegel, config_e
         MP_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: ENTITY, ATTR_MEDIA_VOLUME_LEVEL: 0.9}, blocking=True
     )
     assert ("set_volume", 40) in fake_hegel[-1].calls
+
+
+async def _volume_setup(hass: HomeAssistant, config_entry, fake_hegel, amplifier: int, ceiling: int):
+    """Amplifier at ``amplifier`` (for example turned up with the knob), Home Assistant limit at ``ceiling``."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:volume", {"type": "i32_", "i32_": amplifier})
+    await hass.services.async_call(
+        "number", "set_value", {ATTR_ENTITY_ID: "number.hegel_h150_maximum_volume", "value": ceiling}, blocking=True
+    )
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    return fake
+
+
+def _set_volume_calls(fake) -> list[tuple]:
+    return [call for call in fake.calls if call[0] == "set_volume"]
+
+
+async def test_volume_up_over_the_ceiling_does_not_lower_the_volume(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """The amplifier is at 60, the limit at 40: "louder" must not make it quieter (60 -> 40)."""
+    fake = await _volume_setup(hass, config_entry, fake_hegel, amplifier=60, ceiling=40)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert _set_volume_calls(fake) == []
+    assert hass.states.get(ENTITY).attributes["volume_level"] == 0.6
+
+
+async def test_volume_set_louder_over_the_ceiling_is_ignored(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    fake = await _volume_setup(hass, config_entry, fake_hegel, amplifier=60, ceiling=40)
+    await hass.services.async_call(
+        MP_DOMAIN, SERVICE_VOLUME_SET, {ATTR_ENTITY_ID: ENTITY, ATTR_MEDIA_VOLUME_LEVEL: 0.7}, blocking=True
+    )
+    assert _set_volume_calls(fake) == []
+
+
+async def test_volume_down_over_the_ceiling_goes_to_the_ceiling(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Quieter is always allowed, and the limit still applies to what Home Assistant sets."""
+    fake = await _volume_setup(hass, config_entry, fake_hegel, amplifier=60, ceiling=40)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert _set_volume_calls(fake) == [("set_volume", 40)]
+
+
+async def test_volume_up_below_the_ceiling_takes_one_step(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    fake = await _volume_setup(hass, config_entry, fake_hegel, amplifier=30, ceiling=40)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert _set_volume_calls(fake) == [("set_volume", 32)]
+
+
+async def test_volume_up_at_the_ceiling_changes_nothing(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    fake = await _volume_setup(hass, config_entry, fake_hegel, amplifier=40, ceiling=40)
+    await hass.services.async_call(MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert _set_volume_calls(fake) == []
 
 
 async def test_select_source_pauses_stream_first(hass: HomeAssistant, fake_hegel, config_entry) -> None:

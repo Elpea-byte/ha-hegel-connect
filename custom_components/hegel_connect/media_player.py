@@ -270,7 +270,13 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         if self.coordinator.data.volume_fixed:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="fixed_volume")
         raw = round(volume * self.coordinator.volume_max)
-        await self._run(self.coordinator.client.set_volume(max(0, min(raw, self._max_volume))))
+        target = max(0, min(raw, self._max_volume))
+        current = self.coordinator.data.volume
+        # The limit keeps Home Assistant from making it louder. The knob and the remote are not limited, so the
+        # amplifier can already be above it: then "louder" must do nothing, not turn it down to the limit.
+        if current is not None and raw > current and target <= current:
+            return
+        await self._run(self.coordinator.client.set_volume(target))
 
     async def async_mute_volume(self, mute: bool) -> None:
         await self._run(self.coordinator.client.set_mute(mute))
