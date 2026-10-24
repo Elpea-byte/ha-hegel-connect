@@ -8,6 +8,7 @@ Changes on the `dev` branch that are not in a release yet.
 
 ### Fixed
 - *Volume up* from Home Assistant no longer turns the amplifier down when it is already above the maximum volume (for example after you turned the knob): *louder* now does nothing there, and *quieter* still goes down to the limit.
+- The stream sensors (audio quality, bitrate, streaming service and the others) show what the amplifier reports while a track is starting, instead of going empty until it says "playing". Values it does not report yet stay empty.
 
 ### Changed
 - `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
