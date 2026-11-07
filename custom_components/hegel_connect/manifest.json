@@ -1,6 +1,7 @@
 {
   "domain": "hegel_connect",
   "name": "Hegel Connect",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": [
     "@Elpea-byte"
   ],

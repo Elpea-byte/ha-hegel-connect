@@ -13,6 +13,9 @@ Changes on the `dev` branch that are not in a release yet.
 ### Changed
 - `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
 
+### Development
+- The manifest names a category (Speakers & audio), so the Marketplace can show Hegel Connect under it.
+
 ### Documentation
 - New [docs/ROADMAP.md](docs/ROADMAP.md): the direction towards 1.0 (plans, not promises).
 - README: a note not to install Hegel Connect together with the similar `hegel_streaming` integration for the same amplifier (both would be offered by discovery).
