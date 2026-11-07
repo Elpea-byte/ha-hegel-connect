@@ -270,7 +270,13 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         if self.coordinator.data.volume_fixed:
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="fixed_volume")
         raw = round(volume * self.coordinator.volume_max)
-        await self._run(self.coordinator.client.set_volume(max(0, min(raw, self._max_volume))))
+        target = max(0, min(raw, self._max_volume))
+        current = self.coordinator.data.volume
+        # The limit keeps Home Assistant from making it louder. The knob and the remote are not limited, so the
+        # amplifier can already be above it: then "louder" must do nothing, not turn it down to the limit.
+        if current is not None and raw > current and target <= current:
+            return
+        await self._run(self.coordinator.client.set_volume(target))
 
     async def async_mute_volume(self, mute: bool) -> None:
         await self._run(self.coordinator.client.set_mute(mute))
@@ -292,10 +298,16 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         session (seen with Spotify Connect, Qobuz Connect and media servers, #17).
         The web client resumes a paused stream by sending "pause" again (it is a
         toggle) and offers nothing to resume when the player is stopped. Spotify
-        Connect keeps its own resume action.
+        Connect keeps its own resume action. After live radio (which stops instead
+        of pausing) play starts the same favorite again. Only on the network input: on any other input
+        there is nothing to resume.
         """
         data = self.coordinator.data
         client = self.coordinator.client
+        if not self._playing_network():
+            # Another input (the TV, a turntable) or standby: resuming would switch the amplifier away from it,
+            # or pull a Spotify session over from another device. Start music on purpose instead.
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="nothing_to_resume")
         if (data.player.service or data.last_service) == "Spotify":
             await self._run(client.resume_spotify())
             return
@@ -304,6 +316,10 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             return
         if data.player.state in ("playing", "buffering", "transitioning"):
             return  # already playing
+        if radio_path := self.coordinator.last_radio_path():
+            # Live radio cannot pause, so stopping it left nothing to resume: start the same station again.
+            await self._run(client.play_path(radio_path))
+            return
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="nothing_to_resume")
 
     async def async_media_stop(self) -> None:

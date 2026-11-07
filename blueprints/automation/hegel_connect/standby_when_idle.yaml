@@ -1,0 +1,68 @@
+blueprint:
+  name: Hegel Connect – standby when nothing plays or nobody is home
+  description: >-
+    Puts the amplifier in standby after it has been on the network input for a
+    while without playing, and (optionally) when everybody has left home.
+    It never switches off while another input is in use (for example the TV on
+    an analog input), because the amplifier cannot tell whether that input plays.
+    Works with renamed inputs too.
+  domain: automation
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/standby_when_idle.yaml
+  input:
+    amplifier:
+      name: Amplifier
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: media_player
+    idle_minutes:
+      name: Idle for
+      description: Minutes on the network input without playing (stopped or paused).
+      default: 30
+      selector:
+        number:
+          min: 5
+          max: 240
+          step: 5
+          unit_of_measurement: min
+    when_away:
+      name: Also when nobody is home
+      description: Standby 5 minutes after the last person leaves (uses zone.home), on any input.
+      default: false
+      selector:
+        boolean:
+
+mode: single
+
+triggers:
+  - trigger: state
+    entity_id: !input amplifier
+    to: [idle, paused]
+    for:
+      minutes: !input idle_minutes
+    id: idle
+  - trigger: numeric_state
+    entity_id: zone.home
+    below: 1
+    for: {minutes: 5}
+    id: away
+
+variables:
+  amplifier: !input amplifier
+  when_away: !input when_away
+
+conditions:
+  # The media player is only "idle" or "paused" on the network input; on every other input it is "on".
+  # So the state alone tells that nothing plays on the network input, whatever the input is called.
+  - condition: template
+    value_template: >-
+      {{ (when_away and not is_state(amplifier, 'off')) if trigger.id == 'away'
+         else states(amplifier) in ['idle', 'paused'] }}
+
+actions:
+  - action: media_player.turn_off
+    target:
+      entity_id: !input amplifier

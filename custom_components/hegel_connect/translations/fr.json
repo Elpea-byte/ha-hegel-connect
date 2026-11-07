@@ -81,11 +81,19 @@
     "number": {
       "max_volume": {
         "name": "Volume maximal"
+      },
+      "start_volume": {
+        "name": "Volume de départ {input}"
       }
     },
     "select": {
       "radio_favorite": {
         "name": "Favori radio"
+      }
+    },
+    "switch": {
+      "remember_volume": {
+        "name": "Mémoriser le volume par entrée"
       }
     }
   },
@@ -113,6 +121,9 @@
     },
     "nothing_to_resume": {
       "message": "Il n'y a rien à reprendre. Lancez d'abord de la musique depuis le navigateur multimédia ou une application."
+    },
+    "fixed_volume_input": {
+      "message": "{input} a un volume fixe sur l'amplificateur : un volume de départ ne peut pas être défini."
     }
   },
   "options": {

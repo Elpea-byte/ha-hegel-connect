@@ -72,6 +72,10 @@ SENSORS: tuple[HegelSensorDescription, ...] = (
 )
 
 
+# While a track starts the amplifier reports what it knows already; a value it does not report stays empty.
+STREAM_STATES = ("playing", "paused", "buffering", "transitioning")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HegelConfigEntry,
@@ -99,7 +103,7 @@ class HegelSensor(HegelEntity, SensorEntity):
             not coordinator.connected
             or not data.is_on
             or coordinator.source_name(data.source_index) != NETWORK_SOURCE_NAME
-            or data.player.state not in ("playing", "paused")
+            or data.player.state not in STREAM_STATES
         ):
             return None
         return self.entity_description.value_fn(data.player)

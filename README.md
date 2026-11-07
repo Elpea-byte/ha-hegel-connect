@@ -8,14 +8,14 @@ Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifi
 
 | | |
 | :---- | :---- |
-| **What** | Home Assistant custom integration (HACS) for Hegel streaming amplifiers |
+| **What** | Home Assistant custom integration (HACS or the Marketplace) for Hegel streaming amplifiers |
 | **Models** | H150 and H200 (tested); H400, H600 (expected) |
 | **Domain** | `hegel_connect` |
 | **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number` |
 | **Connection** | Local push over the amplifier's own web API (`iot_class: local_push`); no cloud, no account |
 | **Discovery** | mDNS `_sues800device._tcp`, UPnP/DLNA (SSDP), Google Cast |
 | **Not for** | Older IP-control models (Röst, H95, H120, H190, H390, H590): use the built-in Hegel integration |
-| **Install** | HACS custom repository, or copy `custom_components/hegel_connect` |
+| **Install** | Custom repository in HACS (Home Assistant 2026.10 and older) or in the Marketplace (2026.11 and newer), or copy `custom_components/hegel_connect` |
 | **License** | MIT |
 
 ## Why this project
@@ -106,6 +106,8 @@ For an amplifier named *Hegel H150*:
 | `select.hegel_h150_radio_favorite` | The radio favorites as options; choosing one starts that station, and it shows the favorite that is playing (unknown when something else plays) |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for custom dashboard cards that show the station logos |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
+| `number.hegel_h150_start_volume_<input>` | Optional, off until you enable it: the volume to set when Home Assistant switches to that input (0 = leave the volume alone) |
+| `switch.hegel_h150_remember_volume_per_input` | Optional, off until you enable it: switching to an input returns to the volume it had last |
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
 | `binary_sensor.hegel_h150_fixed_volume` | On when the current input uses fixed volume (diagnostic) |
 
@@ -152,19 +154,48 @@ data:
   media_content_id: "upnp:/uuid:<server>/<album>?itemType=container"
 ```
 
+### Blueprints
+
+Ready-made automations with a one-click import (Settings > Automations & scenes > Blueprints). They only list this integration's own entities.
+
+- **Smart plug: reconnect at once**: Asks Hegel Connect to reconnect every few seconds after the plug that powers the amplifier turns on, until the amplifier answers (no waiting for the next retry).
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fsmart_plug_reconnect.yaml)
+- **Radio at a set time**: Switches the amplifier on at a set time on the days you choose and starts one of your radio favorites, at a volume you pick (never above the maximum volume).
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fradio_at_time.yaml)
+- **Standby when idle or nobody is home**: Puts the amplifier in standby after it has been idle on the network input for a while, and optionally when everyone has left home; other inputs are never switched off.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fstandby_when_idle.yaml)
+- **Lower the maximum volume at night**: Sets the maximum volume lower at night and back in the morning; a volume above the new maximum comes down at once.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnight_volume_limit.yaml)
+
+The blueprints use the amplifier's own name for the network input (*Network*). Hegel Connect accepts that name even when you gave the input your own name in the options.
+
 ## Installation
 
-Developed and tested on Home Assistant 2026.10; HACS allows installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
+Developed and tested on Home Assistant 2026.10; HACS and the Marketplace allow installing it on 2025.4 and newer (the test suite also passes on 2025.4.4). The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
 
-### HACS (recommended)
+### HACS or the Marketplace (recommended)
+
+Home Assistant 2026.11 replaced HACS with a built-in **Marketplace** (Settings > Marketplace). Both use the same repositories, so the steps differ only in where you click.
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Elpea-byte&repository=ha-hegel-connect&category=integration)
 
-The button opens this repository in HACS on your own Home Assistant (you enter its address once on the page it opens). Without the button:
+The button opens this repository on your own Home Assistant (you enter its address once on the page it opens): in HACS before 2026.11, in the Marketplace from 2026.11. Without the button:
+
+**Home Assistant 2026.11 and newer (Marketplace)**
+
+1. Settings > Marketplace > *Add from link*, enter `Elpea-byte/ha-hegel-connect`. The first time, the Marketplace asks you to connect your GitHub account: you approve a code on GitHub, and it only reads public information.
+2. Open **Hegel Connect** and select *Install*.
+3. Add it under Settings > Devices & services (restart Home Assistant first if the Marketplace says so).
+
+Updates of a repository added from a link are checked every 48 hours.
+
+**Home Assistant 2026.10 and older (HACS)**
 
 1. HACS > ⋮ > *Custom repositories* > add `https://github.com/Elpea-byte/ha-hegel-connect`, type *Integration*.
 2. Search for **Hegel Connect** and download it.
 3. Restart Home Assistant.
+
+Updating to Home Assistant 2026.11 carries your HACS installs and custom repositories over to the Marketplace by itself.
 
 ### Manual
 
@@ -182,13 +213,24 @@ Most people do not need this button, because the amplifier shows up under *Disco
 
 A fixed IP address (DHCP reservation in your router) is still recommended. If the address does change, Home Assistant picks up the new one by itself the next time it sees the amplifier on the network.
 
-**Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names.
+**Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names. If you save the options through the API or a script instead of the form, send `hidden_sources` again with the new names; leaving it out shows the hidden inputs again. The form in the interface fills it in for you.
 
-**Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never set the volume above it; the amplifier's own remote and knob are not limited.
+**Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never make the volume louder than it; the amplifier's own remote and knob are not limited. Lowering the maximum below the current volume brings the volume down to the new maximum at once (not on an input with fixed volume, and not while the amplifier is off). If you turned the amplifier above the limit yourself, *louder* from Home Assistant does nothing and *quieter* goes straight down to the limit, not one step. Volume steps are one point on the amplifier's scale.
+
+**Volume per input** is optional and does nothing until you enable it. The amplifier only has one *power-on volume* for all inputs; this goes further and is done by Home Assistant:
+
+Both are switched off by default, so you will not see them on the device page at first. To find them: Settings > Devices & services > Hegel Connect > your amplifier, then open *+ n entities not shown* (or the *Entities* tab with the filter set to show disabled entities), choose the ones you want and enable them. Home Assistant reloads the integration after a short moment.
+
+- `number.hegel_h150_start_volume_<input>`, one per input: the volume to set when Home Assistant switches to that input. **0 means off**: the volume is left alone. The slider goes up to your maximum volume.
+- `switch.hegel_h150_remember_volume_per_input`: the volume you used last on each input is brought back when you switch to it. A volume is only remembered after you change it on that input; an input where you never touched the volume keeps whatever the amplifier has. Turning the switch off throws the remembered volumes away. A start volume set for an input wins over the remembered one.
+- **Only when Home Assistant switches the input** (the source list, scripts, automations, the dashboard). Switching with the amplifier's own remote or the Hegel app, or by an app such as Spotify taking the amplifier over, is left alone. The same goes for switching the amplifier on: it keeps the input it had, and the volume is only set when the input is switched afterwards. For a safe volume at power-on, use the amplifier's own *power-on volume* setting in the Hegel Control app.
+- The maximum volume always applies. An input with **fixed volume** cannot have a start volume: once you have switched to such an input from Home Assistant, its start volume entity turns *unavailable*.
+- If you rename an input in the options, the start volume entity shows the new name after the integration is reloaded.
+- **Fixed volume is only learned when you switch to the input.** The amplifier reports whether the volume is fixed for the input that is selected, not for the other inputs, so Hegel Connect cannot read it for all inputs at startup. The start volume entity of such an input looks normal until Home Assistant has switched to it once; from then on it is *unavailable* and a call to it is refused. The binary sensor *Fixed volume* shows it for the current input.
 
 ### Removing
 
-Settings > Devices & services > Hegel Connect > ⋮ > *Delete*. This removes the amplifier and its entities from Home Assistant; nothing on the amplifier changes. Installed through HACS? Remove the integration there as well and restart Home Assistant.
+Settings > Devices & services > Hegel Connect > ⋮ > *Delete*. This removes the amplifier and its entities from Home Assistant; nothing on the amplifier changes. Installed through HACS or the Marketplace? Uninstall it there as well and restart Home Assistant. The Marketplace first asks you to remove the setup (or offers *Delete and uninstall*).
 
 ## Troubleshooting
 
@@ -199,6 +241,30 @@ logger:
   default: warning
   logs:
     custom_components.hegel_connect: debug
+```
+
+**Amplifier switched off at the mains or unplugged?** When it comes back, Home Assistant normally notices within a minute (it retries after 5, 10, 20, 40 and then every 60 seconds). To reconnect at once, call the standard action `homeassistant.update_entity` on any Hegel Connect entity, for example from the automation that switches the power strip on:
+
+```yaml
+action: homeassistant.update_entity
+target:
+  entity_id: media_player.hegel_h150
+```
+
+It only helps once the amplifier answers on the network again; right after power-on it needs a little time to start (about 20 to 45 seconds on an H150). A call that comes too early fails quietly and the normal retries carry on.
+
+If the amplifier hangs on a smart plug, wait for it to start and then ask for the connection. The delay is a starting point; adjust it to your amplifier (expected to work, the single call was tried on an H150 at the moment the amplifier answered):
+
+```yaml
+triggers:
+  - trigger: state
+    entity_id: switch.audio_plug   # your own plug
+    to: "on"
+actions:
+  - delay: "00:00:45"
+  - action: homeassistant.update_entity
+    target:
+      entity_id: media_player.hegel_h150
 ```
 
 Then open an [issue](../../issues/new/choose) with the log and the diagnostics file (Settings > Devices & services > Hegel Connect > ⋮ > *Download diagnostics*).
@@ -220,6 +286,8 @@ Hegel Connect uses the same local web API as the amplifier's own web page and th
 ## Related projects
 
 [hegel-home-assistant](https://github.com/zerostorypoints/hegel-home-assistant) (`hegel_streaming`, MIT) targets the same amplifiers through the same local API. Matching discovery on the `manufacturer`/`uuid` TXT records and reading the id from `systemmanager:systemMember` were inspired by it.
+
+Do not install both for the same amplifier: both announce themselves for the same discovery service, so Home Assistant would offer the amplifier twice. Pick one.
 
 ## Development
 

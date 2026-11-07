@@ -81,11 +81,19 @@
     "number": {
       "max_volume": {
         "name": "Maximaal volume"
+      },
+      "start_volume": {
+        "name": "Startvolume {input}"
       }
     },
     "select": {
       "radio_favorite": {
         "name": "Radiofavoriet"
+      }
+    },
+    "switch": {
+      "remember_volume": {
+        "name": "Volume per ingang onthouden"
       }
     }
   },
@@ -113,6 +121,9 @@
     },
     "nothing_to_resume": {
       "message": "Er is niets om te hervatten. Start eerst muziek via de mediabrowser of een app."
+    },
+    "fixed_volume_input": {
+      "message": "{input} heeft een vast volume op de versterker, dus er kan geen startvolume voor worden ingesteld."
     }
   },
   "options": {

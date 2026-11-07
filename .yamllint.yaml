@@ -1,0 +1,16 @@
+extends: default
+
+rules:
+  # Blueprint descriptions are sentences; keep lines readable but not narrow.
+  line-length:
+    max: 120
+    allow-non-breakable-inline-mappings: true  # source_url
+  document-start: disable
+  # "on"/"off" are used as plain words in state triggers.
+  truthy:
+    allowed-values: ["true", "false", "on", "off"]
+    check-keys: false
+  braces:
+    max-spaces-inside: 0
+  comments:
+    min-spaces-from-content: 2

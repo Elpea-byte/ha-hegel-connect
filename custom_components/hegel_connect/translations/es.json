@@ -81,11 +81,19 @@
     "number": {
       "max_volume": {
         "name": "Volumen máximo"
+      },
+      "start_volume": {
+        "name": "Volumen inicial {input}"
       }
     },
     "select": {
       "radio_favorite": {
         "name": "Favorito de radio"
+      }
+    },
+    "switch": {
+      "remember_volume": {
+        "name": "Recordar el volumen por entrada"
       }
     }
   },
@@ -113,6 +121,9 @@
     },
     "nothing_to_resume": {
       "message": "No hay nada que reanudar. Inicia primero música desde el explorador multimedia o una aplicación."
+    },
+    "fixed_volume_input": {
+      "message": "{input} tiene un volumen fijo en el amplificador, por lo que no se puede establecer un volumen inicial."
     }
   },
   "options": {

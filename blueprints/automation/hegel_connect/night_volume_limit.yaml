@@ -1,0 +1,70 @@
+blueprint:
+  name: Hegel Connect – lower maximum volume at night
+  description: >-
+    Sets the amplifier's "Maximum volume" to a lower value at night and back in
+    the morning. Since Hegel Connect 0.6 a lower maximum also brings a volume that
+    is above it down at once, so nobody is startled by a loud start late at night.
+  domain: automation
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/night_volume_limit.yaml
+  input:
+    max_volume:
+      name: Maximum volume entity
+      description: >-
+        Pick the amplifier's "Maximum volume" number (number.<name>_maximum_volume),
+        not one of the "Start volume" numbers. The list shows every number of this
+        integration, so check the name.
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: number
+    night_from:
+      name: Night starts
+      default: "22:00:00"
+      selector:
+        time:
+    night_until:
+      name: Night ends
+      default: "07:00:00"
+      selector:
+        time:
+    night_max:
+      name: Maximum at night
+      default: 30
+      selector:
+        number: {min: 1, max: 100, step: 1}
+    day_max:
+      name: Maximum during the day
+      default: 100
+      selector:
+        number: {min: 1, max: 100, step: 1}
+
+mode: queued
+
+triggers:
+  - trigger: time
+    at: !input night_from
+  - trigger: time
+    at: !input night_until
+  - trigger: homeassistant
+    event: start
+
+variables:
+  night_from: !input night_from
+  night_until: !input night_until
+  night_max: !input night_max
+  day_max: !input day_max
+  # Night can run past midnight (22:00 to 07:00) or stay within one day (01:00 to 05:00).
+  is_night: >-
+    {% set t = now().strftime('%H:%M:%S') %}
+    {{ ((t >= night_from or t < night_until) if night_from > night_until
+        else (night_from <= t < night_until)) | bool(false) }}
+
+actions:
+  - action: number.set_value
+    target:
+      entity_id: !input max_volume
+    data:
+      value: "{{ night_max if is_night else day_max }}"

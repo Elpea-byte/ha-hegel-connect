@@ -6,7 +6,38 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.6.0] - 2026-11-07
+
+Requires Home Assistant 2025.4 or newer. Nothing needs to be done after updating: the new volume entities are disabled until you enable them.
+
+### Added
+- Four blueprints with import buttons ([#31](https://github.com/Elpea-byte/ha-hegel-connect/discussions/31)): reconnect after a smart plug turns on, radio favorite at a set time, standby when idle or nobody is home, and a lower maximum volume at night. They are checked in the tests (valid blueprint and automation, README buttons) and with yamllint in the CI.
+- Optional volume per input ([#29](https://github.com/Elpea-byte/ha-hegel-connect/discussions/29)): a *Start volume* number for each input (0 = leave the volume alone) and a *Remember volume per input* switch. Both are disabled until you enable them, so nothing changes for existing setups. They apply when Home Assistant switches the input and stay within the maximum volume. An input with fixed volume is learned when you switch to it, and its start volume entity then turns unavailable. Turning the switch off clears the remembered volumes. The range of the start volume follows the maximum volume.
+
+### Fixed
+- The start volume entity of an input with fixed volume refuses a value with a clear, translated error (Home Assistant itself already skips service calls to it while it is unavailable).
+- *Play* no longer pulls music over from another device or switches the amplifier away from the input it is on: it only resumes on the network input. On any other input, or in standby, it answers that there is nothing to resume. This also applies to resuming Spotify and live radio ([#30](https://github.com/Elpea-byte/ha-hegel-connect/discussions/30)).
+- Lowering the *Maximum volume* below the current volume now brings the volume down at once, instead of leaving it above the new maximum until the next volume command.
+- *Play* after you stopped live radio starts the same favorite again, instead of answering that there is nothing to resume (live radio cannot pause, so stopping is all there is). Only when radio was the last thing played and the station is one of your favorites ([#30](https://github.com/Elpea-byte/ha-hegel-connect/discussions/30)).
+- *Volume up* from Home Assistant no longer turns the amplifier down when it is already above the maximum volume (for example after you turned the knob): *louder* now does nothing there, and *quieter* still goes down to the limit.
+- The stream sensors (audio quality, bitrate, streaming service and the others) show what the amplifier reports while a track is starting, instead of going empty until it says "playing". Values it does not report yet stay empty.
+
+### Changed
+- Requires Home Assistant 2025.4 or newer (the old minimum of 2025.2 never worked: the integration cannot load there).
+- `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
+
+### Development
+- `AGENTS.md` and `CONTRIBUTING.md` describe the new files, the yamllint check and the rules for blueprints, optional features and renamed inputs.
+- Minimum Home Assistant version in `hacs.json` is now 2025.4.0 (was 2025.2.0). The old value was never tested: 2025.2 cannot load the integration (`AddConfigEntryEntitiesCallback` is missing there). The full test suite passes on 2025.4.4.
+- The manifest names a category (Speakers & audio), so the Marketplace can show Hegel Connect under it.
+
 ### Documentation
+- README: that fixed volume is only learned when you switch to the input; where to find the optional (disabled) entities, that *0 = off*, when the volume is set and when not, the smart-plug example for `update_entity` and the start-up time of the amplifier.
+- README: a note for the options (hide and rename inputs): saved through the API or a script, `hidden_sources` must be sent again, or hidden inputs show up again. The form in the interface fills it in.
+- The "Maximum volume entity" field of the night blueprint says to pick the maximum volume, not a start volume (the list shows all numbers of the integration).
+- README: installation steps for the Marketplace of Home Assistant 2026.11, next to HACS (which it replaces from that version).
+- New [docs/ROADMAP.md](docs/ROADMAP.md): the direction towards 1.0 (plans, not promises).
+- README: a note not to install Hegel Connect together with the similar `hegel_streaming` integration for the same amplifier (both would be offered by discovery).
 - Ideas and feature requests now go in GitHub Discussions (Ideas) instead of issues, so the issue list (and the counter HACS shows) only holds bugs and model reports. The "Feature request" issue form is replaced by a link to Discussions.
 - The README has "My Home Assistant" buttons: one to open the repository in HACS, one that asks to set up the integration, to enter the address by hand (usually not needed, because the amplifier is discovered automatically). Both were tried on a Home Assistant instance.
 - The README now shows the radio favorite select as the one way to start a station; the older `play_media` example with a template on the favorites sensor is gone (it still works).
@@ -143,7 +174,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.5.0...dev
+[Unreleased]: ../../compare/v0.6.0...dev
+[0.6.0]: ../../compare/v0.5.0...v0.6.0
 [0.5.0]: ../../compare/v0.4.1...v0.5.0
 [0.4.1]: ../../compare/v0.4.0...v0.4.1
 [0.4.0]: ../../compare/v0.3.3...v0.4.0

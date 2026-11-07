@@ -5,9 +5,11 @@ from __future__ import annotations
 from homeassistant.components.number import NumberMode, RestoreNumber
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HegelConfigEntry
+from .const import DOMAIN
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
 
@@ -19,7 +21,10 @@ async def async_setup_entry(
     entry: HegelConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    async_add_entities([HegelMaxVolume(entry.runtime_data)])
+    coordinator = entry.runtime_data
+    async_add_entities([HegelMaxVolume(coordinator)])
+    # Optional: one per input, switched off until you enable it in the entity settings.
+    async_add_entities(HegelStartVolume(coordinator, source.index) for source in coordinator.visible_sources)
 
 
 class HegelMaxVolume(HegelEntity, RestoreNumber):
@@ -58,3 +63,61 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
         self.coordinator.max_volume = max(1, min(int(value), 100))
         # Also refreshes the media player (its max_volume attribute and volume limit).
         self.coordinator.async_update_listeners()
+        # A volume above the new maximum comes down now, not at the next press of volume up.
+        await self.coordinator.async_enforce_max_volume()
+
+
+class HegelStartVolume(HegelEntity, RestoreNumber):
+    """Volume to set when Home Assistant switches to this input (0 = leave the volume alone).
+
+    Optional and disabled by default. The maximum volume still applies.
+    """
+
+    _attr_translation_key = "start_volume"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_registry_enabled_default = False
+    _attr_native_min_value = 0
+    _attr_native_step = 1
+    _attr_mode = NumberMode.BOX
+
+    def __init__(self, coordinator: HegelCoordinator, index: int) -> None:
+        super().__init__(coordinator, f"start_volume_{index}")
+        self._index = index
+        self._attr_translation_placeholders = {"input": coordinator.source_label(index) or str(index)}
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last = await self.async_get_last_number_data()
+        if last is not None and last.native_value:
+            self.coordinator.start_volumes[self._index] = int(last.native_value)
+
+    async def async_will_remove_from_hass(self) -> None:
+        self.coordinator.start_volumes.pop(self._index, None)
+        await super().async_will_remove_from_hass()
+
+    @property
+    def available(self) -> bool:
+        # An input with fixed volume cannot have a start volume (seen when you switched to it).
+        return self._index not in self.coordinator.fixed_inputs
+
+    @property
+    def native_max_value(self) -> float:
+        return max(1, min(self.coordinator.max_volume, self.coordinator.volume_max))
+
+    @property
+    def native_value(self) -> float:
+        return self.coordinator.start_volumes.get(self._index, 0)
+
+    async def async_set_native_value(self, value: float) -> None:
+        if value and self._index in self.coordinator.fixed_inputs:
+            # The entity is unavailable, but a script or automation can still call it: say why it does nothing.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="fixed_volume_input",
+                translation_placeholders={"input": self.coordinator.source_label(self._index) or str(self._index)},
+            )
+        if volume := max(0, min(int(value), 100)):
+            self.coordinator.start_volumes[self._index] = volume
+        else:
+            self.coordinator.start_volumes.pop(self._index, None)
+        self.async_write_ha_state()
