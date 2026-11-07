@@ -299,10 +299,15 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         The web client resumes a paused stream by sending "pause" again (it is a
         toggle) and offers nothing to resume when the player is stopped. Spotify
         Connect keeps its own resume action. After live radio (which stops instead
-        of pausing) play starts the same favorite again.
+        of pausing) play starts the same favorite again. Only on the network input: on any other input
+        there is nothing to resume.
         """
         data = self.coordinator.data
         client = self.coordinator.client
+        if not self._playing_network():
+            # Another input (the TV, a turntable) or standby: resuming would switch the amplifier away from it,
+            # or pull a Spotify session over from another device. Start music on purpose instead.
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="nothing_to_resume")
         if (data.player.service or data.last_service) == "Spotify":
             await self._run(client.resume_spotify())
             return

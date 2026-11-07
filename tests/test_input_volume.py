@@ -170,7 +170,7 @@ async def test_remembered_volumes_are_saved_and_loaded(
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
-    saved = hass_storage[f"{DOMAIN}.{config_entry.entry_id}.volumes"]["data"]
+    saved = hass_storage[f"{DOMAIN}.{config_entry.entry_id}.volumes"]["data"]["volumes"]
     assert saved["2"] == 18
     assert 29 in saved.values()
 
@@ -257,3 +257,109 @@ async def test_the_remember_switch_is_restored(hass: HomeAssistant, fake_hegel, 
     coordinator = await _setup(hass, config_entry)
     assert coordinator.remember_volume
     assert hass.states.get(SWITCH).state == STATE_ON
+
+
+async def test_lowering_the_maximum_brings_a_louder_volume_down(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    coordinator = await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:volume", {"type": "i32_", "i32_": 40})
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        NUMBER_DOMAIN, "set_value", {ATTR_ENTITY_ID: "number.hegel_h150_maximum_volume", "value": 30}, blocking=True
+    )
+    assert _volumes(fake) == [30]
+    assert coordinator.max_volume == 30
+
+
+@pytest.mark.parametrize("case", ["below", "fixed", "off", "offline"])
+async def test_lowering_the_maximum_leaves_other_cases_alone(
+    hass: HomeAssistant, fake_hegel, config_entry, case: str
+) -> None:
+    coordinator = await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:volume", {"type": "i32_", "i32_": 40 if case != "below" else 10})
+    await hass.async_block_till_done()
+    if case == "fixed":
+        coordinator.data.volume_fixed = True
+    elif case == "off":
+        fake.push("powermanager:target", {"type": "powerTarget", "powerTarget": {"target": "networkStandby"}})
+        await hass.async_block_till_done()
+    elif case == "offline":
+        coordinator.connected = False
+    await hass.services.async_call(
+        NUMBER_DOMAIN, "set_value", {ATTR_ENTITY_ID: "number.hegel_h150_maximum_volume", "value": 30}, blocking=True
+    )
+    assert _volumes(fake) == []
+
+
+async def test_lowering_the_maximum_survives_a_refusing_amplifier(
+    hass: HomeAssistant, fake_hegel, config_entry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:volume", {"type": "i32_", "i32_": 40})
+    await hass.async_block_till_done()
+
+    async def refuse(volume: int) -> None:
+        raise HegelError("refused")
+
+    monkeypatch.setattr(fake, "set_volume", refuse)
+    await hass.services.async_call(
+        NUMBER_DOMAIN, "set_value", {ATTR_ENTITY_ID: "number.hegel_h150_maximum_volume", "value": 30}, blocking=True
+    )
+
+
+async def test_an_input_with_fixed_volume_is_learned_and_its_number_is_unavailable(
+    hass: HomeAssistant, fake_hegel, config_entry, hass_storage: dict
+) -> None:
+    config_entry.add_to_hass(hass)
+    _enabled_entity(hass, config_entry, "number", f"start_volume_{RCA}", "hegel_h150_start_volume_rca")
+    coordinator = await _setup(hass, config_entry)
+    assert hass.states.get(NUMBER_RCA).state != "unavailable"
+    coordinator.start_volumes[RCA] = 18
+    coordinator.data.volume_fixed = True  # what the amplifier reports once it sits on RCA
+    await _select(hass, "RCA")
+    assert _volumes(fake_hegel[-1]) == []  # fixed volume: nothing is set
+    assert coordinator.fixed_inputs == {RCA}
+    assert hass.states.get(NUMBER_RCA).state == "unavailable"
+    # Remembered between restarts.
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    assert hass_storage[f"{DOMAIN}.{config_entry.entry_id}.volumes"]["data"]["fixed"] == [RCA]
+    # And forgotten when the input turns out to have a variable volume again.
+    coordinator.data.volume_fixed = False
+    coordinator.note_fixed_volume(RCA, False)
+    assert coordinator.fixed_inputs == set()
+    assert hass.states.get(NUMBER_RCA).state != "unavailable"
+
+
+async def test_the_number_range_follows_the_maximum_volume(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    _enabled_entity(hass, config_entry, "number", f"start_volume_{RCA}", "hegel_h150_start_volume_rca")
+    coordinator = await _setup(hass, config_entry)
+    assert hass.states.get(NUMBER_RCA).attributes["max"] == coordinator.volume_max
+    coordinator.max_volume = 35
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(NUMBER_RCA).attributes["max"] == 35
+
+
+async def test_turning_remember_off_clears_the_saved_volumes(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    _enabled_entity(hass, config_entry, "switch", "remember_volume", "hegel_h150_remember_volume_per_input")
+    coordinator = await _setup(hass, config_entry)
+    await hass.services.async_call(SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: SWITCH}, blocking=True)
+    assert coordinator.last_volumes
+    await hass.services.async_call(SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: SWITCH}, blocking=True)
+    assert coordinator.last_volumes == {}
+
+
+async def test_the_older_storage_format_is_still_read(
+    hass: HomeAssistant, fake_hegel, config_entry, hass_storage: dict
+) -> None:
+    """Dev versions saved the volumes without the "volumes"/"fixed" keys."""
+    key = f"{DOMAIN}.{config_entry.entry_id}.volumes"
+    hass_storage[key] = {"version": 1, "key": key, "data": {"2": 18, "x": "bad"}}
+    coordinator = await _setup(hass, config_entry)
+    assert coordinator.last_volumes == {RCA: 18}
+    assert coordinator.fixed_inputs == set()

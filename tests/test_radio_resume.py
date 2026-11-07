@@ -97,3 +97,28 @@ async def test_the_last_station_survives_a_full_refresh(hass: HomeAssistant, fak
     fake.calls.clear()
     await _play(hass)
     assert ("play_path", "airable:fav/qmusic") in fake.calls
+
+
+async def test_play_on_another_input_does_not_pull_music_over(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Spotify or radio was the last thing played, but the amplifier now serves the TV on RCA."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _radio("fav-1"))
+    fake.push("player:player/data", {"state": "stopped"})
+    await hass.async_block_till_done()
+    fake.push("hegel:activePhysicalSource", {"type": "i32_", "i32_": 2})  # RCA
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    with pytest.raises(ServiceValidationError) as err:
+        await _play(hass)
+    assert err.value.translation_key == "nothing_to_resume"
+    assert not any(call[0] in ("play_path", "resume_spotify", "control", "set_source") for call in fake.calls)
+
+
+async def test_play_while_off_has_nothing_to_resume(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("powermanager:target", {"type": "powerTarget", "powerTarget": {"target": "networkStandby"}})
+    await hass.async_block_till_done()
+    with pytest.raises(ServiceValidationError):
+        await _play(hass)

@@ -200,13 +200,16 @@ A fixed IP address (DHCP reservation in your router) is still recommended. If th
 
 **Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names.
 
-**Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never make the volume louder than it; the amplifier's own remote and knob are not limited. If you turned the amplifier above the limit yourself, *louder* from Home Assistant does nothing and *quieter* brings it down to the limit.
+**Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never make the volume louder than it; the amplifier's own remote and knob are not limited. Lowering the maximum below the current volume brings the volume down to the new maximum at once (not on an input with fixed volume, and not while the amplifier is off). If you turned the amplifier above the limit yourself, *louder* from Home Assistant does nothing and *quieter* goes straight down to the limit, not one step. Volume steps are one point on the amplifier's scale.
 
 **Volume per input** is optional and does nothing until you enable it. The amplifier only has one *power-on volume* for all inputs; this goes further and is done by Home Assistant:
 
-- Enable `number.hegel_h150_start_volume_<input>` for an input (Settings > Devices & services > Hegel Connect > Entities, show disabled entities) and give it a volume. When Home Assistant switches to that input, the volume is set to it. 0 means: leave the volume alone.
-- Or enable `switch.hegel_h150_remember_volume_per_input`: the volume you used last on each input is brought back when you switch to it. A start volume set for an input wins over the remembered one.
-- It only applies when the input is switched from Home Assistant (the source list, scripts, automations). Switching with the amplifier's own remote or the Hegel app is left alone. The maximum volume always applies, and an input with fixed volume is not touched.
+Both are switched off by default, so you will not see them on the device page at first. To find them: Settings > Devices & services > Hegel Connect > your amplifier, then open *+ n entities not shown* (or the *Entities* tab with the filter set to show disabled entities), choose the ones you want and enable them. Home Assistant reloads the integration after a short moment.
+
+- `number.hegel_h150_start_volume_<input>`, one per input: the volume to set when Home Assistant switches to that input. **0 means off**: the volume is left alone. The slider goes up to your maximum volume.
+- `switch.hegel_h150_remember_volume_per_input`: the volume you used last on each input is brought back when you switch to it. A volume is only remembered after you change it on that input; an input where you never touched the volume keeps whatever the amplifier has. Turning the switch off throws the remembered volumes away. A start volume set for an input wins over the remembered one.
+- **Only when Home Assistant switches the input** (the source list, scripts, automations, the dashboard). Switching with the amplifier's own remote or the Hegel app, or by an app such as Spotify taking the amplifier over, is left alone. The same goes for switching the amplifier on: it keeps the input it had, and the volume is only set when the input is switched afterwards. For a safe volume at power-on, use the amplifier's own *power-on volume* setting in the Hegel Control app.
+- The maximum volume always applies. An input with **fixed volume** cannot have a start volume: once you have switched to such an input from Home Assistant, its start volume entity turns *unavailable*.
 - If you rename an input in the options, the start volume entity shows the new name after the integration is reloaded.
 
 ### Removing
@@ -232,7 +235,21 @@ target:
   entity_id: media_player.hegel_h150
 ```
 
-It only helps once the amplifier answers on the network again; right after power-on it needs a little time to start.
+It only helps once the amplifier answers on the network again; right after power-on it needs a little time to start (about 20 to 45 seconds on an H150). A call that comes too early fails quietly and the normal retries carry on.
+
+If the amplifier hangs on a smart plug, wait for it to start and then ask for the connection. The delay is a starting point; adjust it to your amplifier (expected to work, the single call was tried on an H150 at the moment the amplifier answered):
+
+```yaml
+triggers:
+  - trigger: state
+    entity_id: switch.audio_plug   # your own plug
+    to: "on"
+actions:
+  - delay: "00:00:45"
+  - action: homeassistant.update_entity
+    target:
+      entity_id: media_player.hegel_h150
+```
 
 Then open an [issue](../../issues/new/choose) with the log and the diagnostics file (Settings > Devices & services > Hegel Connect > ⋮ > *Download diagnostics*).
 

@@ -61,6 +61,8 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
         self.coordinator.max_volume = max(1, min(int(value), 100))
         # Also refreshes the media player (its max_volume attribute and volume limit).
         self.coordinator.async_update_listeners()
+        # A volume above the new maximum comes down now, not at the next press of volume up.
+        await self.coordinator.async_enforce_max_volume()
 
 
 class HegelStartVolume(HegelEntity, RestoreNumber):
@@ -73,7 +75,6 @@ class HegelStartVolume(HegelEntity, RestoreNumber):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_entity_registry_enabled_default = False
     _attr_native_min_value = 0
-    _attr_native_max_value = 100
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
 
@@ -94,7 +95,12 @@ class HegelStartVolume(HegelEntity, RestoreNumber):
 
     @property
     def available(self) -> bool:
-        return True
+        # An input with fixed volume cannot have a start volume (seen when you switched to it).
+        return self._index not in self.coordinator.fixed_inputs
+
+    @property
+    def native_max_value(self) -> float:
+        return max(1, min(self.coordinator.max_volume, self.coordinator.volume_max))
 
     @property
     def native_value(self) -> float:

@@ -90,7 +90,9 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self.start_volumes: dict[int, int] = {}
         self.remember_volume = False
         self.last_volumes: dict[int, int] = {}
-        self._volume_store: Store[dict[str, int]] = Store(
+        # Inputs seen with fixed volume (learned when you switch to them); a start volume does nothing there.
+        self.fixed_inputs: set[int] = set()
+        self._volume_store: Store[dict[str, Any]] = Store(
             hass, VOLUMES_STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.volumes"
         )
         # Set by a refresh (homeassistant.update_entity) while the listener waits to reconnect.
@@ -125,7 +127,11 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         )
         self.config_entry.async_on_unload(self._cancel_seek_check)
         saved = await self._volume_store.async_load()
-        self.last_volumes = {int(k): int(v) for k, v in (saved or {}).items()}
+        saved = saved or {}
+        # Earlier dev versions saved the volumes alone, without the "volumes" key.
+        volumes = saved.get("volumes", saved) if isinstance(saved.get("volumes", saved), dict) else {}
+        self.last_volumes = {int(k): int(v) for k, v in volumes.items() if isinstance(v, int)}
+        self.fixed_inputs = {int(i) for i in saved.get("fixed", []) if isinstance(i, int)}
 
     async def _async_favorites_tick(self, _now: datetime) -> None:
         """Periodic favorites refresh (only while connected; offline is skipped)."""
@@ -235,6 +241,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 self.connected = True
                 self._reconnect_now.clear()
                 backoff = BACKOFF_START
+                self.note_fixed_volume(state.source_index, state.volume_fixed)
                 self.async_set_updated_data(state)
                 while True:
                     started = time.monotonic()
@@ -307,6 +314,26 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         if changed:
             self.async_set_updated_data(state)
 
+    def forget_volumes(self) -> None:
+        """Throw away the remembered volumes (the switch for remembering was turned off)."""
+        self.last_volumes.clear()
+        self._volume_store.async_delay_save(self._volumes_to_save, VOLUMES_SAVE_DELAY)
+
+    async def async_enforce_max_volume(self) -> None:
+        """After lowering the maximum volume: bring a volume above it down at once.
+
+        Only while the amplifier is on and answering, and not on a fixed-volume input.
+        """
+        state = self.data
+        if state is None or not self.connected or not state.is_on or state.volume_fixed or state.volume is None:
+            return
+        limit = max(1, min(self.max_volume, self.volume_max))
+        if state.volume > limit:
+            try:
+                await self.client.set_volume(limit)
+            except HegelError as err:
+                _LOGGER.debug("Lowering the volume to the new maximum failed: %s", err)
+
     def remember_current(self) -> None:
         """Save the volume of the current input now (used when "remember volume" is switched on)."""
         if self.data is not None:
@@ -320,8 +347,19 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             self.last_volumes[state.source_index] = state.volume
             self._volume_store.async_delay_save(self._volumes_to_save, VOLUMES_SAVE_DELAY)
 
-    def _volumes_to_save(self) -> dict[str, int]:
-        return {str(k): v for k, v in self.last_volumes.items()}
+    def _volumes_to_save(self) -> dict[str, Any]:
+        return {"volumes": {str(k): v for k, v in self.last_volumes.items()}, "fixed": sorted(self.fixed_inputs)}
+
+    def note_fixed_volume(self, index: int | None, fixed: bool | None) -> None:
+        """Learn whether an input has fixed volume; only call this when index and fixed belong together."""
+        if index is None or fixed is None or fixed == (index in self.fixed_inputs):
+            return
+        if fixed:
+            self.fixed_inputs.add(index)
+        else:
+            self.fixed_inputs.discard(index)
+        self._volume_store.async_delay_save(self._volumes_to_save, VOLUMES_SAVE_DELAY)
+        self.async_update_listeners()  # the start volume entity of this input follows
 
     def volume_for_input(self, index: int) -> int | None:
         """The volume to set when switching to this input, within the maximum volume; None = leave it.
@@ -443,6 +481,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     async def _apply_input_volume(self, index: int) -> None:
         """Set the start or remembered volume of the input just switched to (only if you set one)."""
         state = self.data
+        if state is not None:
+            self.note_fixed_volume(index, state.volume_fixed)  # settled by now: the switch was verified
         target = self.volume_for_input(index)
         if target is None or state is None or state.volume_fixed or state.volume == target:
             return

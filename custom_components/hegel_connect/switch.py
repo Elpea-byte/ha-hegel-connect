@@ -59,4 +59,5 @@ class HegelRememberVolume(HegelEntity, SwitchEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         self.coordinator.remember_volume = False
+        self.coordinator.forget_volumes()  # nothing stays behind that you cannot see or clear
         self.async_write_ha_state()
