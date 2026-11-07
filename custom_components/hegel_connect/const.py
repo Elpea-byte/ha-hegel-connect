@@ -12,6 +12,7 @@ MANUFACTURER = "Hegel"
 # Kept here (not in __init__.py) so adding a platform only touches this file.
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.EVENT,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,

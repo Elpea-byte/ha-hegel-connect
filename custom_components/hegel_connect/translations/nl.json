@@ -48,6 +48,18 @@
         "name": "Netwerk"
       }
     },
+    "event": {
+      "now_playing": {
+        "name": "Nu aan het spelen",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Nummer gewijzigd"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "audio_quality": {
         "name": "Geluidskwaliteit",

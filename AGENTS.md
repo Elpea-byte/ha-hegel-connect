@@ -14,7 +14,7 @@ updates. Code lives in `custom_components/hegel_connect/`.
 | `coordinator.py` | Push listener (event queue), state, back-off, cached static data. |
 | `config_flow.py` | User setup, discovery (mDNS, SSDP, Cast), reconfigure, options. |
 | `entity.py` | Base entity (device info). |
-| `media_player.py`, `sensor.py`, `binary_sensor.py`, `number.py`, `select.py`, `switch.py` | Entities. `number.py` and `switch.py` also hold the optional volume-per-input entities (disabled by default). |
+| `media_player.py`, `sensor.py`, `binary_sensor.py`, `event.py`, `number.py`, `select.py`, `switch.py` | Entities. `event.py` holds the now-playing event. `number.py` and `switch.py` also hold the optional volume-per-input entities (disabled by default). |
 | `diagnostics.py` | Diagnostics download (addresses and ids are redacted). |
 | `blueprints/automation/hegel_connect/` | Ready-made blueprints, imported by users through the README buttons. |
 | `docs/ROADMAP.md` | Plan towards 1.0; keep it in step with what is built. |

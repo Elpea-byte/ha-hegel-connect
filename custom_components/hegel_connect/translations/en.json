@@ -48,6 +48,18 @@
         "name": "Network"
       }
     },
+    "event": {
+      "now_playing": {
+        "name": "Now playing",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Track changed"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "audio_quality": {
         "name": "Audio quality",

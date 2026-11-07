@@ -48,6 +48,18 @@
         "name": "Red"
       }
     },
+    "event": {
+      "now_playing": {
+        "name": "Reproduciendo ahora",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Pista cambiada"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "audio_quality": {
         "name": "Calidad de audio",

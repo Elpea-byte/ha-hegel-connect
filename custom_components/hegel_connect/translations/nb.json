@@ -48,6 +48,18 @@
         "name": "Nettverk"
       }
     },
+    "event": {
+      "now_playing": {
+        "name": "Spilles nå",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Låt byttet"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "audio_quality": {
         "name": "Lydkvalitet",

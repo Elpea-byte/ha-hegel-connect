@@ -103,6 +103,7 @@ For an amplifier named *Hegel H150*:
 | `sensor.hegel_h150_audio_quality` | Hi-Res, CD quality, Lossless, Lossy, DSD (while the streamer plays) |
 | `sensor.hegel_h150_streaming_service` | The service that plays (TIDAL, Spotify, radio, ...) |
 | `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them (kept in history, no long-term statistics) |
+| `event.hegel_h150_now_playing` | Fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and whether it is radio. For listening logs, scrobbling and notifications |
 | `select.hegel_h150_radio_favorite` | The radio favorites as options; choosing one starts that station, and it shows the favorite that is playing (unknown when something else plays) |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for custom dashboard cards that show the station logos |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
@@ -153,6 +154,33 @@ data:
   media_content_type: hegel_path
   media_content_id: "upnp:/uuid:<server>/<album>?itemType=container"
 ```
+
+### Now-playing event
+
+`event.hegel_h150_now_playing` fires once for every new track, so an automation can log or announce what you play without watching the media player's attributes. It fires when the amplifier says "playing", so the quality details are there. It does not fire on pause or resume, nor when the same track plays on (repeat); a track that plays again after another one, or after you stopped, fires again. A track that is already playing when Home Assistant starts is not announced.
+
+The event data has `title`, `artist`, `album`, `service`, `source`, `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`; a value the amplifier does not report is empty. Write what you play to the logbook:
+
+```yaml
+automation:
+  - alias: Hegel listening log
+    triggers:
+      - trigger: state
+        entity_id: event.hegel_h150_now_playing
+    conditions:
+      - condition: template
+        value_template: "{{ trigger.to_state.state not in ['unavailable', 'unknown'] }}"
+    actions:
+      - action: logbook.log
+        data:
+          name: Hegel
+          message: >-
+            {{ trigger.to_state.attributes.artist }} - {{ trigger.to_state.attributes.title }}
+            ({{ trigger.to_state.attributes.audio_quality }})
+          entity_id: event.hegel_h150_now_playing
+```
+
+The same trigger works for a notification such as "now playing in Hi-Res" (add a condition on `audio_quality`). Scrobbling itself is left to other integrations. Tested with a recording of an H150 in the automated tests; the first run on a real amplifier is still to do, in particular what internet radio stations report as the title.
 
 ### Blueprints
 

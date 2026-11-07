@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Added
+- Now-playing event ([#36](https://github.com/Elpea-byte/ha-hegel-connect/discussions/36)): `event.<name>_now_playing` fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and `is_radio`. Pause, resume and a repeating track do not fire it, and a track already playing at startup is not announced. A new entity; nothing existing changes. Tested in the automated tests with a recording of an H150, not yet on the real amplifier.
+
 ## [0.6.0] - 2026-11-07
 
 Requires Home Assistant 2025.4 or newer. Nothing needs to be done after updating: the new volume entities are disabled until you enable them.

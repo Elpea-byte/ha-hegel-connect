@@ -48,6 +48,18 @@
         "name": "Réseau"
       }
     },
+    "event": {
+      "now_playing": {
+        "name": "Lecture en cours",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Piste changée"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "audio_quality": {
         "name": "Qualité audio",

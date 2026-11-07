@@ -41,6 +41,11 @@
         "default": "mdi:volume-equal"
       }
     },
+    "event": {
+      "now_playing": {
+        "default": "mdi:playlist-music"
+      }
+    },
     "number": {
       "max_volume": {
         "default": "mdi:volume-high"
