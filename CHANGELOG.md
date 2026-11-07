@@ -7,6 +7,7 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 Changes on the `dev` branch that are not in a release yet.
 
 ### Fixed
+- *Play* after you stopped live radio starts the same favorite again, instead of answering that there is nothing to resume (live radio cannot pause, so stopping is all there is). Only when radio was the last thing played and the station is one of your favorites ([#30](https://github.com/Elpea-byte/ha-hegel-connect/discussions/30)).
 - *Volume up* from Home Assistant no longer turns the amplifier down when it is already above the maximum volume (for example after you turned the knob): *louder* now does nothing there, and *quieter* still goes down to the limit.
 - The stream sensors (audio quality, bitrate, streaming service and the others) show what the amplifier reports while a track is starting, instead of going empty until it says "playing". Values it does not report yet stay empty.
 

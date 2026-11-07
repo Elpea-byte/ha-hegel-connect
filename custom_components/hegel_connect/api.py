@@ -309,6 +309,10 @@ class PlayerData:
         return " · ".join(parts) or None
 
 
+# Player states in which something is really playing (or about to).
+ACTIVE_STATES = ("playing", "paused", "buffering", "transitioning")
+
+
 @dataclass(slots=True)
 class HegelState:
     """Current state of the amplifier."""
@@ -323,6 +327,8 @@ class HegelState:
     play_mode: str | None = None
     # Last streaming service seen (player data can lose it while paused).
     last_service: str | None = None
+    # Id of the radio station that played last; emptied when something else plays.
+    last_radio_id: str | None = None
     # Playback position (seconds) and when it was read.
     position: int | None = None
     position_at: datetime | None = None
@@ -376,6 +382,8 @@ class HegelState:
                 self.set_play_time(0)
             if self.player.service:
                 self.last_service = self.player.service
+            if self.player.state in ACTIVE_STATES:
+                self.last_radio_id = self.player.media_id if self.player.is_radio else None
             return True
         return False
 

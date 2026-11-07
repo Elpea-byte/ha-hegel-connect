@@ -16,6 +16,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
+    ACTIVE_STATES,
     NETWORK_SOURCE_NAME,
     PATH_PLAYER,
     PATH_SOURCE,
@@ -166,7 +167,14 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         """Keep what a fresh read cannot know (the last streaming service)."""
         if self.data is not None and not state.last_service:
             state.last_service = self.data.last_service
+        if self.data is not None and state.last_radio_id is None and state.player.state not in ACTIVE_STATES:
+            state.last_radio_id = self.data.last_radio_id
         return state
+
+    def last_radio_path(self) -> str | None:
+        """Path of the favorite that played last, if radio was the last thing played."""
+        radio_id = self.data.last_radio_id if self.data is not None else None
+        return next((f["path"] for f in self.favorites if radio_id and f["id"] == radio_id and f["path"]), None)
 
     # ------------------------------------------------------------------ push
 
