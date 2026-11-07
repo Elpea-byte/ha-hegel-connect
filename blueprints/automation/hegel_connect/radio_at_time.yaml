@@ -1,0 +1,110 @@
+blueprint:
+  name: Hegel Connect – radio favorite at a set time
+  description: >-
+    Starts one of the amplifier's radio favorites at a set time on the days you
+    choose (a wake-up or dinner radio). The amplifier is switched on and set to
+    the network input first (this also works if you gave that input your own
+    name in the options). The volume is set before the station starts and never
+    goes above the amplifier's "Maximum volume".
+  domain: automation
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/radio_at_time.yaml
+  input:
+    amplifier:
+      name: Amplifier
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: media_player
+    favorite_select:
+      name: Radio favorite select
+      description: The amplifier's "Radio favorite" select (select.<name>_radio_favorite).
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: select
+    station:
+      name: Station
+      description: >-
+        Name of the favorite exactly as in the Hegel Control app (and in the
+        options of the select), for example "Radio 10".
+      selector:
+        text:
+    at:
+      name: Time
+      selector:
+        time:
+    days:
+      name: Days
+      default: [mon, tue, wed, thu, fri, sat, sun]
+      selector:
+        select:
+          multiple: true
+          options:
+            - {label: Monday, value: mon}
+            - {label: Tuesday, value: tue}
+            - {label: Wednesday, value: wed}
+            - {label: Thursday, value: thu}
+            - {label: Friday, value: fri}
+            - {label: Saturday, value: sat}
+            - {label: Sunday, value: sun}
+    volume:
+      name: Volume
+      description: Volume to start at (0–100). The maximum volume still applies.
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+    only_when_off:
+      name: Only when the amplifier is off
+      description: Do nothing if the amplifier is already on (someone is listening or watching TV).
+      default: true
+      selector:
+        boolean:
+
+mode: single
+
+triggers:
+  - trigger: time
+    at: !input at
+
+variables:
+  amplifier: !input amplifier
+  only_when_off: !input only_when_off
+  volume: !input volume
+
+conditions:
+  - condition: time
+    weekday: !input days
+  - condition: template
+    value_template: "{{ not only_when_off or is_state(amplifier, 'off') }}"
+
+actions:
+  - action: media_player.turn_on
+    target:
+      entity_id: !input amplifier
+  - wait_template: "{{ not is_state(amplifier, 'off') }}"
+    timeout: {seconds: 30}
+    continue_on_timeout: false
+  - action: media_player.select_source
+    target:
+      entity_id: !input amplifier
+    data:
+      # The amplifier's own name: accepted even when the input has your own name in the options.
+      source: Network
+  - action: media_player.volume_set
+    continue_on_error: true  # the network input could be set to fixed volume
+    target:
+      entity_id: !input amplifier
+    data:
+      volume_level: "{{ (volume | int(20)) / 100 }}"
+  - action: select.select_option
+    target:
+      entity_id: !input favorite_select
+    data:
+      option: !input station

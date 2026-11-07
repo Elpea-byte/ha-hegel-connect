@@ -1,0 +1,72 @@
+blueprint:
+  name: Hegel Connect – reconnect at once after a smart plug turns on
+  description: >-
+    When the amplifier hangs on a smart plug that is switched off at night, Home
+    Assistant can take up to a minute to find it again after the plug turns on.
+    This blueprint asks Hegel Connect to reconnect every few seconds (with
+    `homeassistant.update_entity`) until the amplifier is connected, so dashboards
+    and automations work as soon as the amplifier has started (about 20–45 seconds
+    on an H150).
+  domain: automation
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/smart_plug_reconnect.yaml
+  input:
+    plug:
+      name: Smart plug
+      description: The switch that powers the amplifier.
+      selector:
+        entity:
+          filter:
+            domain: switch
+    amplifier:
+      name: Amplifier
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: media_player
+    connected:
+      name: Network sensor
+      description: The amplifier's "Network" connectivity sensor (binary_sensor.<name>_network).
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: binary_sensor
+            device_class: connectivity
+    give_up_after:
+      name: Give up after
+      description: Stop trying after this many seconds.
+      default: 120
+      selector:
+        number:
+          min: 30
+          max: 300
+          step: 10
+          unit_of_measurement: s
+
+mode: restart
+
+triggers:
+  - trigger: state
+    entity_id: !input plug
+    from: "off"
+    to: "on"
+
+variables:
+  connected: !input connected
+  give_up_after: !input give_up_after
+  attempts: "{{ ((give_up_after | int(120)) / 5) | round(0, 'ceil') | int }}"
+
+actions:
+  - repeat:
+      sequence:
+        - delay: {seconds: 5}
+        - action: homeassistant.update_entity
+          target:
+            entity_id: !input amplifier
+          continue_on_error: true
+      until:
+        - condition: template
+          value_template: "{{ is_state(connected, 'on') or repeat.index >= attempts }}"

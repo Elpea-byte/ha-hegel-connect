@@ -7,9 +7,11 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 Changes on the `dev` branch that are not in a release yet.
 
 ### Added
+- Four blueprints with import buttons ([#31](https://github.com/Elpea-byte/ha-hegel-connect/discussions/31)): reconnect after a smart plug turns on, radio favorite at a set time, standby when idle or nobody is home, and a lower maximum volume at night. They are checked in the tests (valid blueprint and automation, README buttons) and with yamllint in the CI.
 - Optional volume per input ([#29](https://github.com/Elpea-byte/ha-hegel-connect/discussions/29)): a *Start volume* number for each input (0 = leave the volume alone) and a *Remember volume per input* switch. Both are disabled until you enable them, so nothing changes for existing setups. They apply when Home Assistant switches the input and stay within the maximum volume. An input with fixed volume is learned when you switch to it, and its start volume entity then turns unavailable. Turning the switch off clears the remembered volumes. The range of the start volume follows the maximum volume.
 
 ### Fixed
+- The start volume entity of an input with fixed volume refuses a value with a clear, translated error (Home Assistant itself already skips service calls to it while it is unavailable).
 - *Play* no longer pulls music over from another device or switches the amplifier away from the input it is on: it only resumes on the network input. On any other input, or in standby, it answers that there is nothing to resume. This also applies to resuming Spotify and live radio ([#30](https://github.com/Elpea-byte/ha-hegel-connect/discussions/30)).
 - Lowering the *Maximum volume* below the current volume now brings the volume down at once, instead of leaving it above the new maximum until the next volume command.
 - *Play* after you stopped live radio starts the same favorite again, instead of answering that there is nothing to resume (live radio cannot pause, so stopping is all there is). Only when radio was the last thing played and the station is one of your favorites ([#30](https://github.com/Elpea-byte/ha-hegel-connect/discussions/30)).
@@ -24,7 +26,7 @@ Changes on the `dev` branch that are not in a release yet.
 - The manifest names a category (Speakers & audio), so the Marketplace can show Hegel Connect under it.
 
 ### Documentation
-- README: where to find the optional (disabled) entities, that *0 = off*, when the volume is set and when not, the smart-plug example for `update_entity` and the start-up time of the amplifier.
+- README: that fixed volume is only learned when you switch to the input; where to find the optional (disabled) entities, that *0 = off*, when the volume is set and when not, the smart-plug example for `update_entity` and the start-up time of the amplifier.
 - README: installation steps for the Marketplace of Home Assistant 2026.11, next to HACS (which it replaces from that version).
 - New [docs/ROADMAP.md](docs/ROADMAP.md): the direction towards 1.0 (plans, not promises).
 - README: a note not to install Hegel Connect together with the similar `hegel_streaming` integration for the same amplifier (both would be offered by discovery).

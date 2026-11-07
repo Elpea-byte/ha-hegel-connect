@@ -121,6 +121,9 @@
     },
     "nothing_to_resume": {
       "message": "Det er ingenting å fortsette. Start musikk fra mediebrowseren eller en app først."
+    },
+    "fixed_volume_input": {
+      "message": "{input} har fast volum på forsterkeren, så det kan ikke settes et startvolum."
     }
   },
   "options": {

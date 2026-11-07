@@ -154,6 +154,21 @@ data:
   media_content_id: "upnp:/uuid:<server>/<album>?itemType=container"
 ```
 
+### Blueprints
+
+Ready-made automations with a one-click import (Settings > Automations & scenes > Blueprints). They only list this integration's own entities.
+
+- **Smart plug: reconnect at once**: Asks Hegel Connect to reconnect every few seconds after the plug that powers the amplifier turns on, until the amplifier answers (no waiting for the next retry).
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fsmart_plug_reconnect.yaml)
+- **Radio at a set time**: Switches the amplifier on at a set time on the days you choose and starts one of your radio favorites, at a volume you pick (never above the maximum volume).
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fradio_at_time.yaml)
+- **Standby when idle or nobody is home**: Puts the amplifier in standby after it has been idle on the network input for a while, and optionally when everyone has left home; other inputs are never switched off.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fstandby_when_idle.yaml)
+- **Lower the maximum volume at night**: Sets the maximum volume lower at night and back in the morning; a volume above the new maximum comes down at once.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnight_volume_limit.yaml)
+
+The blueprints use the amplifier's own name for the network input (*Network*). Hegel Connect accepts that name even when you gave the input your own name in the options.
+
 ## Installation
 
 Developed and tested on Home Assistant 2026.10; HACS and the Marketplace allow installing it on 2025.4 and newer (the test suite also passes on 2025.4.4). The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
@@ -211,6 +226,7 @@ Both are switched off by default, so you will not see them on the device page at
 - **Only when Home Assistant switches the input** (the source list, scripts, automations, the dashboard). Switching with the amplifier's own remote or the Hegel app, or by an app such as Spotify taking the amplifier over, is left alone. The same goes for switching the amplifier on: it keeps the input it had, and the volume is only set when the input is switched afterwards. For a safe volume at power-on, use the amplifier's own *power-on volume* setting in the Hegel Control app.
 - The maximum volume always applies. An input with **fixed volume** cannot have a start volume: once you have switched to such an input from Home Assistant, its start volume entity turns *unavailable*.
 - If you rename an input in the options, the start volume entity shows the new name after the integration is reloaded.
+- **Fixed volume is only learned when you switch to the input.** The amplifier reports whether the volume is fixed for the input that is selected, not for the other inputs, so Hegel Connect cannot read it for all inputs at startup. The start volume entity of such an input looks normal until Home Assistant has switched to it once; from then on it is *unavailable* and a call to it is refused. The binary sensor *Fixed volume* shows it for the current input.
 
 ### Removing
 

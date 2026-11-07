@@ -121,6 +121,9 @@
     },
     "nothing_to_resume": {
       "message": "There is nothing to resume. Start music from the media browser or an app first."
+    },
+    "fixed_volume_input": {
+      "message": "{input} has a fixed volume on the amplifier, so it cannot have a start volume."
     }
   },
   "options": {

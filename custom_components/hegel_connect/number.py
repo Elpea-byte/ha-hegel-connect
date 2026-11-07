@@ -5,9 +5,11 @@ from __future__ import annotations
 from homeassistant.components.number import NumberMode, RestoreNumber
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HegelConfigEntry
+from .const import DOMAIN
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
 
@@ -107,6 +109,13 @@ class HegelStartVolume(HegelEntity, RestoreNumber):
         return self.coordinator.start_volumes.get(self._index, 0)
 
     async def async_set_native_value(self, value: float) -> None:
+        if value and self._index in self.coordinator.fixed_inputs:
+            # The entity is unavailable, but a script or automation can still call it: say why it does nothing.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="fixed_volume_input",
+                translation_placeholders={"input": self.coordinator.source_label(self._index) or str(self._index)},
+            )
         if volume := max(0, min(int(value), 100)):
             self.coordinator.start_volumes[self._index] = volume
         else:

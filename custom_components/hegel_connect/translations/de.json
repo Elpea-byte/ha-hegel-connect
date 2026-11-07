@@ -121,6 +121,9 @@
     },
     "nothing_to_resume": {
       "message": "Es gibt nichts fortzusetzen. Starte zuerst Musik über den Medienbrowser oder eine App."
+    },
+    "fixed_volume_input": {
+      "message": "{input} hat am Verstärker eine feste Lautstärke, daher kann keine Startlautstärke eingestellt werden."
     }
   },
   "options": {

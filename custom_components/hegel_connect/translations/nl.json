@@ -121,6 +121,9 @@
     },
     "nothing_to_resume": {
       "message": "Er is niets om te hervatten. Start eerst muziek via de mediabrowser of een app."
+    },
+    "fixed_volume_input": {
+      "message": "{input} heeft een vast volume op de versterker, dus er kan geen startvolume voor worden ingesteld."
     }
   },
   "options": {

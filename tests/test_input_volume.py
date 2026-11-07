@@ -13,6 +13,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 import pytest
@@ -24,6 +25,7 @@ from pytest_homeassistant_custom_component.common import (
 
 from custom_components.hegel_connect.api import HegelError
 from custom_components.hegel_connect.const import DOMAIN
+from custom_components.hegel_connect.number import HegelStartVolume
 
 ENTITY = "media_player.hegel_h150"
 NUMBER_RCA = "number.hegel_h150_start_volume_rca"
@@ -363,3 +365,27 @@ async def test_the_older_storage_format_is_still_read(
     coordinator = await _setup(hass, config_entry)
     assert coordinator.last_volumes == {RCA: 18}
     assert coordinator.fixed_inputs == set()
+
+
+async def test_a_start_volume_on_a_fixed_volume_input_is_refused(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Home Assistant itself skips service calls to the unavailable entity; the entity refuses too, with a reason."""
+    config_entry.add_to_hass(hass)
+    _enabled_entity(hass, config_entry, "number", f"start_volume_{RCA}", "hegel_h150_start_volume_rca")
+    coordinator = await _setup(hass, config_entry)
+    coordinator.note_fixed_volume(RCA, True)
+    await hass.async_block_till_done()
+    assert hass.states.get(NUMBER_RCA).state == "unavailable"
+    # Through the service: skipped by Home Assistant (a warning in the log), nothing is stored.
+    await hass.services.async_call(NUMBER_DOMAIN, "set_value", {ATTR_ENTITY_ID: NUMBER_RCA, "value": 18}, blocking=True)
+    assert coordinator.start_volumes == {}
+    # Straight on the entity: a clear, translated error.
+    entity = HegelStartVolume(coordinator, RCA)
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_native_value(18)
+    assert err.value.translation_key == "fixed_volume_input"
+    assert err.value.translation_placeholders == {"input": "RCA"}
+    assert coordinator.start_volumes == {}
+    # Clearing it (0) is fine.
+    entity.hass = hass
+    entity.async_write_ha_state = lambda: None  # type: ignore[method-assign]
+    await entity.async_set_native_value(0)
