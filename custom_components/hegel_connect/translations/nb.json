@@ -81,11 +81,19 @@
     "number": {
       "max_volume": {
         "name": "Maksimalt volum"
+      },
+      "start_volume": {
+        "name": "Startvolum {input}"
       }
     },
     "select": {
       "radio_favorite": {
         "name": "Radiofavoritt"
+      }
+    },
+    "switch": {
+      "remember_volume": {
+        "name": "Husk volum per inngang"
       }
     }
   },

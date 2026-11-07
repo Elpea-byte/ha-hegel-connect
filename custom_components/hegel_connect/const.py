@@ -16,6 +16,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 # Models on the StreamUnlimited platform. Other brands (e.g. Onkyo) announce the
@@ -34,6 +35,9 @@ CONF_SOURCE_NAMES = "source_names"
 # integration can start while the amplifier is off at the mains.
 CACHE_KEY = "cache"
 DEFAULT_MAX_VOLUME = 100
+# Saved volumes per input ("remember volume"), kept in the Home Assistant storage.
+VOLUMES_STORAGE_VERSION = 1
+VOLUMES_SAVE_DELAY = 10
 
 # Push: how long the amplifier keeps a poll request open, and the wait after errors.
 POLL_TIMEOUT = 30

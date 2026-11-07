@@ -106,6 +106,8 @@ For an amplifier named *Hegel H150*:
 | `select.hegel_h150_radio_favorite` | The radio favorites as options; choosing one starts that station, and it shows the favorite that is playing (unknown when something else plays) |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for custom dashboard cards that show the station logos |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
+| `number.hegel_h150_start_volume_<input>` | Optional, off until you enable it: the volume to set when Home Assistant switches to that input (0 = leave the volume alone) |
+| `switch.hegel_h150_remember_volume_per_input` | Optional, off until you enable it: switching to an input returns to the volume it had last |
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
 | `binary_sensor.hegel_h150_fixed_volume` | On when the current input uses fixed volume (diagnostic) |
 
@@ -199,6 +201,13 @@ A fixed IP address (DHCP reservation in your router) is still recommended. If th
 **Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names.
 
 **Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never make the volume louder than it; the amplifier's own remote and knob are not limited. If you turned the amplifier above the limit yourself, *louder* from Home Assistant does nothing and *quieter* brings it down to the limit.
+
+**Volume per input** is optional and does nothing until you enable it. The amplifier only has one *power-on volume* for all inputs; this goes further and is done by Home Assistant:
+
+- Enable `number.hegel_h150_start_volume_<input>` for an input (Settings > Devices & services > Hegel Connect > Entities, show disabled entities) and give it a volume. When Home Assistant switches to that input, the volume is set to it. 0 means: leave the volume alone.
+- Or enable `switch.hegel_h150_remember_volume_per_input`: the volume you used last on each input is brought back when you switch to it. A start volume set for an input wins over the remembered one.
+- It only applies when the input is switched from Home Assistant (the source list, scripts, automations). Switching with the amplifier's own remote or the Hegel app is left alone. The maximum volume always applies, and an input with fixed volume is not touched.
+- If you rename an input in the options, the start volume entity shows the new name after the integration is reloaded.
 
 ### Removing
 

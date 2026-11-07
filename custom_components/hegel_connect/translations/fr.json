@@ -81,11 +81,19 @@
     "number": {
       "max_volume": {
         "name": "Volume maximal"
+      },
+      "start_volume": {
+        "name": "Volume de départ {input}"
       }
     },
     "select": {
       "radio_favorite": {
         "name": "Favori radio"
+      }
+    },
+    "switch": {
+      "remember_volume": {
+        "name": "Mémoriser le volume par entrée"
       }
     }
   },

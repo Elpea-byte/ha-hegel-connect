@@ -13,6 +13,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
@@ -20,6 +21,7 @@ from .api import (
     NETWORK_SOURCE_NAME,
     PATH_PLAYER,
     PATH_SOURCE,
+    PATH_VOLUME,
     HegelClient,
     HegelConnectionError,
     HegelError,
@@ -40,6 +42,8 @@ from .const import (
     POWER_ON_WAIT,
     SOURCE_ATTEMPTS,
     SOURCE_VERIFY_WAIT,
+    VOLUMES_SAVE_DELAY,
+    VOLUMES_STORAGE_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,6 +85,14 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         # Volume ceiling, set by the "Maximum volume" number entity.
         self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
+        # Optional volume per input; all off by default, so nothing changes unless you set it:
+        # a start volume per input index (0 = off) and "remember the last volume of each input".
+        self.start_volumes: dict[int, int] = {}
+        self.remember_volume = False
+        self.last_volumes: dict[int, int] = {}
+        self._volume_store: Store[dict[str, int]] = Store(
+            hass, VOLUMES_STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.volumes"
+        )
         # Set by a refresh (homeassistant.update_entity) while the listener waits to reconnect.
         self._reconnect_now = asyncio.Event()
         # Pending position check after a seek (cancel callback), see position_seeked().
@@ -112,6 +124,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             async_track_time_interval(self.hass, self._async_favorites_tick, FAVORITES_INTERVAL)
         )
         self.config_entry.async_on_unload(self._cancel_seek_check)
+        saved = await self._volume_store.async_load()
+        self.last_volumes = {int(k): int(v) for k, v in (saved or {}).items()}
 
     async def _async_favorites_tick(self, _now: datetime) -> None:
         """Periodic favorites refresh (only while connected; offline is skipped)."""
@@ -266,6 +280,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         was_on = state.is_on
         changed = False
         player_changed = False
+        volume_changed = False
         for event in events:
             path = event.get("path")
             if isinstance(path, str) and "itemValue" in event:
@@ -276,6 +291,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                     continue
                 changed |= applied
                 player_changed |= applied and path == PATH_PLAYER
+                volume_changed |= applied and path == PATH_VOLUME
         # Just after a seek the amplifier is still buffering; the seek check reads the position.
         if player_changed and state.is_on and self._seek_check is None:
             if state.player.duration:
@@ -285,8 +301,37 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         if not was_on and state.is_on:
             # Just switched on: read everything once (player data was invalid in standby).
             self.hass.async_create_task(self.async_request_refresh())
+        if volume_changed:
+            # Only a volume change counts: right after a switch the amplifier still reports the old volume.
+            self._remember(state)
         if changed:
             self.async_set_updated_data(state)
+
+    def remember_current(self) -> None:
+        """Save the volume of the current input now (used when "remember volume" is switched on)."""
+        if self.data is not None:
+            self._remember(self.data)
+
+    def _remember(self, state: HegelState) -> None:
+        """Save the volume under the current input; only when "remember volume" is on."""
+        if not self.remember_volume or not state.is_on or state.volume is None or state.source_index is None:
+            return
+        if self.last_volumes.get(state.source_index) != state.volume:
+            self.last_volumes[state.source_index] = state.volume
+            self._volume_store.async_delay_save(self._volumes_to_save, VOLUMES_SAVE_DELAY)
+
+    def _volumes_to_save(self) -> dict[str, int]:
+        return {str(k): v for k, v in self.last_volumes.items()}
+
+    def volume_for_input(self, index: int) -> int | None:
+        """The volume to set when switching to this input, within the maximum volume; None = leave it.
+
+        A start volume you set for the input wins over the remembered one.
+        """
+        target = self.start_volumes.get(index) or (self.last_volumes.get(index) if self.remember_volume else None)
+        if not target:
+            return None
+        return max(0, min(target, self.max_volume, self.volume_max))
 
     def position_seeked(self, position_ms: int) -> None:
         """Show the new position at once and read it back a moment later.
@@ -391,5 +436,17 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 with contextlib.suppress(HegelError, TypeError, ValueError, OverflowError):
                     self.data.source_index = int(await self.client.get_value(PATH_SOURCE))
             if self.data is not None and self.data.source_index == source.index:
+                await self._apply_input_volume(source.index)
                 return
         _LOGGER.warning("Hegel did not keep input %s after %s attempts", name, SOURCE_ATTEMPTS)
+
+    async def _apply_input_volume(self, index: int) -> None:
+        """Set the start or remembered volume of the input just switched to (only if you set one)."""
+        state = self.data
+        target = self.volume_for_input(index)
+        if target is None or state is None or state.volume_fixed or state.volume == target:
+            return
+        try:
+            await self.client.set_volume(target)
+        except HegelError as err:
+            _LOGGER.debug("Setting the volume of input %s failed: %s", index, err)
