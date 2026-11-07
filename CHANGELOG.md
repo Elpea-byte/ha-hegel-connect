@@ -6,6 +6,10 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.6.0] - 2026-11-21
+
+Requires Home Assistant 2025.4 or newer. Nothing needs to be done after updating: the new volume entities are disabled until you enable them.
+
 ### Added
 - Four blueprints with import buttons ([#31](https://github.com/Elpea-byte/ha-hegel-connect/discussions/31)): reconnect after a smart plug turns on, radio favorite at a set time, standby when idle or nobody is home, and a lower maximum volume at night. They are checked in the tests (valid blueprint and automation, README buttons) and with yamllint in the CI.
 - Optional volume per input ([#29](https://github.com/Elpea-byte/ha-hegel-connect/discussions/29)): a *Start volume* number for each input (0 = leave the volume alone) and a *Remember volume per input* switch. Both are disabled until you enable them, so nothing changes for existing setups. They apply when Home Assistant switches the input and stay within the maximum volume. An input with fixed volume is learned when you switch to it, and its start volume entity then turns unavailable. Turning the switch off clears the remembered volumes. The range of the start volume follows the maximum volume.
@@ -19,6 +23,7 @@ Changes on the `dev` branch that are not in a release yet.
 - The stream sensors (audio quality, bitrate, streaming service and the others) show what the amplifier reports while a track is starting, instead of going empty until it says "playing". Values it does not report yet stay empty.
 
 ### Changed
+- Requires Home Assistant 2025.4 or newer (the old minimum of 2025.2 never worked: the integration cannot load there).
 - `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
 
 ### Development
@@ -166,7 +171,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.5.0...dev
+[Unreleased]: ../../compare/v0.6.0...dev
+[0.6.0]: ../../compare/v0.5.0...v0.6.0
 [0.5.0]: ../../compare/v0.4.1...v0.5.0
 [0.4.1]: ../../compare/v0.4.0...v0.4.1
 [0.4.0]: ../../compare/v0.3.3...v0.4.0
