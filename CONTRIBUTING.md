@@ -14,6 +14,7 @@ pip install -r requirements_test.txt
 ruff check
 ruff format        # CI runs "ruff format --check": format before you push
 pytest
+yamllint --strict -c .yamllint.yaml blueprints/   # only when you change a blueprint
 ```
 
 - Keep `api.py` free of Home Assistant imports.

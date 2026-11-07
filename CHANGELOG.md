@@ -27,6 +27,7 @@ Requires Home Assistant 2025.4 or newer. Nothing needs to be done after updating
 - `homeassistant.update_entity` on any Hegel Connect entity now makes a waiting connection retry at once and starts the back-off over, instead of waiting up to 60 seconds. Nothing changes while the connection is healthy.
 
 ### Development
+- `AGENTS.md` and `CONTRIBUTING.md` describe the new files, the yamllint check and the rules for blueprints, optional features and renamed inputs.
 - Minimum Home Assistant version in `hacs.json` is now 2025.4.0 (was 2025.2.0). The old value was never tested: 2025.2 cannot load the integration (`AddConfigEntryEntitiesCallback` is missing there). The full test suite passes on 2025.4.4.
 - The manifest names a category (Speakers & audio), so the Marketplace can show Hegel Connect under it.
 
