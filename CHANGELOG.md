@@ -6,7 +6,7 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
-## [0.6.0] - 2026-11-21
+## [0.6.0] - 2026-11-07
 
 Requires Home Assistant 2025.4 or newer. Nothing needs to be done after updating: the new volume entities are disabled until you enable them.
 
@@ -33,6 +33,8 @@ Requires Home Assistant 2025.4 or newer. Nothing needs to be done after updating
 
 ### Documentation
 - README: that fixed volume is only learned when you switch to the input; where to find the optional (disabled) entities, that *0 = off*, when the volume is set and when not, the smart-plug example for `update_entity` and the start-up time of the amplifier.
+- README: a note for the options (hide and rename inputs): saved through the API or a script, `hidden_sources` must be sent again, or hidden inputs show up again. The form in the interface fills it in.
+- The "Maximum volume entity" field of the night blueprint says to pick the maximum volume, not a start volume (the list shows all numbers of the integration).
 - README: installation steps for the Marketplace of Home Assistant 2026.11, next to HACS (which it replaces from that version).
 - New [docs/ROADMAP.md](docs/ROADMAP.md): the direction towards 1.0 (plans, not promises).
 - README: a note not to install Hegel Connect together with the similar `hegel_streaming` integration for the same amplifier (both would be offered by discovery).

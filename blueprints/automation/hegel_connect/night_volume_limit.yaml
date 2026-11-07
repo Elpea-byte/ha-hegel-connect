@@ -11,7 +11,10 @@ blueprint:
   input:
     max_volume:
       name: Maximum volume entity
-      description: The amplifier's "Maximum volume" number (number.<name>_maximum_volume).
+      description: >-
+        Pick the amplifier's "Maximum volume" number (number.<name>_maximum_volume),
+        not one of the "Start volume" numbers. The list shows every number of this
+        integration, so check the name.
       selector:
         entity:
           filter:

@@ -213,7 +213,7 @@ Most people do not need this button, because the amplifier shows up under *Disco
 
 A fixed IP address (DHCP reservation in your router) is still recommended. If the address does change, Home Assistant picks up the new one by itself the next time it sees the amplifier on the network.
 
-**Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names.
+**Inputs**: Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use (they disappear from the source list and dashboards) and give inputs your own name, e.g. *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names. If you save the options through the API or a script instead of the form, send `hidden_sources` again with the new names; leaving it out shows the hidden inputs again. The form in the interface fills it in for you.
 
 **Maximum volume** is a setting on the device page (a number entity, so automations can change it). Home Assistant will never make the volume louder than it; the amplifier's own remote and knob are not limited. Lowering the maximum below the current volume brings the volume down to the new maximum at once (not on an input with fixed volume, and not while the amplifier is off). If you turned the amplifier above the limit yourself, *louder* from Home Assistant does nothing and *quieter* goes straight down to the limit, not one step. Volume steps are one point on the amplifier's scale.
 
