@@ -8,14 +8,14 @@ Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifi
 
 | | |
 | :---- | :---- |
-| **What** | Home Assistant custom integration (HACS) for Hegel streaming amplifiers |
+| **What** | Home Assistant custom integration (HACS or the Marketplace) for Hegel streaming amplifiers |
 | **Models** | H150 and H200 (tested); H400, H600 (expected) |
 | **Domain** | `hegel_connect` |
 | **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number` |
 | **Connection** | Local push over the amplifier's own web API (`iot_class: local_push`); no cloud, no account |
 | **Discovery** | mDNS `_sues800device._tcp`, UPnP/DLNA (SSDP), Google Cast |
 | **Not for** | Older IP-control models (Röst, H95, H120, H190, H390, H590): use the built-in Hegel integration |
-| **Install** | HACS custom repository, or copy `custom_components/hegel_connect` |
+| **Install** | Custom repository in HACS (Home Assistant 2026.10 and older) or in the Marketplace (2026.11 and newer), or copy `custom_components/hegel_connect` |
 | **License** | MIT |
 
 ## Why this project
@@ -154,17 +154,31 @@ data:
 
 ## Installation
 
-Developed and tested on Home Assistant 2026.10; HACS allows installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
+Developed and tested on Home Assistant 2026.10; HACS and the Marketplace allow installing it on 2025.2 and newer. The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
 
-### HACS (recommended)
+### HACS or the Marketplace (recommended)
+
+Home Assistant 2026.11 replaced HACS with a built-in **Marketplace** (Settings > Marketplace). Both use the same repositories, so the steps differ only in where you click.
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Elpea-byte&repository=ha-hegel-connect&category=integration)
 
-The button opens this repository in HACS on your own Home Assistant (you enter its address once on the page it opens). Without the button:
+The button opens this repository on your own Home Assistant (you enter its address once on the page it opens): in HACS before 2026.11, in the Marketplace from 2026.11. Without the button:
+
+**Home Assistant 2026.11 and newer (Marketplace)**
+
+1. Settings > Marketplace > *Add from link*, enter `Elpea-byte/ha-hegel-connect`. The first time, the Marketplace asks you to connect your GitHub account: you approve a code on GitHub, and it only reads public information.
+2. Open **Hegel Connect** and select *Install*.
+3. Add it under Settings > Devices & services (restart Home Assistant first if the Marketplace says so).
+
+Updates of a repository added from a link are checked every 48 hours.
+
+**Home Assistant 2026.10 and older (HACS)**
 
 1. HACS > ⋮ > *Custom repositories* > add `https://github.com/Elpea-byte/ha-hegel-connect`, type *Integration*.
 2. Search for **Hegel Connect** and download it.
 3. Restart Home Assistant.
+
+Updating to Home Assistant 2026.11 carries your HACS installs and custom repositories over to the Marketplace by itself.
 
 ### Manual
 
@@ -188,7 +202,7 @@ A fixed IP address (DHCP reservation in your router) is still recommended. If th
 
 ### Removing
 
-Settings > Devices & services > Hegel Connect > ⋮ > *Delete*. This removes the amplifier and its entities from Home Assistant; nothing on the amplifier changes. Installed through HACS? Remove the integration there as well and restart Home Assistant.
+Settings > Devices & services > Hegel Connect > ⋮ > *Delete*. This removes the amplifier and its entities from Home Assistant; nothing on the amplifier changes. Installed through HACS or the Marketplace? Uninstall it there as well and restart Home Assistant. The Marketplace first asks you to remove the setup (or offers *Delete and uninstall*).
 
 ## Troubleshooting
 

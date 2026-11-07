@@ -25,4 +25,4 @@ pytest
 
 - `dev`: day-to-day work, tested on the maintainer's own amplifier first. Changes are listed under *Unreleased* in the changelog.
 - `main`: only what has been tested; updated from `dev` with a pull request.
-- Releases are made from `main` and bundle several changes. HACS offers releases only, so pushes to `dev` or `main` never reach users by themselves. Bug fixes can get their own patch release; larger changes may first ship as a pre-release (for example `v0.3.0b1`).
+- Releases are made from `main` and bundle several changes. HACS and the Marketplace offer releases only, so pushes to `dev` or `main` never reach users by themselves. Bug fixes can get their own patch release; larger changes may first ship as a pre-release (for example `v0.3.0b1`).

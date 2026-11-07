@@ -17,6 +17,7 @@ Changes on the `dev` branch that are not in a release yet.
 - The manifest names a category (Speakers & audio), so the Marketplace can show Hegel Connect under it.
 
 ### Documentation
+- README: installation steps for the Marketplace of Home Assistant 2026.11, next to HACS (which it replaces from that version).
 - New [docs/ROADMAP.md](docs/ROADMAP.md): the direction towards 1.0 (plans, not promises).
 - README: a note not to install Hegel Connect together with the similar `hegel_streaming` integration for the same amplifier (both would be offered by discovery).
 - Ideas and feature requests now go in GitHub Discussions (Ideas) instead of issues, so the issue list (and the counter HACS shows) only holds bugs and model reports. The "Feature request" issue form is replaced by a link to Discussions.
