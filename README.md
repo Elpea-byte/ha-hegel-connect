@@ -11,7 +11,7 @@ Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifi
 | **What** | Home Assistant custom integration (HACS or the Marketplace) for Hegel streaming amplifiers |
 | **Models** | H150 and H200 (tested); H400, H600 (expected) |
 | **Domain** | `hegel_connect` |
-| **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number`, `select`, `switch` |
+| **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number`, `select`, `switch`, `event` |
 | **Connection** | Local push over the amplifier's own web API (`iot_class: local_push`); no cloud, no account |
 | **Discovery** | mDNS `_sues800device._tcp`, UPnP/DLNA (SSDP), Google Cast |
 | **Not for** | Older IP-control models (Röst, H95, H120, H190, H390, H590): use the built-in Hegel integration |
