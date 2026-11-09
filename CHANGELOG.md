@@ -9,6 +9,13 @@ Changes on the `dev` branch that are not in a release yet.
 ### Added
 - Now-playing event ([#36](https://github.com/Elpea-byte/ha-hegel-connect/discussions/36)): `event.<name>_now_playing` fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and `is_radio`. Pause, resume and a repeating track do not fire it, and a track already playing at startup is not announced. A new entity; nothing existing changes. Tested in the automated tests with a recording of an H150, not yet on the real amplifier.
 
+### Fixed
+- Answers with an integer of more than 19 digits are refused as invalid JSON instead of causing repeated errors. A normal answer is not affected (the largest integer in the recording of an H150 has 16 digits).
+- The saved volumes of "remember volume per input" are removed when you remove the integration from Home Assistant, instead of staying behind in its storage.
+- "Remember volume per input" no longer saves a volume under an input the amplifier does not list.
+
+These three were only checked with automated tests, not on a real amplifier.
+
 ### Documentation
 - README: the install section leads with searching for *Hegel Connect* in HACS or the Marketplace now that it is in the HACS default list; the custom repository steps stay as the fallback. The platforms row lists `select`, `switch` and `event`.
 

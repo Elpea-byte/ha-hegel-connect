@@ -21,6 +21,7 @@ from custom_components.hegel_connect.api import (
     HegelQueueLost,
     HegelState,
     PlayerData,
+    _bounded_int,
     _finite_float,
     _reject_constant,
     play_mode_parts,
@@ -342,11 +343,27 @@ async def test_request_ordinary_numbers_are_unchanged() -> None:
     assert isinstance(result["b"][0], int)
 
 
+@pytest.mark.parametrize(
+    "body", [b'{"a": ' + b"9" * 400 + b"}", b'{"a": -' + b"9" * 25 + b"}", b'{"a": ' + b"1" * 20 + b"}"]
+)
+async def test_request_refuses_huge_integers(body: bytes) -> None:
+    """An integer with 400 digits parses fine, but ms / 1000 on it raises OverflowError later: refuse it here."""
+    with pytest.raises(HegelError, match="getData: invalid JSON"):
+        await _ask(_FakeResponse(200, [body]))
+
+
+async def test_request_large_but_ordinary_integers_stay_readable() -> None:
+    result = await _ask(
+        _FakeResponse(200, [b'{"a": 9223372036854775807, "b": 2116826320067048, "c": -9223372036854775808}'])
+    )
+    assert result == {"a": 9223372036854775807, "b": 2116826320067048, "c": -9223372036854775808}
+
+
 def test_recorded_h150_session_has_no_non_finite_numbers() -> None:
     """The check does not touch the real recording: every body of the session still loads."""
     session = Path(__file__).parent / "fixtures" / "h150_session.json"
     text = session.read_text(encoding="utf-8")
-    json.loads(text, parse_float=_finite_float, parse_constant=_reject_constant)
+    json.loads(text, parse_float=_finite_float, parse_int=_bounded_int, parse_constant=_reject_constant)
     # Many values inside it are JSON texts themselves (the recorded answer bodies).
     checked = 0
 
@@ -359,7 +376,7 @@ def test_recorded_h150_session_has_no_non_finite_numbers() -> None:
             for value in node:
                 walk(value)
         elif isinstance(node, str) and node.lstrip().startswith(("{", "[")):
-            json.loads(node, parse_float=_finite_float, parse_constant=_reject_constant)
+            json.loads(node, parse_float=_finite_float, parse_int=_bounded_int, parse_constant=_reject_constant)
             checked += 1
 
     walk(json.loads(text))

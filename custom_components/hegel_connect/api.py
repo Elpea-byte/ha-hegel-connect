@@ -112,6 +112,17 @@ def _finite_float(text: str) -> float:
     return value
 
 
+# An integer has at most 19 digits (a signed 64-bit value); more than that only comes from a broken answer.
+MAX_INT_DIGITS = 19
+
+
+def _bounded_int(text: str) -> int:
+    """json.loads hook: a huge integer parses fine, but dividing it later raises OverflowError."""
+    if len(text.lstrip("-")) > MAX_INT_DIGITS:
+        raise ValueError("integer too large")
+    return int(text)
+
+
 def _reject_constant(name: str) -> NoReturn:
     """json.loads hook for NaN, Infinity and -Infinity, which are not valid JSON anyway."""
     raise ValueError(f"non-finite constant {name}")
@@ -468,7 +479,7 @@ class HegelClient:
         if not text:
             return None
         try:
-            return json.loads(text, parse_float=_finite_float, parse_constant=_reject_constant)
+            return json.loads(text, parse_float=_finite_float, parse_int=_bounded_int, parse_constant=_reject_constant)
         except ValueError as err:
             raise HegelError(f"{endpoint}: invalid JSON") from err
 

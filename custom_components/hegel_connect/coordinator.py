@@ -343,6 +343,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         """Save the volume under the current input; only when "remember volume" is on."""
         if not self.remember_volume or not state.is_on or state.volume is None or state.source_index is None:
             return
+        if all(source.index != state.source_index for source in self.sources):
+            return  # an input this amplifier does not list: nothing to come back to
         if self.last_volumes.get(state.source_index) != state.volume:
             self.last_volumes[state.source_index] = state.volume
             self._volume_store.async_delay_save(self._volumes_to_save, VOLUMES_SAVE_DELAY)

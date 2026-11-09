@@ -9,9 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 
 from .api import HegelClient
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS, VOLUMES_STORAGE_VERSION
 from .coordinator import HegelCoordinator
 
 type HegelConfigEntry = ConfigEntry[HegelCoordinator]
@@ -32,6 +33,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bool:
     """Unload; the background listener is cancelled automatically."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> None:
+    """The amplifier is removed: take the saved volumes (see coordinator) with it."""
+    await Store(hass, VOLUMES_STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.volumes").async_remove()
 
 
 async def _async_entry_updated(hass: HomeAssistant, entry: HegelConfigEntry) -> None:
