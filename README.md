@@ -11,11 +11,11 @@ Local-push integration for **Hegel H150, H200, H400 and H600** streaming amplifi
 | **What** | Home Assistant custom integration (HACS or the Marketplace) for Hegel streaming amplifiers |
 | **Models** | H150 and H200 (tested); H400, H600 (expected) |
 | **Domain** | `hegel_connect` |
-| **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number` |
+| **Platforms** | `media_player`, `sensor`, `binary_sensor`, `number`, `select`, `switch` |
 | **Connection** | Local push over the amplifier's own web API (`iot_class: local_push`); no cloud, no account |
 | **Discovery** | mDNS `_sues800device._tcp`, UPnP/DLNA (SSDP), Google Cast |
 | **Not for** | Older IP-control models (Röst, H95, H120, H190, H390, H590): use the built-in Hegel integration |
-| **Install** | Custom repository in HACS (Home Assistant 2026.10 and older) or in the Marketplace (2026.11 and newer), or copy `custom_components/hegel_connect` |
+| **Install** | Search for *Hegel Connect* in HACS (Home Assistant 2026.10 and older) or in the Marketplace (2026.11 and newer); a custom repository works too, or copy `custom_components/hegel_connect` |
 | **License** | MIT |
 
 ## Why this project
@@ -175,7 +175,7 @@ Developed and tested on Home Assistant 2026.10; HACS and the Marketplace allow i
 
 ### HACS or the Marketplace (recommended)
 
-Home Assistant 2026.11 replaced HACS with a built-in **Marketplace** (Settings > Marketplace). Both use the same repositories, so the steps differ only in where you click.
+Hegel Connect is in the default list of HACS, so you can search for it by name. Home Assistant 2026.11 replaced HACS with a built-in **Marketplace** (Settings > Marketplace). Both use the same repositories, so the steps differ only in where you click.
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Elpea-byte&repository=ha-hegel-connect&category=integration)
 
@@ -183,17 +183,18 @@ The button opens this repository on your own Home Assistant (you enter its addre
 
 **Home Assistant 2026.11 and newer (Marketplace)**
 
-1. Settings > Marketplace > *Add from link*, enter `Elpea-byte/ha-hegel-connect`. The first time, the Marketplace asks you to connect your GitHub account: you approve a code on GitHub, and it only reads public information.
-2. Open **Hegel Connect** and select *Install*.
-3. Add it under Settings > Devices & services (restart Home Assistant first if the Marketplace says so).
-
-Updates of a repository added from a link are checked every 48 hours.
+1. Settings > Marketplace, search for **Hegel Connect** and select *Install*.
+2. Add it under Settings > Devices & services (restart Home Assistant first if the Marketplace says so).
 
 **Home Assistant 2026.10 and older (HACS)**
 
-1. HACS > ⋮ > *Custom repositories* > add `https://github.com/Elpea-byte/ha-hegel-connect`, type *Integration*.
-2. Search for **Hegel Connect** and download it.
-3. Restart Home Assistant.
+1. In HACS, search for **Hegel Connect** and download it.
+2. Restart Home Assistant.
+
+**If the search does not find it yet**, add the repository yourself. A new addition to the default list can take a while to show up, and this also works as a fallback later:
+
+- Marketplace: Settings > Marketplace > *Add from link*, enter `Elpea-byte/ha-hegel-connect`. The first time, the Marketplace asks you to connect your GitHub account: you approve a code on GitHub, and it only reads public information. Updates of a repository added from a link are checked every 48 hours.
+- HACS: ⋮ > *Custom repositories* > add `https://github.com/Elpea-byte/ha-hegel-connect`, type *Integration*.
 
 Updating to Home Assistant 2026.11 carries your HACS installs and custom repositories over to the Marketplace by itself.
 
