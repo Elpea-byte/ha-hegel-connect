@@ -46,6 +46,11 @@ async def _setup(hass: HomeAssistant, config_entry) -> None:
     await hass.async_block_till_done()
 
 
+async def _setup_coordinator(hass: HomeAssistant, config_entry):
+    await _setup(hass, config_entry)
+    return config_entry.runtime_data
+
+
 async def _replay(hass: HomeAssistant, fake, first: int, last: int) -> None:
     """Replay the player events of the recorded session (Spotify, then a radio station, then stop)."""
     for index in range(first, last + 1):
@@ -195,3 +200,40 @@ async def test_another_input_fires_nothing(hass: HomeAssistant, fake_hegel, conf
     await hass.async_block_till_done()
     await _push_track(hass, fake, "One")
     assert fired == []
+
+
+async def test_a_reload_brings_the_old_event_back_without_a_new_one(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """Unavailable, then the same time and data again: an automation has to ignore that, it is no new track."""
+    await _setup(hass, config_entry)
+    await _push_track(hass, fake_hegel[-1], "One")
+    before = hass.states.get(NOW_PLAYING)
+    assert before.attributes["title"] == "One"
+    states: list[str] = []
+
+    def on_change(event: Event) -> None:
+        if event.data["entity_id"] == NOW_PLAYING:
+            states.append(event.data["new_state"].state)
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, on_change)
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    after = hass.states.get(NOW_PLAYING)
+    assert states[0] == "unavailable"
+    assert after.state == before.state
+    assert dict(after.attributes) == dict(before.attributes)
+    # Only the restored time: no second timestamp, so no track_changed was fired by the reload.
+    assert set(states) <= {"unavailable", before.state}
+
+
+async def test_losing_the_connection_does_not_make_the_event_unavailable(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    coordinator = await _setup_coordinator(hass, config_entry)
+    await _push_track(hass, fake_hegel[-1], "One")
+    before = hass.states.get(NOW_PLAYING)
+    coordinator.connected = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(NOW_PLAYING).state == before.state

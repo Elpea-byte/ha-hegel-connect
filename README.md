@@ -112,7 +112,7 @@ For an amplifier named *Hegel H150*:
 | `binary_sensor.hegel_h150_network` | On while the amplifier answers, standby included (diagnostic) |
 | `binary_sensor.hegel_h150_fixed_volume` | On when the current input uses fixed volume (diagnostic) |
 
-Entity ids follow your Home Assistant language; the names above are the English ones.
+Entity ids follow your Home Assistant language when they are added; the names above are the English ones, and your own ids are on the device page (Settings > Devices & services > Hegel Connect > your amplifier). Home Assistant 2026.11 shows entity names together with their device and area; existing entity ids stay as they are.
 
 ### Examples
 
@@ -167,9 +167,8 @@ automation:
     triggers:
       - trigger: state
         entity_id: event.hegel_h150_now_playing
-    conditions:
-      - condition: template
-        value_template: "{{ trigger.to_state.state not in ['unavailable', 'unknown'] }}"
+        not_from: [unavailable, unknown]
+        not_to: [unavailable, unknown]
     actions:
       - action: logbook.log
         data:
@@ -180,7 +179,9 @@ automation:
           entity_id: event.hegel_h150_now_playing
 ```
 
-The same trigger works for a notification such as "now playing in Hi-Res" (add a condition on `audio_quality`). Scrobbling itself is left to other integrations.
+The two `not_` lines matter: the event entity goes *unavailable* when the integration reloads and comes back with the time of the last event, which a plain state trigger would log as a new track. (In the automation editor this is the option *Is not* on the state trigger, from Home Assistant 2026.11.) Only the very first event of a new entity is skipped, because it comes from *unknown*. The entity id depends on your Home Assistant language, for example `event.hegel_h150_nu_aan_het_spelen` in Dutch: find yours on the device page (Settings > Devices & services > Hegel Connect > your amplifier).
+
+The blueprint [Log or announce what is playing](#blueprints) does all this for you, including a notification of your own and a filter on audio quality. Scrobbling itself is left to other integrations.
 
 Good to know, from trying it on an H150:
 
@@ -234,11 +235,14 @@ Ready-made automations with a one-click import (Settings > Automations & scenes 
 - **Lower the maximum volume at night**: Sets the maximum volume lower at night and back in the morning; a volume above the new maximum comes down at once.
   [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnight_volume_limit.yaml)
 
+- **Log or announce what is playing**: Writes every new track of the now-playing event to the logbook and, if you choose an action, runs it too (for example a notification); nothing is sent unless you choose one. Optional filters on audio quality and on internet radio.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnow_playing.yaml)
+
 The blueprints use the amplifier's own name for the network input (*Network*). Hegel Connect accepts that name even when you gave the input your own name in the options.
 
 ## Installation
 
-Developed and tested on Home Assistant 2026.10; HACS and the Marketplace allow installing it on 2025.4 and newer (the test suite also passes on 2025.4.4). The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
+Developed and tested on Home Assistant 2026.11; HACS and the Marketplace allow installing it on 2025.4 and newer (the test suite also passes on 2025.4.4). The integration's own icon is shown from Home Assistant 2026.3 ([brand images](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api)); older versions show no icon.
 
 ### HACS or the Marketplace (recommended)
 

@@ -9,6 +9,9 @@ Changes on the `dev` branch that are not in a release yet.
 ### Added
 - Now-playing event ([#36](https://github.com/Elpea-byte/ha-hegel-connect/discussions/36)): `event.<name>_now_playing` fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and `is_radio`. Pause, resume and a repeating track do not fire it, and a track already playing at startup is not announced. Internet radio waits for the song (the station name alone is not a track) and splits `Artist - Title` into artist and title, with the station in `station`. A new entity; nothing existing changes. Tried on an H150 with Spotify and internet radio; not with a media server.
 
+### Added (blueprint)
+- A fifth blueprint, *Log or announce what is playing*, for the now-playing event: it writes each new track to the logbook and runs an action of your own (for example a notification) if you choose one. Optional filters on audio quality and on internet radio. Nothing is sent unless you choose an action. Valid as a blueprint and as an automation in the tests; its trigger and filters are run in a test as well. Not yet tried on Home Assistant with a real amplifier.
+
 ### Fixed
 - Answers with an integer of more than 19 digits are refused as invalid JSON instead of causing repeated errors. A normal answer is not affected (the largest integer in the recording of an H150 has 16 digits).
 - The saved volumes of "remember volume per input" are removed when you remove the integration from Home Assistant, instead of staying behind in its storage.
@@ -17,6 +20,7 @@ Changes on the `dev` branch that are not in a release yet.
 These three were only checked with automated tests, not on a real amplifier.
 
 ### Documentation
+- README: the now-playing example no longer logs the previous track again when the integration reloads. The event entity goes *unavailable* and comes back with the time of the last event, so the example (and the new blueprint) ignore a change from or to *unavailable* or *unknown* (`not_from` and `not_to`). The README also says that entity ids follow the language of Home Assistant and where to find them, and that it was tried on Home Assistant 2026.11.
 - README: how to put the amplifier back after an announcement with a scene ([#33](https://github.com/Elpea-byte/ha-hegel-connect/discussions/33)), tried on an H150 apart from the spoken message itself, and what to expect from the now-playing event per service.
 - README: the install section leads with searching for *Hegel Connect* in HACS or the Marketplace now that it is in the HACS default list; the custom repository steps stay as the fallback. The platforms row lists `select`, `switch` and `event`.
 

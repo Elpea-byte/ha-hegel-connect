@@ -1,0 +1,96 @@
+blueprint:
+  name: Hegel Connect – log or announce what is playing
+  description: >-
+    Reacts to the amplifier's now-playing event: every new track is written to
+    the logbook, and you can add an action of your own, for example a
+    notification. Nothing is sent unless you choose an action. You can limit it
+    to certain audio qualities and leave out internet radio. In your own action
+    you can use the variables title, artist, album, station, service, source,
+    quality, codec, sample_rate, bit_depth, bitrate and is_radio.
+  domain: automation
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/now_playing.yaml
+  input:
+    event_entity:
+      name: Now-playing event
+      description: The amplifier's now-playing event (event.<name>_now_playing).
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: event
+    logbook:
+      name: Write to the logbook
+      default: true
+      selector:
+        boolean:
+    notify_action:
+      name: Extra action (optional)
+      description: >-
+        Runs for every track that passes the filters below, for example a
+        notification. Leave it empty to only write to the logbook.
+      default: []
+      selector:
+        action:
+    only_quality:
+      name: Only for these audio qualities
+      description: Leave empty for every track.
+      default: []
+      selector:
+        select:
+          multiple: true
+          options:
+            - {label: Hi-Res, value: hi_res}
+            - {label: CD quality, value: cd}
+            - {label: Lossless, value: lossless}
+            - {label: DSD, value: dsd}
+            - {label: Lossy, value: lossy}
+    skip_radio:
+      name: Not for internet radio
+      default: false
+      selector:
+        boolean:
+
+mode: queued
+
+triggers:
+  # The event entity goes unavailable when the integration reloads and comes back with the time of the
+  # last event. Without these two lines that would be logged as if the last track just started again.
+  - trigger: state
+    entity_id: !input event_entity
+    not_from: [unavailable, unknown]
+    not_to: [unavailable, unknown]
+
+variables:
+  logbook: !input logbook
+  only_quality: !input only_quality
+  skip_radio: !input skip_radio
+  title: "{{ trigger.to_state.attributes.title }}"
+  artist: "{{ trigger.to_state.attributes.artist }}"
+  album: "{{ trigger.to_state.attributes.album }}"
+  station: "{{ trigger.to_state.attributes.station }}"
+  service: "{{ trigger.to_state.attributes.service }}"
+  source: "{{ trigger.to_state.attributes.source }}"
+  quality: "{{ trigger.to_state.attributes.audio_quality }}"
+  codec: "{{ trigger.to_state.attributes.codec }}"
+  sample_rate: "{{ trigger.to_state.attributes.sample_rate }}"
+  bit_depth: "{{ trigger.to_state.attributes.bit_depth }}"
+  bitrate: "{{ trigger.to_state.attributes.bitrate }}"
+  is_radio: "{{ trigger.to_state.attributes.is_radio }}"
+
+conditions:
+  - condition: template
+    value_template: >-
+      {{ (only_quality | length == 0 or quality in only_quality)
+         and not (skip_radio and is_radio) }}
+
+actions:
+  - if: "{{ logbook }}"
+    then:
+      - action: logbook.log
+        data:
+          name: Hegel
+          message: "{{ artist ~ ' - ' if artist }}{{ title }}{{ ' (' ~ quality ~ ')' if quality }}"
+          entity_id: !input event_entity
+  - sequence: !input notify_action

@@ -38,6 +38,8 @@ blueprint:
 mode: single
 
 triggers:
+  # Also starts when the amplifier comes back from unavailable (for example after a power cut) already
+  # idle or paused: the timer then runs from that moment, which is what we want.
   - trigger: state
     entity_id: !input amplifier
     to: [idle, paused]
