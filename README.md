@@ -159,7 +159,7 @@ data:
 
 `event.hegel_h150_now_playing` fires once for every new track, so an automation can log or announce what you play without watching the media player's attributes. It fires when the amplifier says "playing", so the quality details are there. It does not fire on pause or resume, nor when the same track plays on (repeat); a track that plays again after another one, or after you stopped, fires again. A track that is already playing when Home Assistant starts is not announced.
 
-The event data has `title`, `artist`, `album`, `service`, `source`, `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`; a value the amplifier does not report is empty. Write what you play to the logbook:
+The event data has `title`, `artist`, `album`, `service`, `station`, `source`, `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`; a value the amplifier does not report is empty. Write what you play to the logbook:
 
 ```yaml
 automation:
@@ -180,7 +180,46 @@ automation:
           entity_id: event.hegel_h150_now_playing
 ```
 
-The same trigger works for a notification such as "now playing in Hi-Res" (add a condition on `audio_quality`). Scrobbling itself is left to other integrations. Tested with a recording of an H150 in the automated tests; the first run on a real amplifier is still to do, in particular what internet radio stations report as the title.
+The same trigger works for a notification such as "now playing in Hi-Res" (add a condition on `audio_quality`). Scrobbling itself is left to other integrations.
+
+Good to know, from trying it on an H150:
+
+- **Spotify**: `codec`, `sample_rate`, `bit_depth` and `bitrate` stay empty, because the amplifier does not receive them from Spotify. `audio_quality` is `lossy` (or `lossless` when the amplifier reports Spotify Lossless).
+- **Internet radio**: the station is in `station`. The amplifier shows the station name first and the song a moment later, so the event comes with the song; stations send `Artist - Title` as one text, which is split into `artist` and `title` at the first ` - `. A station that never sends a song title gives no events, and a station that updates the title only now and then gives an event per update.
+- **Same track again**: a track that plays on (repeat, or back to the start without a break) gives no new event. After a break (another input, the stream moved to a phone and back, or an announcement that interrupted it) the same track starts a new event.
+- Tried on an H150 with Spotify, internet radio, pause and resume, next and previous track, switching input, and restarting Home Assistant while music played. Not tried: tracks from a media server (NAS) and other streaming services.
+
+### Announcements: put the amplifier back afterwards
+
+A spoken message or a doorbell sound on the amplifier interrupts what plays. A scene brings the amplifier back to where it was: Home Assistant stores the power state, input, volume and mute of a media player in a scene and restores them, so Hegel Connect needs nothing extra.
+
+```yaml
+sequence:
+  - action: scene.create
+    data:
+      scene_id: hegel_before_announcement
+      snapshot_entities:
+        - media_player.hegel_h150
+  - action: tts.speak
+    target:
+      entity_id: tts.your_text_to_speech   # your own text-to-speech entity
+    data:
+      media_player_entity_id: media_player.hegel_h150_cast   # the Cast entity of the amplifier
+      message: "Dinner is ready"
+  - delay: "00:00:08"   # long enough for the message; or wait until the Cast entity is idle
+  - action: scene.turn_on
+    target:
+      entity_id: scene.hegel_before_announcement
+```
+
+What was tried on an H150 (the scene steps; the spoken message itself was not played):
+
+- Input and volume come back, also from standby (the amplifier switches on first). Allow 4 to 8 seconds, from standby the longest.
+- Internet radio starts again (live radio cannot continue); Spotify continues at the same place.
+- A lower *Maximum volume* wins over the volume in the scene, and mute is restored as it was.
+- The now-playing event fires again for the track that continues, because the stream was interrupted.
+
+The amplifier cannot play a link of your own through its local interface (none was found), so the announcement itself goes through the Cast entity of the amplifier. In Home Assistant that entity may be disabled: enable it under the device first.
 
 ### Blueprints
 

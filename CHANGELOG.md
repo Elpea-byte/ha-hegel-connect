@@ -7,7 +7,7 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 Changes on the `dev` branch that are not in a release yet.
 
 ### Added
-- Now-playing event ([#36](https://github.com/Elpea-byte/ha-hegel-connect/discussions/36)): `event.<name>_now_playing` fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and `is_radio`. Pause, resume and a repeating track do not fire it, and a track already playing at startup is not announced. A new entity; nothing existing changes. Tested in the automated tests with a recording of an H150, not yet on the real amplifier.
+- Now-playing event ([#36](https://github.com/Elpea-byte/ha-hegel-connect/discussions/36)): `event.<name>_now_playing` fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and `is_radio`. Pause, resume and a repeating track do not fire it, and a track already playing at startup is not announced. Internet radio waits for the song (the station name alone is not a track) and splits `Artist - Title` into artist and title, with the station in `station`. A new entity; nothing existing changes. Tried on an H150 with Spotify and internet radio; not with a media server.
 
 ### Fixed
 - Answers with an integer of more than 19 digits are refused as invalid JSON instead of causing repeated errors. A normal answer is not affected (the largest integer in the recording of an H150 has 16 digits).
@@ -17,6 +17,7 @@ Changes on the `dev` branch that are not in a release yet.
 These three were only checked with automated tests, not on a real amplifier.
 
 ### Documentation
+- README: how to put the amplifier back after an announcement with a scene ([#33](https://github.com/Elpea-byte/ha-hegel-connect/discussions/33)), tried on an H150 apart from the spoken message itself, and what to expect from the now-playing event per service.
 - README: the install section leads with searching for *Hegel Connect* in HACS or the Marketplace now that it is in the HACS default list; the custom repository steps stay as the fallback. The platforms row lists `select`, `switch` and `event`.
 
 ## [0.6.0] - 2026-11-07

@@ -35,6 +35,11 @@ class HegelNowPlaying(HegelEntity, EventEntity):
     the same track playing on (repeat). A track that played before starts a new event
     when something else, or nothing, played in between. A track that is already
     playing when Home Assistant starts or reconnects is not announced.
+
+    Internet radio: a start only shows the station name as the title, and the song
+    follows a moment later. The station name is not a track, so the event comes with
+    the song title (``Artist - Title`` is split into artist and title; the station is
+    in ``station``). A station that never reports a song title gives no events.
     """
 
     _attr_translation_key = "now_playing"
@@ -66,8 +71,8 @@ class HegelNowPlaying(HegelEntity, EventEntity):
         ):
             self._track = None
             return
-        if player.state != "playing" or not player.title:
-            return  # starting up or paused: the next "playing" decides
+        if player.state != "playing" or not player.title or player.title == player.station:
+            return  # starting up, paused, or a radio station that has not reported a song yet
         track = (player.title, player.artist, player.album, player.service, player.media_id)
         if track == self._track:
             return
@@ -79,11 +84,16 @@ class HegelNowPlaying(HegelEntity, EventEntity):
         coordinator = self.coordinator
         data = coordinator.data
         player = data.player
+        title, artist = player.title, player.artist
+        if player.is_radio and not artist and title and " - " in title:
+            # Radio stations send "Artist - Title" as one text.
+            artist, title = (part.strip() for part in title.split(" - ", 1))
         return {
-            "title": player.title,
-            "artist": player.artist,
+            "title": title,
+            "artist": artist,
             "album": player.album,
             "service": player.service,
+            "station": player.station,
             "source": coordinator.source_label(data.source_index),
             "audio_quality": player.quality,
             "codec": player.short_codec,

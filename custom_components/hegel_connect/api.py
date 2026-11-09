@@ -212,6 +212,12 @@ class PlayerData:
         return bool(self._meta.get("radioStation"))
 
     @property
+    def station(self) -> str | None:
+        """Name of the radio station; None when something else plays."""
+        name = _dig(self.raw, "mediaRoles", "title") if self.is_radio else None
+        return name if isinstance(name, str) and name else None
+
+    @property
     def image_url(self) -> str | None:
         for icon in (_dig(self.raw, "trackRoles", "icon"), _dig(self.raw, "mediaRoles", "icon")):
             if isinstance(icon, str) and icon.startswith(("http://", "https://")):
