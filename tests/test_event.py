@@ -8,7 +8,10 @@ from typing import Any
 
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 import pytest
+
+from custom_components.hegel_connect.const import DOMAIN
 
 from .conftest import FIXTURE
 
@@ -41,7 +44,16 @@ def fired(hass: HomeAssistant) -> list[dict[str, Any]]:
 
 
 async def _setup(hass: HomeAssistant, config_entry) -> None:
+    """Set up with the (disabled by default) event enabled, as a user who switched it on."""
     config_entry.add_to_hass(hass)
+    er.async_get(hass).async_get_or_create(
+        "event",
+        DOMAIN,
+        f"{config_entry.unique_id}_now_playing",
+        config_entry=config_entry,
+        suggested_object_id="hegel_h150_now_playing",
+        translation_key="now_playing",
+    )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -237,3 +249,13 @@ async def test_losing_the_connection_does_not_make_the_event_unavailable(
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
     assert hass.states.get(NOW_PLAYING).state == before.state
+
+
+async def test_the_event_is_disabled_by_default(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    entry = er.async_get(hass).async_get(NOW_PLAYING)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(NOW_PLAYING) is None

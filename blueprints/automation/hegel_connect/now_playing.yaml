@@ -1,7 +1,8 @@
 blueprint:
   name: Hegel Connect – log or announce what is playing
   description: >-
-    Reacts to the amplifier's now-playing event: every new track is written to
+    Reacts to the amplifier's now-playing event (enable that entity first, it
+    is off by default): every new track is written to
     the logbook, and you can add an action of your own, for example a
     notification. Nothing is sent unless you choose an action. You can limit it
     to certain audio qualities and leave out internet radio. In your own action

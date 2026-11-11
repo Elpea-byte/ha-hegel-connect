@@ -40,9 +40,13 @@ class HegelNowPlaying(HegelEntity, EventEntity):
     follows a moment later. The station name is not a track, so the event comes with
     the song title (``Artist - Title`` is split into artist and title; the station is
     in ``station``). A station that never reports a song title gives no events.
+
+    Disabled until you enable it: each event stores the track in the recorder.
     """
 
     _attr_translation_key = "now_playing"
+    # Every track lands in the Home Assistant database: only when you ask for it.
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "now_playing")

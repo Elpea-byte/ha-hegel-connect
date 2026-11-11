@@ -103,7 +103,7 @@ For an amplifier named *Hegel H150*:
 | `sensor.hegel_h150_audio_quality` | Hi-Res, CD quality, Lossless, Lossy, DSD (while the streamer plays) |
 | `sensor.hegel_h150_streaming_service` | The service that plays (TIDAL, Spotify, radio, ...) |
 | `sensor.hegel_h150_codec`, `_sample_rate`, `_bit_depth`, `_bitrate` | Stream details, when the service reports them (kept in history, no long-term statistics) |
-| `event.hegel_h150_now_playing` | Fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and whether it is radio. For listening logs, scrobbling and notifications |
+| `event.hegel_h150_now_playing` | Optional, off until you enable it: fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and whether it is radio. For listening logs, scrobbling and notifications |
 | `select.hegel_h150_radio_favorite` | The radio favorites as options; choosing one starts that station, and it shows the favorite that is playing (unknown when something else plays) |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for custom dashboard cards that show the station logos |
 | `select.hegel_h150_auto_standby` | Optional, off until you enable it: the amplifier's own auto-standby after 5, 10 or 20 minutes without activity (or off), configuration |
@@ -169,7 +169,7 @@ Tried on an H150 (Home Assistant 2026.11, 5 minutes): on the network input witho
 
 ### Now-playing event
 
-`event.hegel_h150_now_playing` fires once for every new track, so an automation can log or announce what you play without watching the media player's attributes. It fires when the amplifier says "playing", so the quality details are there. It does not fire on pause or resume, nor when the same track plays on (repeat); a track that plays again after another one, or after you stopped, fires again. A track that is already playing when Home Assistant starts is not announced.
+`event.hegel_h150_now_playing` is off until you enable it (Settings > Devices & services > Hegel Connect > your amplifier > disabled entities), because every track it fires is stored in the Home Assistant database. It fires once for every new track, so an automation can log or announce what you play without watching the media player's attributes. It fires when the amplifier says "playing", so the quality details are there. It does not fire on pause or resume, nor when the same track plays on (repeat); a track that plays again after another one, or after you stopped, fires again. A track that is already playing when Home Assistant starts is not announced.
 
 The event data has `title`, `artist`, `album`, `service`, `station`, `source`, `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`; a value the amplifier does not report is empty. Write what you play to the logbook:
 
@@ -192,6 +192,8 @@ automation:
 ```
 
 The two `not_` lines matter: the event entity goes *unavailable* when the integration reloads and comes back with the time of the last event, which a plain state trigger would log as a new track. (In the automation editor this is the option *Is not* on the state trigger, from Home Assistant 2026.11.) Only the very first event of a new entity is skipped, because it comes from *unknown*. The entity id depends on your Home Assistant language, for example `event.hegel_h150_nu_aan_het_spelen` in Dutch: find yours on the device page (Settings > Devices & services > Hegel Connect > your amplifier).
+
+Home Assistant keeps the recorded events only as long as its recorder does (10 days by default, `purge_keep_days`), and `recorder.purge_entities` removes them earlier. For a longer listening log, let an automation write the tracks somewhere that suits you, or leave the event out of the recorder with `exclude` if you only need the automation to react.
 
 The blueprint [Log or announce what is playing](#blueprints) does all this for you, including a notification of your own and a filter on audio quality. Scrobbling itself is left to other integrations.
 
@@ -247,7 +249,7 @@ Ready-made automations with a one-click import (Settings > Automations & scenes 
 - **Lower the maximum volume at night**: Sets the maximum volume lower at night and back in the morning; a volume above the new maximum comes down at once.
   [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnight_volume_limit.yaml)
 
-- **Log or announce what is playing**: Writes every new track of the now-playing event to the logbook and, if you choose an action, runs it too (for example a notification); nothing is sent unless you choose one. Optional filters on audio quality and on internet radio.
+- **Log or announce what is playing**: (enable the now-playing event first) Writes every new track of the now-playing event to the logbook and, if you choose an action, runs it too (for example a notification); nothing is sent unless you choose one. Optional filters on audio quality and on internet radio.
   [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnow_playing.yaml)
 
 The blueprints use the amplifier's own name for the network input (*Network*). Hegel Connect accepts that name even when you gave the input your own name in the options.
