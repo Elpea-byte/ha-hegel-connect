@@ -101,6 +101,15 @@
     "select": {
       "radio_favorite": {
         "name": "Radio favorite"
+      },
+      "auto_standby": {
+        "name": "Auto standby",
+        "state": {
+          "off": "Off",
+          "5_min": "5 minutes",
+          "10_min": "10 minutes",
+          "20_min": "20 minutes"
+        }
       }
     },
     "switch": {

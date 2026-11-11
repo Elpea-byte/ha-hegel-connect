@@ -9,6 +9,9 @@ Changes on the `dev` branch that are not in a release yet.
 ### Added
 - Now-playing event ([#36](https://github.com/Elpea-byte/ha-hegel-connect/discussions/36)): `event.<name>_now_playing` fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and `is_radio`. Pause, resume and a repeating track do not fire it, and a track already playing at startup is not announced. Internet radio waits for the song (the station name alone is not a track) and splits `Artist - Title` into artist and title, with the station in `station`. A new entity; nothing existing changes. Tried on an H150 with Spotify and internet radio; not with a media server.
 
+### Added (auto standby)
+- Auto standby ([#42](https://github.com/Elpea-byte/ha-hegel-connect/discussions/42)): `select.<name>_auto_standby` shows and changes the amplifier's own idle timer (off, or 5, 10 or 20 minutes without activity; the choices come from the amplifier). Disabled until you enable it, so nothing changes for existing setups. Tried on an H150: with 5 minutes it went to standby by itself after exactly 5 minutes idle on the network input, not while music played. Not tried: how it works together with the standby timer in the amplifier's own menu, pause, a power cut, and other models.
+
 ### Added (blueprint)
 - A fifth blueprint, *Log or announce what is playing*, for the now-playing event: it writes each new track to the logbook and runs an action of your own (for example a notification) if you choose one. Optional filters on audio quality and on internet radio. Nothing is sent unless you choose an action. Valid as a blueprint and as an automation in the tests; its trigger and filters are run in a test as well. Not yet tried on Home Assistant with a real amplifier.
 

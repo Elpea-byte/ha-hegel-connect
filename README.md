@@ -106,6 +106,7 @@ For an amplifier named *Hegel H150*:
 | `event.hegel_h150_now_playing` | Fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and whether it is radio. For listening logs, scrobbling and notifications |
 | `select.hegel_h150_radio_favorite` | The radio favorites as options; choosing one starts that station, and it shows the favorite that is playing (unknown when something else plays) |
 | `sensor.hegel_h150_radio_favorites` | Number of radio favorites; the list (title, icon, path) as attribute, for custom dashboard cards that show the station logos |
+| `select.hegel_h150_auto_standby` | Optional, off until you enable it: the amplifier's own auto-standby after 5, 10 or 20 minutes without activity (or off), configuration |
 | `number.hegel_h150_maximum_volume` | Volume ceiling for Home Assistant (configuration) |
 | `number.hegel_h150_start_volume_<input>` | Optional, off until you enable it: the volume to set when Home Assistant switches to that input (0 = leave the volume alone) |
 | `switch.hegel_h150_remember_volume_per_input` | Optional, off until you enable it: switching to an input returns to the volume it had last |
@@ -154,6 +155,17 @@ data:
   media_content_type: hegel_path
   media_content_id: "upnp:/uuid:<server>/<album>?itemType=container"
 ```
+
+### Auto standby
+
+The amplifier can put itself in standby after a while without activity. That is a setting inside the streamer of the amplifier, and *Auto standby* (`select.hegel_h150_auto_standby`, under the device's disabled entities, off until you enable it) shows and changes it: Off, or after 5, 10 or 20 minutes, the choices the amplifier itself offers. The amplifier counts the time itself, so it also works when Home Assistant is not running.
+
+Tried on an H150 (Home Assistant 2026.11, 5 minutes): on the network input without playing it went to standby exactly 5 minutes after the last activity, with Home Assistant doing nothing; while music plays it does not count, and after stopping the 5 minutes start again. Good to know:
+
+- This is not the standby timer in the amplifier's own menu. Which of the two wins when both are on has not been tried.
+- The amplifier does not report a change of this setting, so Home Assistant reads it when it connects and every few hours. A change in the Hegel app shows up then.
+- Not tried: whether pause counts as idle, whether the setting survives a power cut, and other models. An amplifier that does not have the setting shows the entity as unavailable.
+- The blueprint *Standby when idle or nobody is home* is still the way to switch off when everybody has left, or after a time other than 5, 10 or 20 minutes.
 
 ### Now-playing event
 

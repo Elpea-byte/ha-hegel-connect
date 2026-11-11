@@ -46,6 +46,9 @@ PATH_PRODUCT_NAME = "settings:/system/productName"
 PATH_DEVICE_NAME = "settings:/deviceName"
 PATH_MEMBER = "systemmanager:systemMember"
 PATH_FIRMWARE = "settings:/version"
+# The streamer's own auto-standby: seconds without activity (0 = off) and the values the amplifier offers.
+PATH_MAX_IDLE_TIME = "settings:/system/maxIdleTime"
+PATH_MAX_IDLE_TIME_VALUES = "settings:/system/maxIdleTimeValues"
 PATH_AIRABLE_ROOT = "airable:"
 PATH_PLAY_HISTORY = "ui:/playHistory"
 PATH_MEDIA_SERVERS = "ui:/upnp"
@@ -583,6 +586,28 @@ class HegelClient:
             if isinstance(name, str) and isinstance(index, int):
                 result.append(HegelSource(index, name))
         return result
+
+    async def idle_time(self) -> int:
+        """Seconds of inactivity after which the amplifier goes to standby by itself (0 = off)."""
+        value = await self.get_value(PATH_MAX_IDLE_TIME)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise HegelError(f"unexpected auto-standby value: {value!r}")
+        return value
+
+    async def idle_time_options(self) -> list[int]:
+        """The auto-standby times the amplifier offers, in seconds, in its own order."""
+        data = await self.get_rows(PATH_MAX_IDLE_TIME_VALUES)
+        options: list[int] = []
+        for row in data.get("rows", []):
+            seconds = unwrap(row.get("value")) if isinstance(row, dict) else None
+            if isinstance(seconds, int) and not isinstance(seconds, bool) and seconds >= 0:
+                options.append(seconds)
+        if not options:
+            raise HegelError("no auto-standby times offered")
+        return options
+
+    async def set_idle_time(self, seconds: int) -> None:
+        await self.set_value(PATH_MAX_IDLE_TIME, {"type": "i32_", "i32_": seconds})
 
     async def volume_max(self) -> int:
         """Upper end of the volume range as reported by the amplifier."""

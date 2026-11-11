@@ -1,17 +1,23 @@
-"""Radio favorite: start one of the stations saved in the Hegel Control app."""
+"""Radio favorite (start a saved station) and the optional auto-standby time."""
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from . import HegelConfigEntry
 from .api import NETWORK_SOURCE_NAME, HegelError
+from .const import FAVORITES_INTERVAL
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
 from .media_player import _command_failed
+
+_LOGGER = logging.getLogger(__name__)
 
 # Commands go one at a time to the amplifier (same as the media player).
 PARALLEL_UPDATES = 1
@@ -25,7 +31,7 @@ async def async_setup_entry(
     entry: HegelConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    async_add_entities([HegelRadioFavorite(entry.runtime_data)])
+    async_add_entities([HegelRadioFavorite(entry.runtime_data), HegelAutoStandby(entry.runtime_data)])
 
 
 class HegelRadioFavorite(HegelEntity, SelectEntity):
@@ -122,3 +128,83 @@ class HegelRadioFavorite(HegelEntity, SelectEntity):
             self._clear_pending()
             self.async_write_ha_state()
             raise _command_failed(err) from err
+
+
+def _idle_option(seconds: int) -> str:
+    """Option key for an auto-standby time: "off", "5_min", "10_min" (see the translations)."""
+    if seconds == 0:
+        return "off"
+    return f"{seconds // 60}_min" if seconds % 60 == 0 else f"{seconds}_s"
+
+
+class HegelAutoStandby(HegelEntity, SelectEntity):
+    """The amplifier's own auto-standby: how long it may sit idle before it goes to standby.
+
+    Optional and disabled by default. It is a setting of the streamer inside the
+    amplifier (not the standby timer in the amplifier's own menu): the amplifier
+    counts the time itself, also when Home Assistant is not running. While music
+    plays it does not count. The choices (off, 5, 10, 20 minutes) are read from the
+    amplifier, and so is the value, when Home Assistant connects and now and then.
+    """
+
+    _attr_translation_key = "auto_standby"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: HegelCoordinator) -> None:
+        super().__init__(coordinator, "auto_standby")
+        self._seconds: int | None = None
+        self._choices: list[int] = []
+        self._was_connected = False
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(async_track_time_interval(self.hass, self._async_tick, FAVORITES_INTERVAL))
+        if self.coordinator.connected:
+            self._was_connected = True
+            await self._async_read()
+
+    async def _async_tick(self, _now: object) -> None:
+        if self.coordinator.connected:
+            await self._async_read()
+
+    async def _async_read(self) -> None:
+        """Read the choices and the value; an amplifier without this setting leaves the entity unavailable."""
+        client = self.coordinator.client
+        try:
+            self._choices = await client.idle_time_options()
+            self._seconds = await client.idle_time()
+        except HegelError as err:
+            _LOGGER.debug("Auto-standby setting not available: %s", err)
+            self._seconds = None
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        connected = self.coordinator.connected
+        if connected and not self._was_connected:
+            self.hass.async_create_task(self._async_read())  # back from a lost connection: read it again
+        self._was_connected = connected
+        super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.connected and self._seconds is not None
+
+    @property
+    def options(self) -> list[str]:
+        return [_idle_option(seconds) for seconds in self._choices]
+
+    @property
+    def current_option(self) -> str | None:
+        return _idle_option(self._seconds) if self._seconds in self._choices else None
+
+    async def async_select_option(self, option: str) -> None:
+        seconds = next(s for s in self._choices if _idle_option(s) == option)
+        client = self.coordinator.client
+        try:
+            await client.set_idle_time(seconds)
+            self._seconds = await client.idle_time()  # what the amplifier says now
+        except HegelError as err:
+            raise _command_failed(err) from err
+        self.async_write_ha_state()

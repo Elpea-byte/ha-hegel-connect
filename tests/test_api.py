@@ -381,3 +381,47 @@ def test_recorded_h150_session_has_no_non_finite_numbers() -> None:
 
     walk(json.loads(text))
     assert checked > 10
+
+
+def _rows(*pairs: tuple[str, int]) -> bytes:
+    rows = [{"title": title, "type": "value", "value": {"type": "i32_", "i32_": value}} for title, value in pairs]
+    return json.dumps({"rowsCount": len(rows), "rows": rows}).encode()
+
+
+def _client(body: bytes) -> HegelClient:
+    return HegelClient("192.0.2.10", _FakeSession(_FakeResponse(200, [body])))  # type: ignore[arg-type]
+
+
+async def test_idle_time_options_are_read_from_the_rows() -> None:
+    body = _rows(("Off", 0), ("5 minutes", 300), ("10 minutes", 600), ("20 minutes", 1200))
+    assert await _client(body).idle_time_options() == [0, 300, 600, 1200]
+
+
+@pytest.mark.parametrize("body", [b'{"rows": []}', b"{}", b'{"rows": ["x", {"title": "t"}]}'])
+async def test_idle_time_options_without_usable_rows_are_an_error(body: bytes) -> None:
+    with pytest.raises(HegelError, match="no auto-standby times"):
+        await _client(body).idle_time_options()
+
+
+async def test_idle_time_is_read_and_checked() -> None:
+    assert await _client(b'[{"type":"i32_","i32_":300}]').idle_time() == 300
+    for body in (b'[{"type":"i32_","i32_":-5}]', b'[{"type":"bool_","bool_":true}]', b'"soon"'):
+        with pytest.raises(HegelError, match="unexpected auto-standby value"):
+            await _client(body).idle_time()
+
+
+async def test_set_idle_time_writes_a_typed_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent: list[tuple] = []
+
+    async def fake_request(self, method, endpoint, **kwargs):
+        sent.append((method, endpoint, kwargs.get("payload")))
+
+    monkeypatch.setattr(HegelClient, "_request", fake_request)
+    await HegelClient("192.0.2.10", None).set_idle_time(600)  # type: ignore[arg-type]
+    assert sent == [
+        (
+            "POST",
+            "setData",
+            {"path": "settings:/system/maxIdleTime", "role": "value", "value": {"type": "i32_", "i32_": 600}},
+        )
+    ]

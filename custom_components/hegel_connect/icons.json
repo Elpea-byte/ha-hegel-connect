@@ -54,6 +54,9 @@
     "select": {
       "radio_favorite": {
         "default": "mdi:radio"
+      },
+      "auto_standby": {
+        "default": "mdi:power-sleep"
       }
     }
   }
