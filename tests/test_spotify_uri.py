@@ -58,6 +58,14 @@ def test_album_and_artist_uris() -> None:
     assert player.spotify_track_uri is None  # no track id reported
 
 
+def test_the_playlist_it_plays_from() -> None:
+    assert _player(playbackSourceId=f"spotify:playlist:{ID}").spotify_playlist_uri == f"spotify:playlist:{ID}"
+    # Playing from an album or an artist is not a playlist.
+    assert _player(playbackSourceId=f"spotify:album:{ID}").spotify_playlist_uri is None
+    assert _player(playbackSourceId=f"spotify:artist:{ID}").spotify_playlist_uri is None
+    assert _player(service_id="tidal", playbackSourceId=f"spotify:playlist:{ID}").spotify_playlist_uri is None
+
+
 def test_only_for_spotify() -> None:
     """Another service that happens to report a trackId is not Spotify."""
     assert _player(service_id="tidal", trackId=ID).spotify_track_uri is None
@@ -72,6 +80,7 @@ async def test_the_recorded_spotify_track_has_its_uris(hass: HomeAssistant, fake
     assert event["spotify_uri"] == f"spotify:track:{ID}"
     assert event["spotify_album_uri"].startswith("spotify:album:")
     assert event["spotify_artist_uri"].startswith("spotify:artist:")
+    assert event["spotify_playlist_uri"].startswith("spotify:playlist:")  # the recorded track plays from a playlist
     assert hass.states.get(PLAYER).attributes["media_content_id"] == f"spotify:track:{ID}"
 
 
@@ -91,7 +100,17 @@ async def test_radio_has_no_spotify_uris_and_keeps_its_media_id(
     await hass.async_block_till_done()
     radio = fired[-1]
     assert radio["is_radio"] is True
-    assert (radio["spotify_uri"], radio["spotify_album_uri"], radio["spotify_artist_uri"]) == (None, None, None)
+    assert (
+        radio["spotify_uri"],
+        radio["spotify_album_uri"],
+        radio["spotify_artist_uri"],
+        radio["spotify_playlist_uri"],
+    ) == (
+        None,
+        None,
+        None,
+        None,
+    )
     state = hass.states.get(PLAYER)
     assert state.attributes.get("media_content_id") is None
     assert state.attributes["media_id"]  # the radio station id, as before

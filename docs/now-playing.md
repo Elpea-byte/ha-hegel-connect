@@ -2,7 +2,7 @@
 
 `event.hegel_h150_now_playing` is off until you enable it (Settings > Devices & services > Hegel Connect > your amplifier > disabled entities), because every track it fires is stored in the Home Assistant database. It fires once for every new track, so an automation can log or announce what you play without watching the media player's attributes. It fires when the amplifier says "playing", so the quality details are there. It does not fire on pause or resume, nor when the same track plays on (repeat); a track that plays again after another one, or after you stopped, fires again. A track that is already playing when Home Assistant starts is not announced.
 
-The event data has `title`, `artist`, `album`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `station`, `source`, `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`; a value the amplifier does not report is empty. Write what you play to the logbook:
+The event data has `title`, `artist`, `album`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `spotify_playlist_uri`, `station`, `source`, `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`; a value the amplifier does not report is empty. Write what you play to the logbook:
 
 ```yaml
 automation:
@@ -30,7 +30,7 @@ The blueprint [Log or announce what is playing](blueprints.md) does all this for
 
 Good to know, from trying it on an H150:
 
-- **Spotify**: the track, album and artist as Spotify URIs (`spotify:track:...`) in `spotify_uri`, `spotify_album_uri` and `spotify_artist_uri` (empty for other services; the media player has the track URI as `media_content_id`). `codec`, `sample_rate`, `bit_depth` and `bitrate` stay empty, because the amplifier does not receive them from Spotify. `audio_quality` is `lossy` (or `lossless` when the amplifier reports Spotify Lossless).
+- **Spotify**: the track, album and artist as Spotify URIs (`spotify:track:...`) in `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri` and, when it plays from a playlist, `spotify_playlist_uri` (empty for other services; the media player has the track URI as `media_content_id`). `codec`, `sample_rate`, `bit_depth` and `bitrate` stay empty, because the amplifier does not receive them from Spotify. `audio_quality` is `lossy` (or `lossless` when the amplifier reports Spotify Lossless).
 - **Internet radio**: the station is in `station`. The amplifier shows the station name first and the song a moment later, so the event comes with the song; stations send `Artist - Title` as one text, which is split into `artist` and `title` at the first ` - `. A station that never sends a song title gives no events, and a station that updates the title only now and then gives an event per update.
 - **Same track again**: a track that plays on (repeat, or back to the start without a break) gives no new event. After a break (another input, the stream moved to a phone and back, or an announcement that interrupted it) the same track starts a new event.
 - Tried on an H150 with Spotify, internet radio, pause and resume, next and previous track, switching input, and restarting Home Assistant while music played. Not tried: tracks from a media server (NAS) and other streaming services.
@@ -48,5 +48,5 @@ actions:
       device_id: Hegel H150   # the name of the amplifier as a Spotify Connect device
 ```
 
-The album and artist URIs can start a whole album or artist the same way (SpotifyPlus has a separate action for that). Other services: Hegel Connect has no such ids for them (see the changelog).
+The album, artist and playlist URIs can start a whole album, artist or playlist the same way (SpotifyPlus has a separate action for that; not tried). Other services: Hegel Connect has no such ids for them (see the changelog).
 

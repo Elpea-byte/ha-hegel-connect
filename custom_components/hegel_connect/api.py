@@ -165,9 +165,9 @@ def _dig(data: Any, *keys: str) -> Any:
 
 
 _SPOTIFY_ID = re.compile(r"(?P<id>[0-9A-Za-z]{22})")
-_SPOTIFY_URI = re.compile(r"spotify:(?P<kind>track|album|artist):(?P<id>[0-9A-Za-z]{22})")
+_SPOTIFY_URI = re.compile(r"spotify:(?P<kind>track|album|artist|playlist):(?P<id>[0-9A-Za-z]{22})")
 _SPOTIFY_URL = re.compile(
-    r"https://open\.spotify\.com/(?:intl-[a-z]+/)?(?P<kind>track|album|artist)/(?P<id>[0-9A-Za-z]{22})(?:[?#].*)?"
+    r"https://open\.spotify\.com/(?:intl-[a-z]+/)?(?P<kind>track|album|artist|playlist)/(?P<id>[0-9A-Za-z]{22})(?:[?#].*)?"
 )
 
 
@@ -247,6 +247,11 @@ class PlayerData:
     @property
     def spotify_artist_uri(self) -> str | None:
         return self._spotify_uri("artist", "artistId")
+
+    @property
+    def spotify_playlist_uri(self) -> str | None:
+        """The playlist the track plays from (not set when it plays from an album or an artist)."""
+        return self._spotify_uri("playlist", "playbackSourceId")
 
     @property
     def is_radio(self) -> bool:

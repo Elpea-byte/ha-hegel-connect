@@ -101,6 +101,7 @@ class HegelNowPlaying(HegelEntity, EventEntity):
             "spotify_uri": player.spotify_track_uri,
             "spotify_album_uri": player.spotify_album_uri,
             "spotify_artist_uri": player.spotify_artist_uri,
+            "spotify_playlist_uri": player.spotify_playlist_uri,
             "station": player.station,
             "source": coordinator.source_label(data.source_index),
             "audio_quality": player.quality,
