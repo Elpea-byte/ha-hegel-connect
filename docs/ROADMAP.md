@@ -10,10 +10,10 @@ The Home Assistant [integration quality scale](https://developers.home-assistant
 
 ## Pace
 
-There is no schedule, and the plan is deliberately not rushed:
+There is no fixed schedule. The plan follows what is actually done:
 
-- At most one release every three to four weeks, unless a bug needs a fix.
-- A version is tried on the maintainer's own amplifier for at least two weeks before it is released.
+- A release comes when all its items are done and tested, on average every two to three weeks (0.5.0 to 0.6.0 took 18 days); a bug that needs a fix can get its own release.
+- A version is used on the maintainer's own amplifier for at least a week before it is released.
 - Features are bundled: a version comes out when all its items are done and tested, not one by one.
 - A breaking change is announced in the release notes one version ahead.
 - Every release has something in it that users will notice and enjoy, listed in the table below.
