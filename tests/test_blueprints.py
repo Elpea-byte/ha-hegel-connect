@@ -83,8 +83,9 @@ async def test_blueprint_makes_a_valid_automation(hass: HomeAssistant, path: Pat
     assert validated.validation_status == "ok", validated.validation_error
 
 
-def test_readme_lists_every_blueprint_with_an_import_button() -> None:
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+def test_the_blueprint_page_lists_every_blueprint_with_an_import_button() -> None:
+    readme = (ROOT / "docs" / "blueprints.md").read_text(encoding="utf-8")
+    assert "docs/blueprints.md" in (ROOT / "README.md").read_text(encoding="utf-8")  # the README links to the page
     for path in FILES:
         raw = f"https://raw.githubusercontent.com/Elpea-byte/ha-hegel-connect/main/blueprints/automation/hegel_connect/{path.name}"
         assert f"blueprint_import/?blueprint_url={quote(raw, safe='')}" in readme, path.name
