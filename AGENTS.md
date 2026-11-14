@@ -17,10 +17,22 @@ updates. Code lives in `custom_components/hegel_connect/`.
 | `media_player.py`, `sensor.py`, `binary_sensor.py`, `event.py`, `number.py`, `select.py`, `switch.py` | Entities. `event.py` holds the now-playing event. `number.py` and `switch.py` also hold the optional volume-per-input entities, and `select.py` the optional auto-standby (all disabled by default). |
 | `diagnostics.py` | Diagnostics download (addresses and ids are redacted). |
 | `blueprints/automation/hegel_connect/` | Ready-made blueprints, imported by users through the README buttons. |
+| `docs/REFERENCE.md` | States, entities, attributes and errors in tables; a test checks it against `strings.json` and the media player. |
+| `docs/*.md` | Longer guides (now playing, volume per input, auto standby, announcements, blueprints, streaming services, examples); the README links to them. |
 | `docs/ROADMAP.md` | Plan towards 1.0; keep it in step with what is built. |
 | `quality_scale.yaml` | Honest self-assessment against the Home Assistant quality scale. |
 
-## Checks (all must pass; CI runs them on every push)
+## Setup and checks (all must pass; CI runs them on every push)
+
+Python 3.14 (what the CI uses and what the current Home Assistant needs). On Windows, in PowerShell:
+
+```powershell
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements_test.txt
+```
+
+Home Assistant's test tools install fine on Windows; if a package refuses to build there, use WSL or a Linux container instead. The checks:
 
 ```bash
 pip install -r requirements_test.txt
@@ -30,6 +42,24 @@ pytest --cov=custom_components.hegel_connect  # total floor in pyproject.toml
 yamllint --strict -c .yamllint.yaml blueprints/
 coverage report --include="custom_components/hegel_connect/config_flow.py" --fail-under=100
 ```
+
+## Definition of done for a new entity or option
+
+- [ ] Code, with `_attr_translation_key` and a unique id; `has_entity_name` stays on.
+- [ ] Texts in `strings.json` **and** the six files in `translations/` (en, nl, nb, de, fr, es), icon in `icons.json`.
+- [ ] Optional or noticeable for existing setups: **disabled by default** (`_attr_entity_registry_enabled_default = False`).
+- [ ] A test against the `FakeHegel` fixture, including the failure case (the amplifier refuses, the setting is missing).
+- [ ] `docs/REFERENCE.md` (table row, states), the README or a page in `docs/`, `CHANGELOG.md` under *Unreleased*.
+- [ ] `quality_scale.yaml` and `docs/ROADMAP.md` still say what is true.
+- [ ] Claims in the docs separate what was tried on a real amplifier from what only ran in automated tests.
+
+## Extending the recording
+
+`tests/fixtures/h150_session.json` is a recording of a real H150: answers to `getData` and `getRows` (`snap`, `rows`) and the events of the queue (`events`). To add a case, record the amplifier's own answers (for example with the browser's developer tools on `http://<address>/webclient/`) and paste them in, after removing everything personal: the unique id and `systemMemberId` become `00000000-0000-0000-0000-000000000000`, IP addresses become `192.0.2.x`, host names and account names become neutral text, and cloud ids in paths (Airable, Spotify) become placeholders. Search the file for digits-and-dots and for `@` before you commit. The `FakeHegel` class in `tests/conftest.py` replays it; never contact a real device from a test.
+
+## Releases (short)
+
+`dev` is for day-to-day work; `main` only gets tested code, through a pull request from `dev`. A release bundles several changes: raise `version` in `custom_components/hegel_connect/manifest.json`, rename *Unreleased* in `CHANGELOG.md` to the version with the date (and add an empty *Unreleased* above it plus the compare links), merge `dev` into `main`, then create the GitHub release `vX.Y.Z` on the merge commit of `main`. HACS and the Marketplace only offer releases. The release notes say what was tried on a real amplifier.
 
 ## Rules
 

@@ -11,11 +11,15 @@ Thanks for helping out! The most useful contributions right now:
 
 ```bash
 pip install -r requirements_test.txt
-ruff check
-ruff format        # CI runs "ruff format --check": format before you push
-pytest
-yamllint --strict -c .yamllint.yaml blueprints/   # only when you change a blueprint
+ruff check .
+ruff format .                                # CI runs "ruff format --check": format before you push
+mypy custom_components/hegel_connect         # strict
+pytest --cov=custom_components.hegel_connect # the total floor is in pyproject.toml
+coverage report --include="custom_components/hegel_connect/config_flow.py" --fail-under=100
+yamllint --strict -c .yamllint.yaml blueprints/
 ```
+
+Python 3.14; on Windows use PowerShell and a virtual environment (see [AGENTS.md](AGENTS.md)). A new entity or option follows the checklist *Definition of done* there: texts in all six languages, disabled by default when optional, a test, the reference page and the changelog.
 
 - Keep `api.py` free of Home Assistant imports.
 - Never commit IP addresses, serial numbers or other personal data (also not in test fixtures).
