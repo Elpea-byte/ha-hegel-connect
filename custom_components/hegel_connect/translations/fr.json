@@ -9,22 +9,26 @@
           "host": "Hôte"
         },
         "data_description": {
-          "host": "Adresse IP ou nom d'hôte de l'amplificateur, par ex. 192.168.1.50"
+          "host": "Adresse IP ou nom d'hôte de l'amplificateur, p. ex. 192.168.1.50. Vous pouvez aussi coller l'adresse depuis votre navigateur."
         }
       },
       "reconfigure": {
         "title": "Modifier l'adresse",
         "data": {
           "host": "Hôte"
+        },
+        "description": "Saisissez la nouvelle adresse IP de cet amplificateur. Ce doit être le même amplificateur : un autre s'ajoute comme nouvel appareil.",
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte de l'amplificateur, p. ex. 192.168.1.50. Vous pouvez aussi coller l'adresse depuis votre navigateur."
         }
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "**{name}** trouvé à l'adresse {host}.\n\nL'ajouter à Home Assistant ?"
+        "description": "**{name}** ({model}) trouvé à l'adresse {host}.\n\nL'ajouter à Home Assistant ?"
       }
     },
     "error": {
-      "cannot_connect": "Impossible de joindre l'amplificateur à cette adresse. Est-il connecté au réseau (fonctionne aussi en veille) ?",
+      "cannot_connect": "Impossible de joindre l'amplificateur à cette adresse. Est-il connecté au réseau (fonctionne aussi en veille) ? Vérifiez que l'adresse suivie de /webclient/ s'ouvre dans votre navigateur, par exemple http://192.168.1.50/webclient/.",
       "not_supported": "Un appareil a répondu, mais il ne ressemble pas à un Hegel H150, H200, H400 ou H600.",
       "unknown": "Erreur inattendue, consultez le journal.",
       "legacy_model": "Il s'agit d'un amplificateur Hegel plus ancien (H95, H120, H190, H190V, H390, H590 ou Röst). Il se pilote avec le protocole de contrôle IP de Hegel : utilisez l'[intégration Hegel]({core_url}) intégrée à Home Assistant. Hegel Connect est destiné aux H150, H200, H400 et H600."

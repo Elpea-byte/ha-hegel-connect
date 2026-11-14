@@ -425,3 +425,21 @@ async def test_set_idle_time_writes_a_typed_value(monkeypatch: pytest.MonkeyPatc
             {"path": "settings:/system/maxIdleTime", "role": "value", "value": {"type": "i32_", "i32_": 600}},
         )
     ]
+
+
+async def test_the_client_puts_an_ipv6_address_in_brackets_in_the_url() -> None:
+    """The request goes to http://[addr]/api/...; checked on the URL only (the test sockets cannot use ::1).
+
+    Not tried with an amplifier that has an IPv6 address.
+    """
+    urls: list[str] = []
+
+    class _Session(_FakeSession):
+        def request(self, method, url, **kwargs):
+            urls.append(url)
+            return super().request(method, url, **kwargs)
+
+    body = b'{"value": {"type": "i32_", "i32_": 7}}'
+    client = HegelClient("fe80::1%eth0", _Session(_FakeResponse(200, [body])))  # type: ignore[arg-type]
+    assert await client.get_value("any:path") == 7
+    assert urls == ["http://[fe80::1%25eth0]/api/getData"]

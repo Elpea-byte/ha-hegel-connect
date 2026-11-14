@@ -40,6 +40,21 @@ def _parse_ipv4(value: str) -> ipaddress.IPv4Address | None:
         return None
 
 
+def _clean_host(value: str) -> str:
+    """What was typed or pasted as the address, reduced to the host (and an explicit port).
+
+    People paste what their browser shows: ``http://192.168.1.50/webclient/``. The scheme, a user
+    name, the path, a query and brackets around an IPv6 address are removed.
+    """
+    text = value.strip()
+    if "://" in text:
+        text = text.split("://", 1)[1]
+    text = text.split("/", 1)[0].split("?", 1)[0].split("#", 1)[0].rsplit("@", 1)[-1]
+    if text.startswith("[") and "]" in text:
+        return text[1:].split("]", 1)[0]  # [addr] or [addr]:port: the client adds the brackets again
+    return text.strip("[]")
+
+
 def _ssdp_host(location: str | None) -> str | None:
     """The IP address in a UPnP description URL; a host name or a broken URL gives None."""
     try:
@@ -87,7 +102,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST].strip().strip("[]")  # IPv6 may be typed as [addr]
+            host = _clean_host(user_input[CONF_HOST])  # a pasted browser address works too; IPv6 as [addr] or addr
             try:
                 model, title, unique_id = await self._async_probe(host)
             except HegelConnectionError:
@@ -164,7 +179,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={"name": self._title, "host": self._host},
+            description_placeholders={"name": self._title, "host": self._host, "model": self._model},
         )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -172,7 +187,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST].strip().strip("[]")  # IPv6 may be typed as [addr]
+            host = _clean_host(user_input[CONF_HOST])
             try:
                 _model, _title, unique_id = await self._async_probe(host)
             except HegelConnectionError:

@@ -13,6 +13,9 @@ Changes on the `dev` branch that are not in a release yet.
 
 - A fifth blueprint, *Log or announce what is playing*, for the now-playing event: it writes each new track to the logbook and runs an action of your own (for example a notification) if you choose one. Optional filters on audio quality and on internet radio. Nothing is sent unless you choose an action. Valid as a blueprint and as an automation in the tests; its trigger and filters are run in a test as well. Not yet tried on Home Assistant with a real amplifier.
 
+### Changed
+- Setup: you can paste the address from your browser (for example `http://192.168.1.50/webclient/`); only the host (and an explicit port) is used, in setup and when changing the address. The error *Cannot reach the amplifier* now says how to check it (open the address followed by `/webclient/` in a browser), changing the address has a description, and the discovery confirmation shows the model. All six languages. Tested with the fake amplifier. IPv6 addresses typed by hand put brackets in the request URL (checked on the URL only, not with a real IPv6 amplifier); discovery stays IPv4-only.
+
 ### Fixed
 - Answers with an integer of more than 19 digits are refused as invalid JSON instead of causing repeated errors. A normal answer is not affected (the largest integer in the recording of an H150 has 16 digits).
 - The saved volumes of "remember volume per input" are removed when you remove the integration from Home Assistant, instead of staying behind in its storage.
