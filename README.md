@@ -81,6 +81,18 @@ logger:
 
 Then open an [issue](https://github.com/Elpea-byte/ha-hegel-connect/issues/new/choose) with the log and the diagnostics file (Settings > Devices & services > Hegel Connect > ⋮ > *Download diagnostics*; it contains no IP address or device ids).
 
+| Symptom | Cause and fix |
+| :---- | :---- |
+| The amplifier is not discovered | Discovery uses multicast, which does not cross another subnet or VLAN and is blocked on some networks. Add it by hand with its IP address (see *Set up*). |
+| *Cannot reach the amplifier on this address* | Wrong address, or the amplifier is not on the network (standby is fine, switched off at the mains is not). Open `http://<address>/webclient/` in a browser: if that page does not open, Home Assistant cannot reach it either. |
+| *A device answered, but it does not look like a Hegel* | The address belongs to something else, or to a model that is not on the streaming platform. Other brands on the same platform (Onkyo) announce the same discovery service; the model the device reports decides. Expected from the code; not tried with such a device. |
+| The built-in Hegel integration also shows the amplifier as *Discovered* | That one is for the IP-control models. Choose *Ignore* on it. |
+| Entity ids differ from this README | Entity ids follow the language Home Assistant had when they were added (for example `..._nu_aan_het_spelen` in Dutch). Yours are on the device page. |
+| Next, previous or stop are missing with Spotify | Spotify Connect only allows pause through the amplifier. Use the Spotify app. |
+| A *Start volume* entity is *unavailable* | That input has fixed volume (home theater bypass), which Hegel Connect learned when Home Assistant switched to it. See the volume page. |
+| *Configure* says the inputs are not known yet | Hegel Connect has not read the inputs yet: wait until the amplifier is connected and try again. Expected from the code; not tried. |
+| Now playing and the stream sensors are empty | They only show something on the network input (the media player is *on* on other inputs). If it stays empty on the network input, a new firmware may have renamed it: please open an issue. |
+
 **Amplifier switched off at the mains or unplugged?** When it comes back, Home Assistant normally notices within a minute (it retries after 5, 10, 20, 40 and then every 60 seconds). To reconnect at once, call `homeassistant.update_entity` on any Hegel Connect entity (for example `media_player.hegel_h150`), or use the blueprint *Smart plug: reconnect at once*. It only helps once the amplifier answers on the network again: right after power-on it needs about 20 to 45 seconds to start (on an H150).
 
 ## Features
