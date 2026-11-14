@@ -29,6 +29,7 @@ Features: next, previous, seek, shuffle, repeat and stop are only offered while 
 | `media_id` | text or null | Id of what plays (a radio station matches the `id` of a radio favorite); null unless the network input plays |
 | `audio_format` | text or null | Codec and format, for example `FLAC · 24-bit/96kHz`; null when not reported or another input plays |
 | `volume_raw` | number or null | Volume on the amplifier's scale |
+| `media_content_id` (standard attribute) | text or null | While Spotify plays: the track as a Spotify URI (`spotify:track:...`); null for other services |
 | `max_volume` | number | The volume ceiling Home Assistant applies, on the amplifier's scale |
 | `input_names` | object | Shown input name to the amplifier's own name, for the visible inputs |
 
@@ -59,7 +60,7 @@ The sensors and the media player are not `unavailable` when the amplifier cannot
 
 ### The now-playing event
 
-Event type `track_changed`, with the attributes `title`, `artist`, `album`, `service`, `station`, `source` (the shown input name), `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`. A value the amplifier does not report is null. Details and examples: [now playing](now-playing.md).
+Event type `track_changed`, with the attributes `title`, `artist`, `album`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri` (Spotify only, otherwise null), `station`, `source` (the shown input name), `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`. A value the amplifier does not report is null. Details and examples: [now playing](now-playing.md).
 
 ## Which entity or attribute to use in a trigger
 

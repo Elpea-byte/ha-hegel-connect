@@ -20,6 +20,7 @@ import ipaddress
 import json
 import logging
 import math
+import re
 from typing import Any, NoReturn
 
 import aiohttp
@@ -163,6 +164,13 @@ def _dig(data: Any, *keys: str) -> Any:
     return data
 
 
+_SPOTIFY_ID = re.compile(r"(?P<id>[0-9A-Za-z]{22})")
+_SPOTIFY_URI = re.compile(r"spotify:(?P<kind>track|album|artist):(?P<id>[0-9A-Za-z]{22})")
+_SPOTIFY_URL = re.compile(
+    r"https://open\.spotify\.com/(?:intl-[a-z]+/)?(?P<kind>track|album|artist)/(?P<id>[0-9A-Za-z]{22})(?:[?#].*)?"
+)
+
+
 @dataclass(slots=True)
 class PlayerData:
     """What the streamer is doing (parsed from ``player:player/data``)."""
@@ -209,6 +217,36 @@ class PlayerData:
         """Id of what is playing (e.g. a radio station); matches the id of a favorites row."""
         media_id = _dig(self.raw, "mediaRoles", "id")
         return str(media_id) if media_id else None
+
+    def _spotify_uri(self, kind: str, key: str) -> str | None:
+        """``spotify:<kind>:<id>`` from the metadata, only while Spotify plays.
+
+        The amplifier reports the id as a URI already (``spotify:track:...``); a bare id of 22
+        characters or an open.spotify.com link is turned into the same URI.
+        """
+        if str(self._meta.get("serviceID") or "").lower() != "spotify":
+            return None
+        value = self._meta.get(key)
+        if not isinstance(value, str):
+            return None
+        value = value.strip()
+        match = _SPOTIFY_ID.fullmatch(value) or _SPOTIFY_URI.fullmatch(value) or _SPOTIFY_URL.fullmatch(value)
+        if match is None:
+            return None
+        found_kind, found_id = (match.groupdict().get("kind") or kind), match.group("id")
+        return f"spotify:{kind}:{found_id}" if found_kind == kind else None
+
+    @property
+    def spotify_track_uri(self) -> str | None:
+        return self._spotify_uri("track", "trackId")
+
+    @property
+    def spotify_album_uri(self) -> str | None:
+        return self._spotify_uri("album", "albumId")
+
+    @property
+    def spotify_artist_uri(self) -> str | None:
+        return self._spotify_uri("artist", "artistId")
 
     @property
     def is_radio(self) -> bool:

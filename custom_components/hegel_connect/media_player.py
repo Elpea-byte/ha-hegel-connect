@@ -204,6 +204,11 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return self.coordinator.data.player.album if self._playing_network() else None
 
     @property
+    def media_content_id(self) -> str | None:
+        """The Spotify URI of the track (spotify:track:...) while Spotify plays, so it can be started again."""
+        return self.coordinator.data.player.spotify_track_uri if self._playing_network() else None
+
+    @property
     def media_playlist(self) -> str | None:
         """The playlist or album the track plays from, as the service reports it."""
         return self.coordinator.data.player.playback_source if self._playing_network() else None

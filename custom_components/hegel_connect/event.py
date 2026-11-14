@@ -77,7 +77,8 @@ class HegelNowPlaying(HegelEntity, EventEntity):
             return
         if player.state != "playing" or not player.title or player.title == player.station:
             return  # starting up, paused, or a radio station that has not reported a song yet
-        track = (player.title, player.artist, player.album, player.service, player.media_id)
+        # Spotify has no media id, but a track URI: two versions with the same title are two tracks.
+        track = (player.title, player.artist, player.album, player.service, player.spotify_track_uri or player.media_id)
         if track == self._track:
             return
         self._track = track
@@ -97,6 +98,9 @@ class HegelNowPlaying(HegelEntity, EventEntity):
             "artist": artist,
             "album": player.album,
             "service": player.service,
+            "spotify_uri": player.spotify_track_uri,
+            "spotify_album_uri": player.spotify_album_uri,
+            "spotify_artist_uri": player.spotify_artist_uri,
             "station": player.station,
             "source": coordinator.source_label(data.source_index),
             "audio_quality": player.quality,
