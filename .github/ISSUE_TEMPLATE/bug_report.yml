@@ -15,6 +15,14 @@ body:
       label: Home Assistant version
     validations:
       required: true
+  - type: input
+    id: version
+    attributes:
+      label: Hegel Connect version
+      description: Shown in HACS or the Marketplace, or in `custom_components/hegel_connect/manifest.json`.
+      placeholder: "0.6.0"
+    validations:
+      required: true
   - type: textarea
     id: what
     attributes:
