@@ -7,3 +7,9 @@ __pycache__/
 htmlcov/
 .vscode/
 .idea/
+
+# Local notes and reports, never committed (also listed in AGENTS.md)
+Testverslag-*.md
+Release-*.md
+CLAUDE.local.md
+hc.tgz
