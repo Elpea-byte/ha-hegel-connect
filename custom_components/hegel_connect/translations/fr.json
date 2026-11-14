@@ -27,7 +27,7 @@
       "cannot_connect": "Impossible de joindre l'amplificateur à cette adresse. Est-il connecté au réseau (fonctionne aussi en veille) ?",
       "not_supported": "Un appareil a répondu, mais il ne ressemble pas à un Hegel H150, H200, H400 ou H600.",
       "unknown": "Erreur inattendue, consultez le journal.",
-      "legacy_model": "Il s'agit d'un amplificateur Hegel plus ancien (H95, H120, H190, H390, H590 ou Röst). Il se pilote avec le protocole de contrôle IP de Hegel : utilisez l'[intégration Hegel]({core_url}) intégrée à Home Assistant. Hegel Connect est destiné aux H150, H200, H400 et H600."
+      "legacy_model": "Il s'agit d'un amplificateur Hegel plus ancien (H95, H120, H190, H190V, H390, H590 ou Röst). Il se pilote avec le protocole de contrôle IP de Hegel : utilisez l'[intégration Hegel]({core_url}) intégrée à Home Assistant. Hegel Connect est destiné aux H150, H200, H400 et H600."
     },
     "abort": {
       "already_configured": "Cet amplificateur est déjà configuré.",

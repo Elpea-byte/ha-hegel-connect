@@ -27,7 +27,7 @@
       "cannot_connect": "Der Verstärker ist unter dieser Adresse nicht erreichbar. Ist er mit dem Netzwerk verbunden (funktioniert auch im Standby)?",
       "not_supported": "Ein Gerät hat geantwortet, scheint aber kein Hegel H150, H200, H400 oder H600 zu sein.",
       "unknown": "Unerwarteter Fehler, siehe Protokoll.",
-      "legacy_model": "Dies ist ein älterer Hegel-Verstärker (H95, H120, H190, H390, H590 oder Röst). Er wird über Hegels IP-Steuerprotokoll gesteuert: Verwende die in Home Assistant integrierte [Hegel-Integration]({core_url}). Hegel Connect ist für den H150, H200, H400 und H600."
+      "legacy_model": "Dies ist ein älterer Hegel-Verstärker (H95, H120, H190, H190V, H390, H590 oder Röst). Er wird über Hegels IP-Steuerprotokoll gesteuert: Verwende die in Home Assistant integrierte [Hegel-Integration]({core_url}). Hegel Connect ist für den H150, H200, H400 und H600."
     },
     "abort": {
       "already_configured": "Dieser Verstärker ist bereits eingerichtet.",
