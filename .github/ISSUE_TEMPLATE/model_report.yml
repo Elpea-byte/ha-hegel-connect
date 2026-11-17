@@ -46,4 +46,4 @@ body:
     id: diagnostics
     attributes:
       label: Diagnostics file
-      description: Settings > Devices & services > Hegel Connect > ⋮ > Download diagnostics.
+      description: Settings > Devices & services > Hegel Connect > ⋮ > Download diagnostics. It lists the model, firmware, volume range, the auto-standby choices and the features Home Assistant offers; the address and ids are removed.
