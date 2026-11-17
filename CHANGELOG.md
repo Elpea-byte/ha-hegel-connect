@@ -18,6 +18,8 @@ Changes on the `dev` branch that are not in a release yet.
 - Search internet radio from the media browser ([#27](https://github.com/Elpea-byte/ha-hegel-connect/discussions/27)): the search box (and the action `media_player.search_media`) finds stations on the amplifier, and a found station starts like a favorite. Needs a Home Assistant version that has search in the media browser; older ones just do not offer it. Tested with the fake amplifier and with the amplifier's answers as recorded in a test report; the search through the integration is not yet seen on an H150. Podcasts are planned for 0.8.
 
 ### Changed
+- The text after setup now links to the README section that explains how to enable the optional entities.
+- The automated tests also run against Home Assistant 2025.4, the oldest supported version.
 - The auto-standby select is read again every 15 minutes (before: every 6 hours), because the amplifier does not report a change of the setting; a change in the Hegel app shows up within a quarter of an hour. One small read each time, and only while the entity is enabled.
 - The auto-standby select no longer shows its old value for a moment when the connection returns; it stays unavailable until the amplifier has answered (seen on an H150 as 36 ms).
 - After setup a text says that optional entities are off until you enable them, and for a model the maintainer has not tested (everything but the H150) it asks for a [model report](https://github.com/Elpea-byte/ha-hegel-connect/issues/new?template=model_report.yml). All six languages; tested with the fake amplifier, not seen in the interface yet.
