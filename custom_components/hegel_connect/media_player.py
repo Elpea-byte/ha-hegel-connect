@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -35,6 +35,9 @@ from .api import (
 from .const import DOMAIN
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
+
+if TYPE_CHECKING:
+    from homeassistant.components.media_player.browse_media import SearchMedia, SearchMediaQuery
 
 # Commands go one at a time to the amplifier; state comes from the coordinator (push).
 PARALLEL_UPDATES = 1
@@ -72,6 +75,9 @@ _ROOT_TITLES = {
     PATH_USB: "USB",
     PATH_PLAY_HISTORY: "Recently played",
 }
+
+# Search in the media browser exists from a newer Home Assistant on; older ones simply do not offer it.
+_SEARCH = getattr(MediaPlayerEntityFeature, "SEARCH_MEDIA", MediaPlayerEntityFeature(0))
 
 _PLAYER_STATES = {
     "playing": MediaPlayerState.PLAYING,
@@ -116,7 +122,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Next/previous only when the current service allows it (not Spotify, not radio)."""
-        features = self._BASE_FEATURES
+        features = self._BASE_FEATURES | _SEARCH
         data = self.coordinator.data
         if self._playing_network():
             if data.player.control_allowed("next_"):
@@ -379,6 +385,27 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         position_ms = round(position * 1000)
         await self._run(self.coordinator.client.seek(position_ms))
         self.coordinator.position_seeked(position_ms)
+
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search internet radio on the amplifier (Home Assistant's search box in the media browser).
+
+        Podcasts can be searched the same way on the amplifier; that is planned for a later version, so a
+        search that asks for podcasts only gives nothing.
+        """
+        from homeassistant.components.media_player.browse_media import SearchMedia
+
+        if set(query.media_filter_classes or []) == {MediaClass.PODCAST}:
+            return SearchMedia(result=[])
+        try:
+            rows = await self.coordinator.client.search_airable("radio", query.search_query)
+        except HegelError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="search_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        items = (_child(row, PATH_AIRABLE_ROOT, index, {}) for index, row in enumerate(rows))
+        return SearchMedia(result=[item for item in items if item is not None])
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):

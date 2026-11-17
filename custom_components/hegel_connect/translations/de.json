@@ -154,6 +154,9 @@
     },
     "fixed_volume_input": {
       "message": "{input} hat am Verstärker eine feste Lautstärke, daher kann keine Startlautstärke eingestellt werden."
+    },
+    "search_failed": {
+      "message": "Die Suche am Verstärker ist fehlgeschlagen: {error}"
     }
   },
   "options": {

@@ -48,7 +48,7 @@ There is no fixed schedule. The plan follows what is actually done:
 - **Built:** the amplifier's own auto-standby as an optional select ([#42](../../../discussions/42)).
 - **Built:** a text after setup that asks for a model report for models the maintainer has not tested, and setup that takes a pasted browser address.
 - **Built:** hardening of the JSON reading, and the README and `docs/` restructure with [REFERENCE.md](REFERENCE.md).
-- **Open:** searching internet radio ([#27](../../../discussions/27)). The amplifier has a search form for it (fill in a text, activate, read the result list); researched on an H150, feasible. Podcasts work the same way. If it turns out too big it moves to after 1.0.
+- **Built:** searching internet radio ([#27](../../../discussions/27)): the search box of the media browser finds stations on the amplifier (the amplifier has a search form for it: fill in a text, activate, read the result list), and a found station starts like a favorite. Tried on an H150 as raw requests; the integration itself still has to be tried.
 - **Built:** the auto-standby select is re-read when the connection returns and every 15 minutes, because the amplifier does not report a change of the setting.
 
 **0.8** (planned), core behaviour and coverage:
@@ -57,6 +57,7 @@ There is no fixed schedule. The plan follows what is actually done:
 - **Open:** a repair issue when the amplifier has been unreachable for a long time or its model is not supported (both `exempt` in `quality_scale.yaml` today).
 - **Open:** saving the options without `hidden_sources` keeps the hidden inputs instead of showing them again (today a documented pitfall for scripts, fixed in code instead).
 - **Open:** the *Maximum volume* number recognisable for the blueprint picker, which can only filter on device class or unit (the start volume numbers have neither); this changes an entity, so it is weighed against the dashboards that rely on it and listed as breaking if it is.
+- **Open:** searching podcasts ([#27](../../../discussions/27)), the user feature of this version: it works the same way on the amplifier (the result is a podcast, which opens to its episodes; an episode is a track that starts like a radio item, not tried yet).
 - **Open:** larger cover art where the streaming service offers it, only if that can be done reliably.
 - **Open:** overall test coverage to 95% or more, with the CI floor raised to match, and `pip-audit` in the CI.
 

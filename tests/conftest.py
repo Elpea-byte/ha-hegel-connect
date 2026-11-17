@@ -47,6 +47,7 @@ class FakeHegel:
         self.host = host
         self.base_url = f"http://{url_host(host)}"
         self.calls: list[tuple] = []
+        self.searches: list[tuple[str, str]] = []
         self.values = {path: snapshot_value(path) for path in FIXTURE["snap"]}
         self._events: asyncio.Queue = asyncio.Queue()
 
@@ -157,6 +158,17 @@ class FakeHegel:
         self.calls.append(("set_idle_time", seconds))
         FakeHegel.idle_seconds = seconds
 
+    # Search (internet radio and podcasts): rows per kind, or an error to raise.
+    search_results: ClassVar[dict[str, Any]] = {}
+
+    async def search_airable(self, kind: str, query: str, limit: int = 20) -> list[dict]:
+        self._check()
+        self.searches.append((kind, query))
+        found = FakeHegel.search_results.get(kind, [])
+        if isinstance(found, Exception):
+            raise found
+        return found[:limit]
+
     async def play_time(self) -> dict:
         self.calls.append(("play_time",))
         return {"type": "i64_", "i64_": 30000}
@@ -205,6 +217,7 @@ def fake_hegel():
     FakeHegel.queue_broken = False
     FakeHegel.idle_supported = True
     FakeHegel.idle_seconds = 0
+    FakeHegel.search_results = {}
     FakeHegel.rows = {}
     FakeHegel.raw = {}
     instances: list[FakeHegel] = []

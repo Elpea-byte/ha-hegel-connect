@@ -154,6 +154,9 @@
     },
     "fixed_volume_input": {
       "message": "{input} tiene un volumen fijo en el amplificador, por lo que no se puede establecer un volumen inicial."
+    },
+    "search_failed": {
+      "message": "No se pudo buscar en el amplificador: {error}"
     }
   },
   "options": {

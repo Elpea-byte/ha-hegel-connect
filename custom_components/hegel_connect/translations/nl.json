@@ -154,6 +154,9 @@
     },
     "fixed_volume_input": {
       "message": "{input} heeft een vast volume op de versterker, dus er kan geen startvolume voor worden ingesteld."
+    },
+    "search_failed": {
+      "message": "Zoeken op de versterker is niet gelukt: {error}"
     }
   },
   "options": {

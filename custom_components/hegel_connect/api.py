@@ -372,6 +372,9 @@ class PlayerData:
         return " · ".join(parts) or None
 
 
+# Rows of a search the amplifier gives at most per request.
+SEARCH_LIMIT = 20
+
 # Player states in which something is really playing (or about to).
 ACTIVE_STATES = ("playing", "paused", "buffering", "transitioning")
 
@@ -500,6 +503,8 @@ class HegelClient:
         self.base_url = f"http://{url_host(host)}"
         self._session = session
         self._timeout = request_timeout
+        # One search at a time: the amplifier gives every search its own form.
+        self._search_lock = asyncio.Lock()
 
     # ---------------------------------------------------------------- basics
 
@@ -797,6 +802,51 @@ class HegelClient:
                 }
             )
         return result
+
+    async def search_airable(self, kind: str, query: str, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
+        """Search internet radio (``kind`` "radio") or podcasts ("podcast"), as the web client does.
+
+        The search is a form on the amplifier: the section's search node redirects to a form
+        (``airable:formN``, N counts up), the text goes into its ``q`` field, activating ``submit``
+        answers with the path of the result list, and that list is read like any other folder.
+        The result rows are returned as the amplifier gives them, without the three filter rows
+        (by location, language and genre) that start every list. At most ``limit`` rows (the
+        amplifier gives 20 per request).
+        """
+        query = query.strip()
+        if not query:
+            return []
+        section = "radios" if kind == "radio" else "feeds"
+        root = await self.get_rows(PATH_AIRABLE_ROOT, 0, 10)
+        base = next(
+            (
+                r.get("path")
+                for r in root.get("rows", [])
+                if isinstance(r, dict) and str(r.get("path", "")).endswith(f"/{section}")
+            ),
+            None,
+        )
+        if not isinstance(base, str):
+            raise HegelError(f"No {section} section found")
+        async with self._search_lock:
+            form = await self.get_rows(f"{base}/search", 0, 1)
+            redirect = form.get("rowsRedirect")
+            if not isinstance(redirect, str) or not redirect.startswith("airable:"):
+                raise HegelError("The amplifier gave no search form")
+            await self.set_value(f"{redirect}:q", {"type": "string_", "string_": query})
+            reply = await self._request(
+                "POST", "setData", payload={"path": f"{redirect}:submit", "role": "activate", "value": {}}
+            )
+            result = _dig(reply, "result", "path")
+            if not isinstance(result, str) or not result:
+                raise HegelError("The search gave no result list")
+            data = await self.get_rows(result, 0, max(limit, 1) - 1)
+        rows = [
+            row
+            for row in data.get("rows", [])
+            if isinstance(row, dict) and row.get("path") and "/filter" not in str(row.get("id") or row["path"])
+        ]
+        return rows[:limit]
 
     # ------------------------------------------------------------------ push
 

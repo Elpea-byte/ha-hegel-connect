@@ -41,6 +41,26 @@ data:
   media_content_id: "upnp:/uuid:<server>/<album>?itemType=container"
 ```
 
+Search a radio station by name (new in 0.7, not released yet) from a script, then start the first result; in the media browser the same search box finds stations:
+
+```yaml
+actions:
+  - action: media_player.search_media
+    target:
+      entity_id: media_player.hegel_h150
+    data:
+      search_query: Radio 10
+    response_variable: found
+  - action: media_player.play_media
+    target:
+      entity_id: media_player.hegel_h150
+    data:
+      media_content_type: hegel_path
+      media_content_id: "{{ found['media_player.hegel_h150'].result[0].media_content_id }}"
+```
+
+The field names of the result follow the Home Assistant version; not tried on an H150 yet. Searching podcasts is planned.
+
 Reconnect at once when the amplifier was unplugged or switched off at the mains. Home Assistant normally notices within a minute (it retries after 5, 10, 20, 40 and then every 60 seconds); the standard action `homeassistant.update_entity` on any Hegel Connect entity makes it retry now:
 
 ```yaml

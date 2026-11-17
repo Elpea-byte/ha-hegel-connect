@@ -101,7 +101,7 @@ Then open an [issue](https://github.com/Elpea-byte/ha-hegel-connect/issues/new/c
 
 - **Control:** power (on and network standby), volume and mute with a maximum Home Assistant never exceeds, inputs read from the amplifier (hide and rename them), reliable input switching (waits until the amplifier is on and checks the input stays selected).
 - **Playback:** play, pause, next, previous, stop, seek, shuffle and repeat, only where the current [streaming service allows it](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/streaming-services.md).
-- **Media browser:** your radio favorites, all internet radio, media servers (UPnP/DLNA, for example a NAS), a USB stick in the amplifier (not tested yet) and recently played. Nothing to set up.
+- **Media browser:** your radio favorites, all internet radio, media servers (UPnP/DLNA, for example a NAS), a USB stick in the amplifier (not tested yet) and recently played, and a search box for internet radio (new in 0.7, not released yet). Nothing to set up.
 - **Radio favorite select** and a **radio favorites sensor** with the station logos, for automations, voice and dashboard cards.
 - **Now playing:** title, artist, album, cover art, service, length and position; sensors for audio quality (Hi-Res, CD, Lossless, Lossy, DSD), codec, sample rate, bit depth and bitrate.
 - **Status you can trust:** instant updates (local push), a network sensor that tells standby from switched off at the mains, starts while the amplifier is off at the mains, a fixed-volume indicator.

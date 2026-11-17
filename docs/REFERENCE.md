@@ -108,6 +108,7 @@ What works, and when an action is refused (the errors are listed at the end of t
 | `media_player.media_seek` | Where the service allows it (media server, USB) | Not offered with Spotify or radio |
 | `media_player.shuffle_set`, `repeat_set` | Where the source offers that combination | `play_mode_not_allowed` |
 | `media_player.play_media` | `media_content_type: hegel_path` with an id from the media browser | `not_playable` for the browser roots, `unknown_media` for a broken track id |
+| `media_player.search_media` (new in 0.7, not released yet) | Searches internet radio on the amplifier; a found station starts with `play_media`. Needs a Home Assistant version with search in the media browser | `search_failed` when the amplifier cannot search; a search for podcasts only gives nothing (planned for 0.8) |
 | `media_player.browse_media` | Radio favorites, internet radio, media servers, USB, recently played | `browse_failed` when the amplifier cannot open a folder |
 | `select.select_option` on the radio favorite | Starts that station | `command_failed` when the amplifier refuses |
 | `select.select_option` on auto standby | Writes the time to the amplifier and reads it back | `command_failed` when it refuses; `unavailable` while not connected |
@@ -144,4 +145,5 @@ Errors you can see in the interface and in `service` calls have a translated mes
 | `unknown_source` | `select_source` was given an input the amplifier does not have |
 | `play_mode_not_allowed` | A shuffle and repeat combination that the amplifier does not allow for what plays now |
 | `nothing_to_resume` | *Play* when there is nothing to resume: another input is selected, the amplifier is in standby, or nothing has played |
+| `search_failed` | A search on the amplifier did not work; the amplifier's own message is included |
 | `fixed_volume_input` | A start volume is set (directly on the entity) for an input that has fixed volume |
