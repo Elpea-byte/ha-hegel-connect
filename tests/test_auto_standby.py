@@ -147,7 +147,7 @@ async def test_the_old_value_is_not_shown_while_it_is_read_again(hass: HomeAssis
     fake_hegel[-1].idle_time = slow
     coordinator.connected = True
     coordinator.async_update_listeners()
-    await hass.async_block_till_done(wait_background_tasks=False)
+    await asyncio.sleep(0.05)  # the read is running and waits for the gate: no block_till_done here
     assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE  # not the value from before
     gate.set()
     await hass.async_block_till_done()
