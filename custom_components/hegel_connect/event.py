@@ -27,7 +27,23 @@ async def async_setup_entry(
 
 
 # Some stations send these as the title around their commercials: markers, not songs.
-AD_MARKERS = frozenset({"commercial-in", "commercial-out"})
+AD_MARKERS = frozenset({"commercial-in", "commercial-out", "ad break"})
+# What the amplifier shows while it plays a link from outside (an announcement through the DLNA renderer).
+LINK_TITLES = frozenset({"home assistant", "upnp renderer"})
+MEDIA_SERVERS = "media servers"
+# Stations with a name shorter than this are not checked for jingles ("Radio" would hide "Radio Ga Ga").
+JINGLE_MIN_NAME = 5
+
+
+def _is_no_track(player: Any) -> bool:
+    """The text the amplifier shows is no song: the station itself, a commercial marker, a station jingle or a link."""
+    title = player.title.casefold()
+    station = (player.station or "").casefold()
+    if title == station or title in AD_MARKERS:
+        return True
+    if len(station) >= JINGLE_MIN_NAME and title.startswith(f"{station} "):
+        return True  # "Qmusic nieuws"
+    return (player.service or "").casefold() == MEDIA_SERVERS and title in LINK_TITLES
 
 
 class HegelNowPlaying(HegelEntity, EventEntity):
@@ -79,12 +95,7 @@ class HegelNowPlaying(HegelEntity, EventEntity):
         ):
             self._track = None
             return
-        if (
-            player.state != "playing"
-            or not player.title
-            or player.title == player.station
-            or player.title.casefold() in AD_MARKERS
-        ):
+        if player.state != "playing" or not player.title or _is_no_track(player):
             return  # starting up, paused, or a radio station that has not reported a song yet
         # Spotify has no media id, but a track URI: two versions with the same title are two tracks.
         track = (player.title, player.artist, player.album, player.service, player.spotify_track_uri or player.media_id)
@@ -101,7 +112,9 @@ class HegelNowPlaying(HegelEntity, EventEntity):
         title, artist = player.title, player.artist
         if player.is_radio and not artist and title and " - " in title:
             # Radio stations send "Artist - Title" as one text.
-            artist, title = (part.strip() for part in title.split(" - ", 1))
+            first, second = (part.strip() for part in title.split(" - ", 1))
+            # Most stations send "Artist - Title"; Qmusic sends "Title - ARTIST" with the artist in capitals.
+            artist, title = (second, first) if second.isupper() and not first.isupper() else (first, second)
         return {
             "title": title,
             "artist": artist,

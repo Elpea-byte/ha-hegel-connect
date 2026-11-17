@@ -30,4 +30,6 @@ What was tried on an H150 (the scene steps; the spoken message itself was not pl
 - A lower *Maximum volume* wins over the volume in the scene, and mute is restored as it was.
 - The now-playing event fires again for the track that continues, because the stream was interrupted.
 
+Playing a link through the DLNA renderer was tried on an H150 (text-to-speech through the built-in *DLNA Digital Media Renderer* integration, which finds the amplifier as a UPnP renderer): the player went to *playing* for 4 seconds and then back to idle. Whether it was audible was not checked. The input stayed *Network* and the volume did not change, but **the radio that played before did not come back**: the amplifier stayed idle, so the scene recipe above is needed there as well. The now-playing event ignores this title.
+
 The amplifier cannot play a link of your own through its local interface (none was found), so the announcement itself goes through the Cast entity of the amplifier. In Home Assistant that entity may be disabled: enable it under the device first.

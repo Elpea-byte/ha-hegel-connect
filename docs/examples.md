@@ -61,6 +61,8 @@ actions:
 
 Tried on an H150 (Home Assistant 2026.11): about 15 results per search in under a second, and the first result started with `play_media`. Searching podcasts is planned.
 
+**By voice (Assist):** Home Assistant's own sentence "play Radio 10 on the Hegel H150" searches with this action and plays the first result; matching radio favorites come first. Say the name Home Assistant knows for the amplifier (the entity is called *Hegel H150*: "the Hegel" was not found), or give the entity an alias under *Settings > Voice assistants > Expose*. Tried on an H150 in text; spoken sentences were not tried.
+
 Reconnect at once when the amplifier was unplugged or switched off at the mains. Home Assistant normally notices within a minute (it retries after 5, 10, 20, 40 and then every 60 seconds); the standard action `homeassistant.update_entity` on any Hegel Connect entity makes it retry now:
 
 ```yaml

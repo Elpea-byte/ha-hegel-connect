@@ -269,3 +269,41 @@ async def test_commercial_markers_are_not_tracks(hass: HomeAssistant, fake_hegel
     assert fired == []
     await _push_radio_title(hass, fake_hegel[-1], "Toto - Pamela")
     assert [(e["artist"], e["title"]) for e in fired] == [("Toto", "Pamela")]
+
+
+async def test_qmusic_sends_the_title_first_and_the_artist_in_capitals(
+    hass: HomeAssistant, fake_hegel, config_entry, fired
+) -> None:
+    """Seen on an H150: 'Take Me Back - KYGO & MAX MCNOWN' is title - artist, other stations send artist - title."""
+    await _setup(hass, config_entry)
+    await _push_radio_title(hass, fake_hegel[-1], "Take Me Back - KYGO & MAX MCNOWN")
+    await _push_radio_title(hass, fake_hegel[-1], "The Weeknd - In Your Eyes")
+    await _push_radio_title(hass, fake_hegel[-1], "ABBA - WATERLOO")  # both in capitals: not guessed
+    assert [(e["artist"], e["title"]) for e in fired] == [
+        ("KYGO & MAX MCNOWN", "Take Me Back"),
+        ("The Weeknd", "In Your Eyes"),
+        ("ABBA", "WATERLOO"),
+    ]
+
+
+@pytest.mark.parametrize("title", ["Ad break", "AD BREAK", "Qmusic nieuws", "qmusic Foute Uur"])
+async def test_ad_breaks_and_station_jingles_are_not_tracks(
+    hass: HomeAssistant, fake_hegel, config_entry, fired, title: str
+) -> None:
+    await _setup(hass, config_entry)
+    await _push_radio_title(hass, fake_hegel[-1], title)
+    assert fired == []
+
+
+async def test_a_link_played_from_outside_is_not_a_track(hass: HomeAssistant, fake_hegel, config_entry, fired) -> None:
+    """An announcement through the DLNA renderer shows as 'Home Assistant' on 'Media Servers'."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    value = copy.deepcopy(FIXTURE["events"][RADIO_PLAYING]["e"]["itemValue"])
+    data = value.get("playLogicData", value)
+    data["trackRoles"]["title"] = "Home Assistant"
+    data["trackRoles"]["mediaData"]["metaData"]["serviceName"] = "Media Servers"
+    fake.push("player:player/data", value)
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.hegel_h150").attributes.get("media_title") == "Home Assistant"
+    assert fired == []
