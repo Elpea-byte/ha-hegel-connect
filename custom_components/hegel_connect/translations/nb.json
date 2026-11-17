@@ -27,6 +27,10 @@
         "description": "Fant **{name}** ({model}) på {host}.\n\nLegge den til i Home Assistant?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** er lagt til. Valgfrie enheter (startvolum per inngang, automatisk standby, hendelse for det som spilles) er av til du slår dem på på enhetssiden; README forklarer hvordan.",
+      "added_model_report": "**{name}** er lagt til. Valgfrie enheter (startvolum per inngang, automatisk standby, hendelse for det som spilles) er av til du slår dem på på enhetssiden; README forklarer hvordan. Din {model} er ikke testet av vedlikeholderen: [send en modellrapport]({report_url}), også når alt fungerer."
+    },
     "error": {
       "cannot_connect": "Får ikke kontakt med forsterkeren på denne adressen. Er den koblet til nettverket (fungerer også i standby)? Sjekk at adressen etterfulgt av /webclient/ åpnes i nettleseren, for eksempel http://192.168.1.50/webclient/.",
       "not_supported": "En enhet svarte, men den ser ikke ut som en Hegel H150, H200, H400 eller H600.",

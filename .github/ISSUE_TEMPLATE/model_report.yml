@@ -1,10 +1,10 @@
-name: Model report (H400, H600, other)
+name: Model report (H400, H600, H200, other)
 description: Tell us whether Hegel Connect works on your amplifier
 labels: [model-report]
 body:
   - type: markdown
     attributes:
-      value: Thank you! The maintainer owns an H150 and a user confirmed the H200; the H400 and H600 are still expected to work. A 5-minute check on your model helps everyone, also when everything works.
+      value: Thank you! The maintainer owns an H150 and a user confirmed the H200; the H400 and H600 are still expected to work. A 5-minute check on your model helps everyone, also when everything works; for the H200 more services are welcome (only status, artwork, track info and pause/play were confirmed).
   - type: input
     id: model
     attributes:

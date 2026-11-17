@@ -27,6 +27,10 @@
         "description": "**{name}** ({model}) found at {host}.\n\nAdd to Home Assistant?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** was added. Optional entities (start volume per input, auto standby, now-playing event) are switched off until you enable them on the device page; the README explains how.",
+      "added_model_report": "**{name}** was added. Optional entities (start volume per input, auto standby, now-playing event) are switched off until you enable them on the device page; the README explains how. Your {model} has not been tested by the maintainer: please [send a model report]({report_url}), even if everything works."
+    },
     "error": {
       "cannot_connect": "Cannot reach the amplifier on this address. Is it on the network (also works in standby)? Check that the address followed by /webclient/ opens in your browser, for example http://192.168.1.50/webclient/.",
       "not_supported": "A device answered, but it does not look like a Hegel H150, H200, H400 or H600.",

@@ -23,7 +23,7 @@ Quick check: on a streaming model `http://<amplifier-address>/webclient/` opens 
 | H200 | ✅ Works, reported by a user ([#17](https://github.com/Elpea-byte/ha-hegel-connect/issues/17)): status, artwork, track info and pause/play, also with Qobuz Connect |
 | H400, H600 | 🟡 Expected to work, not tested yet. Hegel groups the H150, H400 and H600 together for home automation ([Hegel support](https://support.hegel.com/product-articles/custom-install-sue)) |
 
-Own an H200, H400 or H600? Please [send a model report](https://github.com/Elpea-byte/ha-hegel-connect/issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone.
+Own an H400 or H600? Please [send a model report](https://github.com/Elpea-byte/ha-hegel-connect/issues/new?template=model_report.yml), even if everything works. It takes five minutes and helps everyone. A report on more services of an H200 is welcome too: only status, artwork, track info and pause/play were confirmed there.
 
 ## Install
 

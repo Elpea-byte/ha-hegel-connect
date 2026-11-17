@@ -27,6 +27,10 @@
         "description": "**{name}** ({model}) unter {host} gefunden.\n\nZu Home Assistant hinzufügen?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** wurde hinzugefügt. Optionale Entitäten (Startlautstärke pro Eingang, automatischer Standby, Ereignis für den aktuellen Titel) sind aus, bis du sie auf der Geräteseite aktivierst; die README erklärt wie.",
+      "added_model_report": "**{name}** wurde hinzugefügt. Optionale Entitäten (Startlautstärke pro Eingang, automatischer Standby, Ereignis für den aktuellen Titel) sind aus, bis du sie auf der Geräteseite aktivierst; die README erklärt wie. Dein {model} wurde vom Maintainer nicht getestet: [sende einen Modellbericht]({report_url}), auch wenn alles funktioniert."
+    },
     "error": {
       "cannot_connect": "Der Verstärker ist unter dieser Adresse nicht erreichbar. Ist er mit dem Netzwerk verbunden (funktioniert auch im Standby)? Prüfe, ob die Adresse mit /webclient/ im Browser geöffnet wird, zum Beispiel http://192.168.1.50/webclient/.",
       "not_supported": "Ein Gerät hat geantwortet, scheint aber kein Hegel H150, H200, H400 oder H600 zu sein.",

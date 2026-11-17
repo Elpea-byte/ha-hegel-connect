@@ -27,6 +27,10 @@
         "description": "Se ha encontrado **{name}** ({model}) en {host}.\n\n¿Añadirlo a Home Assistant?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** se ha añadido. Las entidades opcionales (volumen inicial por entrada, espera automática, evento de reproducción actual) están desactivadas hasta que las actives en la página del dispositivo; el README explica cómo.",
+      "added_model_report": "**{name}** se ha añadido. Las entidades opcionales (volumen inicial por entrada, espera automática, evento de reproducción actual) están desactivadas hasta que las actives en la página del dispositivo; el README explica cómo. Tu {model} no ha sido probado por el mantenedor: [envía un informe de modelo]({report_url}), aunque todo funcione."
+    },
     "error": {
       "cannot_connect": "No se puede conectar con el amplificador en esta dirección. ¿Está conectado a la red (también funciona en reposo)? Comprueba que la dirección seguida de /webclient/ se abre en tu navegador, por ejemplo http://192.168.1.50/webclient/.",
       "not_supported": "Un dispositivo ha respondido, pero no parece un Hegel H150, H200, H400 o H600.",

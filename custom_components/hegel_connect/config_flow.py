@@ -27,7 +27,15 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 import voluptuous as vol
 
 from .api import HegelClient, HegelConnectionError, HegelError, async_has_ip_control
-from .const import CONF_HIDDEN_SOURCES, CONF_SOURCE_NAMES, CORE_HEGEL_URL, DOMAIN, SUPPORTED_MODELS
+from .const import (
+    CONF_HIDDEN_SOURCES,
+    CONF_SOURCE_NAMES,
+    CORE_HEGEL_URL,
+    DOMAIN,
+    MODEL_REPORT_URL,
+    SUPPORTED_MODELS,
+    TESTED_MODEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +111,15 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         title = name if name.lower().startswith("hegel") else f"Hegel {name}"
         return model, title, unique_id
 
+    def _create_entry(self, title: str, host: str, model: str) -> ConfigFlowResult:
+        """The new entry, with a text after setup; for a model the maintainer has not tested it asks for a report."""
+        return self.async_create_entry(
+            title=title,
+            data={CONF_HOST: host, "model": model},
+            description="added" if model.upper() == TESTED_MODEL else "added_model_report",
+            description_placeholders={"name": title, "model": model, "report_url": MODEL_REPORT_URL},
+        )
+
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -122,7 +139,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                    return self.async_create_entry(title=title, data={CONF_HOST: host, "model": model})
+                    return self._create_entry(title, host, model)
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),  # type: ignore[arg-type]
@@ -182,7 +199,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Ask the user to confirm adding a discovered amplifier."""
         if user_input is not None:
-            return self.async_create_entry(title=self._title, data={CONF_HOST: self._host, "model": self._model})
+            return self._create_entry(self._title, self._host, self._model)
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
