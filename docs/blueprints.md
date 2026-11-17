@@ -1,3 +1,5 @@
+[← README](../README.md) · [Reference](REFERENCE.md) · [All pages](README.md)
+
 # Blueprints
 
 Ready-made automations with a one-click import (Settings > Automations & scenes > Blueprints). They only list this integration's own entities.

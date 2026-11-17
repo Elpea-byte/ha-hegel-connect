@@ -1,3 +1,5 @@
+[← README](../README.md) · [Reference](REFERENCE.md) · [All pages](README.md)
+
 # Auto standby
 
 > **New in 0.7 (not released yet).** The auto-standby select is not in a release. It is on the `dev` branch; the released version is 0.6.0.

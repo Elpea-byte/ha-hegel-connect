@@ -1,3 +1,5 @@
+[← README](../README.md) · [All pages](README.md)
+
 # Reference
 
 Facts about what Hegel Connect creates and does, in one place. For setup and everyday use see the [README](../README.md). Example names are for an amplifier named *Hegel H150*.

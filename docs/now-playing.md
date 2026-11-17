@@ -1,3 +1,5 @@
+[← README](../README.md) · [Reference](REFERENCE.md) · [All pages](README.md)
+
 # Now-playing event
 
 > **New in 0.7 (not released yet).** The now-playing event, the Spotify URIs and the blueprint on this page are not in a release. It is on the `dev` branch; the released version is 0.6.0.

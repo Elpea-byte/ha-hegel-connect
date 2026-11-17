@@ -1,3 +1,5 @@
+[← README](../README.md) · [Reference](REFERENCE.md) · [All pages](README.md)
+
 # What each streaming service allows
 
 The amplifier reports per service which controls work; Hegel Connect follows it, so buttons that would fail are not offered. Tested on the H150; "not tested yet" means what the code expects, not what was seen. Pause and play with Qobuz Connect were confirmed by a user on an H200.

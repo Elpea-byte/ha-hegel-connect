@@ -1,3 +1,5 @@
+[← README](../README.md) · [Reference](REFERENCE.md) · [All pages](README.md)
+
 # Announcements: put the amplifier back afterwards
 
 A spoken message or a doorbell sound on the amplifier interrupts what plays. A scene brings the amplifier back to where it was: Home Assistant stores the power state, input, volume and mute of a media player in a scene and restores them, so Hegel Connect needs nothing extra.
