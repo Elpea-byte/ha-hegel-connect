@@ -44,7 +44,7 @@ jobs:
           python-version: "3.13"
           cache: pip
       # 0.13.236 is the pytest plugin built for Home Assistant 2025.4.4
-      - run: pip install pytest-homeassistant-custom-component==0.13.236 pytest-cov==7.1.0
+      - run: pip install pytest-homeassistant-custom-component==0.13.236
       - run: python -c "import homeassistant.const as c; print(c.__version__)"
       - run: pytest -q
 
