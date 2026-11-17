@@ -62,7 +62,7 @@ rules:
     comment: The amplifier's local API has no authentication.
   test-coverage:
     status: todo
-    comment: 87% measured on dev (the CI floor in pyproject.toml is 73%, config_flow.py must stay at 100%). The HTTP client in api.py is still mostly tested through a fake amplifier; client tests against recorded responses come next, towards 95% (ROADMAP 0.8).
+    comment: 87% measured on dev, and the CI floor in pyproject.toml is 87% too (config_flow.py must stay at 100%). The HTTP client in api.py is still mostly tested through a fake amplifier; client tests against recorded responses come next, towards 95% (ROADMAP 0.8).
 
   # Gold
   devices: done
