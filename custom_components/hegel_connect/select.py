@@ -182,6 +182,8 @@ class HegelAutoStandby(HegelEntity, SelectEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         connected = self.coordinator.connected
+        if not connected:
+            self._seconds = None  # do not show the old value for a moment when the connection returns
         if connected and not self._was_connected:
             self.hass.async_create_task(self._async_read())  # back from a lost connection: read it again
         self._was_connected = connected

@@ -127,3 +127,28 @@ async def test_a_value_the_amplifier_does_not_offer_shows_no_option(
     FakeHegel.idle_seconds = 450
     await _setup(hass, config_entry)
     assert hass.states.get(ENTITY).state == "unknown"
+
+
+async def test_the_old_value_is_not_shown_while_it_is_read_again(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """After a lost connection the select stays unavailable until the amplifier has answered again."""
+    import asyncio
+
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    coordinator.connected = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    gate = asyncio.Event()
+
+    async def slow() -> int:
+        await gate.wait()
+        return 600
+
+    fake_hegel[-1].idle_time = slow
+    coordinator.connected = True
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done(wait_background_tasks=False)
+    assert hass.states.get(ENTITY).state == STATE_UNAVAILABLE  # not the value from before
+    gate.set()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).state == "10_min"
