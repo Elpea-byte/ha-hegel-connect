@@ -31,7 +31,8 @@
       "cannot_connect": "Får ikke kontakt med forsterkeren på denne adressen. Er den koblet til nettverket (fungerer også i standby)? Sjekk at adressen etterfulgt av /webclient/ åpnes i nettleseren, for eksempel http://192.168.1.50/webclient/.",
       "not_supported": "En enhet svarte, men den ser ikke ut som en Hegel H150, H200, H400 eller H600.",
       "unknown": "Uventet feil, se loggen.",
-      "legacy_model": "Dette er en eldre Hegel-forsterker (H95, H120, H190, H190V, H390, H590 eller Röst). Den styres med Hegels IP-kontrollprotokoll: bruk den innebygde [Hegel-integrasjonen]({core_url}) i Home Assistant. Hegel Connect er for H150, H200, H400 og H600."
+      "legacy_model": "Dette er en eldre Hegel-forsterker (H95, H120, H190, H190V, H390, H590 eller Röst). Den styres med Hegels IP-kontrollprotokoll: bruk den innebygde [Hegel-integrasjonen]({core_url}) i Home Assistant. Hegel Connect er for H150, H200, H400 og H600.",
+      "invalid_host": "Skriv inn adressen til forsterkeren, for eksempel 192.168.1.50."
     },
     "abort": {
       "already_configured": "Denne forsterkeren er allerede konfigurert.",

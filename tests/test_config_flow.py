@@ -47,7 +47,9 @@ async def test_user_flow_accepts_bracketed_ipv6(hass: HomeAssistant, fake_hegel)
         ("admin@192.0.2.10/webclient/", "192.0.2.10"),
         ("192.0.2.10:8080/webclient/", "192.0.2.10:8080"),
         ("http://[2001:db8::10]/webclient/", "2001:db8::10"),
-        ("[2001:db8::10]:8080", "2001:db8::10"),
+        ("[2001:db8::10]:8080", "[2001:db8::10]:8080"),
+        ("http://[2001:db8::10]:8080/webclient/", "[2001:db8::10]:8080"),
+        ("[2001:db8::10]:", "2001:db8::10"),
         ("2001:db8::10", "2001:db8::10"),
     ],
 )
@@ -60,6 +62,17 @@ async def test_user_flow_reduces_a_pasted_address_to_the_host(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["host"] == host
     assert fake_hegel[-1].host == host
+
+
+@pytest.mark.parametrize("typed", ["", "   ", "http://", "https:///webclient/", "/", "@", "[]", "user@/"])
+async def test_user_flow_refuses_an_empty_address_without_asking_the_network(
+    hass: HomeAssistant, fake_hegel, typed: str
+) -> None:
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": typed})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+    assert fake_hegel == []  # no client was made: nothing was probed
 
 
 async def test_user_flow_cannot_connect(hass: HomeAssistant, fake_hegel) -> None:
@@ -277,6 +290,15 @@ async def test_reconfigure_reduces_a_pasted_address_to_the_host(hass: HomeAssist
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data["host"] == "192.0.2.20"
     await hass.async_block_till_done()
+
+
+async def test_reconfigure_refuses_an_empty_address(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "http://"})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+    assert config_entry.data["host"] == "192.0.2.10"
 
 
 async def test_reconfigure_other_amplifier_refused(hass: HomeAssistant, fake_hegel, config_entry) -> None:

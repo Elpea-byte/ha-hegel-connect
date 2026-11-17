@@ -443,3 +443,9 @@ async def test_the_client_puts_an_ipv6_address_in_brackets_in_the_url() -> None:
     client = HegelClient("fe80::1%eth0", _Session(_FakeResponse(200, [body])))  # type: ignore[arg-type]
     assert await client.get_value("any:path") == 7
     assert urls == ["http://[fe80::1%25eth0]/api/getData"]
+
+
+def test_the_client_keeps_a_bracketed_ipv6_address_with_a_port() -> None:
+    """[addr]:port from the setup form goes into the URL as it is (a bare address gets its brackets)."""
+    assert HegelClient("[2001:db8::10]:8080", None).base_url == "http://[2001:db8::10]:8080"  # type: ignore[arg-type]
+    assert HegelClient("2001:db8::10", None).base_url == "http://[2001:db8::10]"  # type: ignore[arg-type]

@@ -31,7 +31,8 @@
       "cannot_connect": "Cannot reach the amplifier on this address. Is it on the network (also works in standby)? Check that the address followed by /webclient/ opens in your browser, for example http://192.168.1.50/webclient/.",
       "not_supported": "A device answered, but it does not look like a Hegel H150, H200, H400 or H600.",
       "unknown": "Unexpected error, see the log.",
-      "legacy_model": "This is an older Hegel amplifier (H95, H120, H190, H190V, H390, H590 or Röst). It is controlled with Hegel's IP control protocol: use Home Assistant's built-in [Hegel integration]({core_url}). Hegel Connect is for the H150, H200, H400 and H600."
+      "legacy_model": "This is an older Hegel amplifier (H95, H120, H190, H190V, H390, H590 or Röst). It is controlled with Hegel's IP control protocol: use Home Assistant's built-in [Hegel integration]({core_url}). Hegel Connect is for the H150, H200, H400 and H600.",
+      "invalid_host": "Enter the address of the amplifier, for example 192.168.1.50."
     },
     "abort": {
       "already_configured": "This amplifier is already configured.",
