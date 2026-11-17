@@ -57,6 +57,9 @@ There is no fixed schedule. The plan follows what is actually done:
 - **Open:** a repair issue when the amplifier has been unreachable for a long time or its model is not supported (both `exempt` in `quality_scale.yaml` today).
 - **Open:** saving the options without `hidden_sources` keeps the hidden inputs instead of showing them again (today a documented pitfall for scripts, fixed in code instead).
 - **Open:** the *Maximum volume* number recognisable for the blueprint picker, which can only filter on device class or unit (the start volume numbers have neither); this changes an entity, so it is weighed against the dashboards that rely on it and listed as breaking if it is.
+- **Open (research):** announcements over DLNA: the amplifier announces itself as a UPnP media renderer, so the built-in DLNA Digital Media Renderer integration may play text-to-speech on it. To be tried first (which input it switches to, whether the scene recipe puts things back); only then is a change of the recipe or a `play_media` for links in Hegel Connect considered.
+- **Open (research):** more amplifier settings as optional entities: a read-only list of the settings the amplifier offers is made first, then at most three candidates are proposed in a Discussion.
+- **Open:** two blueprints: *switch on from the mains* (plug on, wait for the network sensor, amplifier on, optional input and volume up to the maximum) and *sleep timer* (lower the volume in steps, then standby, restore the volume).
 - **Open:** searching podcasts ([#27](../../../discussions/27)), the user feature of this version: it works the same way on the amplifier (the result is a podcast, which opens to its episodes; an episode is a track that starts like a radio item, not tried yet).
 - **Open:** larger cover art where the streaming service offers it, only if that can be done reliably.
 - **Open:** overall test coverage to 95% or more, with the CI floor raised to match, and `pip-audit` in the CI.
