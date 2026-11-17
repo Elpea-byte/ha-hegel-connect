@@ -25,6 +25,7 @@ Changes on the `dev` branch that are not in a release yet.
 These three were only checked with automated tests, not on a real amplifier.
 
 ### Documentation
+- Pages and README lines about features that are not released yet say so (*New in 0.7, not released yet*), and a test fails when such a marker names a version the manifest has reached, so the markers go with the release.
 - New `docs/REFERENCE.md`: media player states, volume, every entity with its translation key, default and states, all attributes, `play_media` ids, every translated error, the rule about the amplifier's own input names, and which entity or attribute to use in a trigger ([#28](https://github.com/Elpea-byte/ha-hegel-connect/discussions/28)).
 - README: the troubleshooting section lists the usual symptoms with cause and fix (not discovered, cannot reach, does not look like a Hegel, entity ids, Spotify controls, start volume, inputs not known, empty now playing). Two entries come from the code and were not tried on a real amplifier; they say so.
 - The README is shorter and follows the order of a new user: is it for my model, install, set up, first steps, troubleshooting, features. The long sections moved to pages in `docs/` (now playing, volume per input, auto standby, announcements, blueprints, streaming services, examples, reference). Links in the README are absolute, so they also work where HACS and the Marketplace show the README (not checked there).

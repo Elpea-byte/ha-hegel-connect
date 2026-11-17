@@ -51,6 +51,7 @@ coverage report --include="custom_components/hegel_connect/config_flow.py" --fai
 - [ ] A test against the `FakeHegel` fixture, including the failure case (the amplifier refuses, the setting is missing).
 - [ ] `docs/REFERENCE.md` (table row, states), the README or a page in `docs/`, `CHANGELOG.md` under *Unreleased*.
 - [ ] `quality_scale.yaml` and `docs/ROADMAP.md` still say what is true.
+- [ ] Docs for a feature that is not released yet carry a marker, `New in X.Y (not released yet)`, until the release commit removes it. `tests/test_docs_markers.py` fails when a marker names a version that `manifest.json` has reached.
 - [ ] Claims in the docs separate what was tried on a real amplifier from what only ran in automated tests.
 
 ## Extending the recording

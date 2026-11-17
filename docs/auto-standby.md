@@ -1,5 +1,7 @@
 # Auto standby
 
+> **New in 0.7 (not released yet).** The auto-standby select is not in a release. It is on the `dev` branch; the released version is 0.6.0.
+
 The amplifier can put itself in standby after a while without activity. That is a setting inside the streamer of the amplifier, and *Auto standby* (`select.hegel_h150_auto_standby`, under the device's disabled entities, off until you enable it) shows and changes it: Off, or after 5, 10 or 20 minutes, the choices the amplifier itself offers. The amplifier counts the time itself, so it also works when Home Assistant is not running.
 
 Tried on an H150 (Home Assistant 2026.11, 5 minutes): on the network input without playing it went to standby exactly 5 minutes after the last activity, with Home Assistant doing nothing; while music plays it does not count, and after stopping the 5 minutes start again. Good to know:

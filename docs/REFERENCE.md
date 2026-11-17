@@ -2,6 +2,8 @@
 
 Facts about what Hegel Connect creates and does, in one place. For setup and everyday use see the [README](../README.md). Example names are for an amplifier named *Hegel H150*.
 
+> **New in 0.7 (not released yet).** In this page: `select.hegel_h150_auto_standby`, `event.hegel_h150_now_playing`, the Spotify URIs of the event and `media_content_id` of the media player.
+
 ## Names and ids
 
 - **Entity ids follow the language of Home Assistant** at the moment the entity is added: in Dutch the now-playing event is `event.hegel_h150_nu_aan_het_spelen`, in English `event.hegel_h150_now_playing`. Find yours on the device page (Settings > Devices & services > Hegel Connect > your amplifier). The translation keys in the table below do not depend on the language.

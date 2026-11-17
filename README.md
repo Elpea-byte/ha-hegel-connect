@@ -59,14 +59,14 @@ You get one device with a **media player** (power, volume, mute, inputs, playbac
 | Optional | What it does |
 | :---- | :---- |
 | [Start volume per input and remember volume](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/volume-per-input.md) | The volume that is set when Home Assistant switches input |
-| [Auto standby](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/auto-standby.md) | The amplifier's own idle timer (5, 10 or 20 minutes) |
-| [Now-playing event](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/now-playing.md) | One event per new track, for listening logs and notifications |
+| [Auto standby](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/auto-standby.md) | The amplifier's own idle timer (5, 10 or 20 minutes). New in 0.7, not released yet |
+| [Now-playing event](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/now-playing.md) | One event per new track, for listening logs and notifications. New in 0.7, not released yet |
 
 **Inputs:** Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use and give inputs your own name, for example *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names. If you save the options through the API or a script instead of the form, send `hidden_sources` again with the new names; leaving it out shows the hidden inputs again.
 
 **Maximum volume** is a number on the device page. Home Assistant never makes the volume louder than it; the amplifier's own remote and knob are not limited. Set it to protect your speakers and ears. [More about it](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/volume-per-input.md#maximum-volume).
 
-**Automate:** [five blueprints](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/blueprints.md) with one-click import (reconnect after a smart plug, radio at a set time, standby when idle, lower volume at night, log what plays), [examples](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/examples.md), and a recipe to [put the amplifier back after an announcement](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/announcements.md).
+**Automate:** [five blueprints](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/blueprints.md) with one-click import (reconnect after a smart plug, radio at a set time, standby when idle, lower volume at night, log what plays, new in 0.7 and not released yet), [examples](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/examples.md), and a recipe to [put the amplifier back after an announcement](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/announcements.md).
 
 ## Troubleshooting
 
