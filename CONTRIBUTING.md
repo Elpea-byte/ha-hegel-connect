@@ -19,7 +19,7 @@ coverage report --include="custom_components/hegel_connect/config_flow.py" --fai
 yamllint --strict -c .yamllint.yaml blueprints/
 ```
 
-Python 3.14; on Windows use PowerShell and a virtual environment (see [AGENTS.md](AGENTS.md)). A new entity or option follows the checklist *Definition of done* there: texts in all six languages, disabled by default when optional, a test, the reference page and the changelog.
+Python 3.14. On Windows run the tests in WSL or a Linux container: `pytest` does not start on native Windows (see [AGENTS.md](AGENTS.md)). A new entity or option follows the checklist *Definition of done* there: texts in all six languages, disabled by default when optional, a test, the reference page and the changelog.
 
 - Keep `api.py` free of Home Assistant imports.
 - Never commit IP addresses, serial numbers or other personal data (also not in test fixtures).

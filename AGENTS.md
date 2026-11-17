@@ -24,15 +24,16 @@ updates. Code lives in `custom_components/hegel_connect/`.
 
 ## Setup and checks (all must pass; CI runs them on every push)
 
-Python 3.14 (what the CI uses and what the current Home Assistant needs). On Windows, in PowerShell:
+Python 3.14 (what the CI uses and what the current Home Assistant needs).
 
-```powershell
-py -3.14 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements_test.txt
+**`pytest` does not run on native Windows.** Tried in a clean Python 3.14 venv: `pip install -r requirements_test.txt` works, but `pytest` stops at start-up because Home Assistant's `homeassistant/runner.py` imports `fcntl`, which only exists on Unix. Run the tests in **WSL** (Ubuntu) or a Linux container, from a checkout inside the Linux file system or from `/mnt/c/...`:
+
+```bash
+python3.14 -m venv .venv && . .venv/bin/activate
+pip install -r requirements_test.txt ruff   # ruff is not in requirements_test.txt (the CI installs it as an action)
 ```
 
-Home Assistant's test tools install fine on Windows; if a package refuses to build there, use WSL or a Linux container instead. The checks:
+On native Windows (PowerShell) `mypy` and `yamllint` did run from that venv (`py -3.14 -m venv .venv`, `.\.venv\Scripts\Activate.ps1`, `pip install -r requirements_test.txt`); `ruff` was not tried there. The checks:
 
 ```bash
 pip install -r requirements_test.txt
