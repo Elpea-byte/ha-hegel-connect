@@ -28,8 +28,8 @@
       }
     },
     "create_entry": {
-      "added": "**{name}** a été ajouté. Les entités facultatives (volume de départ par entrée, veille automatique, événement de lecture en cours) sont désactivées jusqu'à ce que vous les activiez sur la page de l'appareil ; le README explique comment.",
-      "added_model_report": "**{name}** a été ajouté. Les entités facultatives (volume de départ par entrée, veille automatique, événement de lecture en cours) sont désactivées jusqu'à ce que vous les activiez sur la page de l'appareil ; le README explique comment. Votre {model} n'a pas été testé par le mainteneur : [envoyez un rapport de modèle]({report_url}), même si tout fonctionne."
+      "added": "**{name}** a été ajouté. Les entités facultatives (volume de départ par entrée, veille automatique, événement de lecture en cours) sont désactivées jusqu'à ce que vous les activiez sur la page de l'appareil ; [le README]({readme_url}) explique comment.",
+      "added_model_report": "**{name}** a été ajouté. Les entités facultatives (volume de départ par entrée, veille automatique, événement de lecture en cours) sont désactivées jusqu'à ce que vous les activiez sur la page de l'appareil ; [le README]({readme_url}) explique comment. Votre {model} n'a pas été testé par le mainteneur : [envoyez un rapport de modèle]({report_url}), même si tout fonctionne."
     },
     "error": {
       "cannot_connect": "Impossible de joindre l'amplificateur à cette adresse. Est-il connecté au réseau (fonctionne aussi en veille) ? Vérifiez que l'adresse suivie de /webclient/ s'ouvre dans votre navigateur, par exemple http://192.168.1.50/webclient/.",

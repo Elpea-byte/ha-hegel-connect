@@ -33,6 +33,7 @@ async def test_after_setup_the_h150_gets_the_plain_text(hass: HomeAssistant, fak
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {"host": "192.0.2.10"})
     assert result["description"] == "added"
     assert result["description_placeholders"]["name"] == "Hegel H150"
+    assert result["description_placeholders"]["readme_url"].endswith("#first-steps")
 
 
 @pytest.mark.parametrize("model", ["H200", "H400", "H600"])
@@ -45,6 +46,7 @@ async def test_after_setup_other_models_are_asked_for_a_model_report(
     assert result["description"] == "added_model_report"
     assert result["description_placeholders"]["model"] == model
     assert result["description_placeholders"]["report_url"].endswith("template=model_report.yml")
+    assert result["description_placeholders"]["readme_url"].endswith("#first-steps")
 
 
 async def test_user_flow_accepts_bracketed_ipv6(hass: HomeAssistant, fake_hegel) -> None:

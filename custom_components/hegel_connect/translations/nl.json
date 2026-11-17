@@ -28,8 +28,8 @@
       }
     },
     "create_entry": {
-      "added": "**{name}** is toegevoegd. Optionele entiteiten (startvolume per ingang, automatische stand-by, nu-aan-het-spelen-event) staan uit tot je ze aanzet op de apparaatpagina; de README legt uit hoe.",
-      "added_model_report": "**{name}** is toegevoegd. Optionele entiteiten (startvolume per ingang, automatische stand-by, nu-aan-het-spelen-event) staan uit tot je ze aanzet op de apparaatpagina; de README legt uit hoe. Jouw {model} is nog niet door de beheerder getest: [stuur een modelrapport]({report_url}), ook als alles werkt."
+      "added": "**{name}** is toegevoegd. Optionele entiteiten (startvolume per ingang, automatische stand-by, nu-aan-het-spelen-event) staan uit tot je ze aanzet op de apparaatpagina; [de README]({readme_url}) legt uit hoe.",
+      "added_model_report": "**{name}** is toegevoegd. Optionele entiteiten (startvolume per ingang, automatische stand-by, nu-aan-het-spelen-event) staan uit tot je ze aanzet op de apparaatpagina; [de README]({readme_url}) legt uit hoe. Jouw {model} is nog niet door de beheerder getest: [stuur een modelrapport]({report_url}), ook als alles werkt."
     },
     "error": {
       "cannot_connect": "De versterker is op dit adres niet bereikbaar. Staat hij op het netwerk (werkt ook in standby)? Controleer of het adres gevolgd door /webclient/ opent in je browser, bijvoorbeeld http://192.168.1.50/webclient/.",

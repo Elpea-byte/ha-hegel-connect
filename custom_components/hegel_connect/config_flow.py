@@ -33,6 +33,7 @@ from .const import (
     CORE_HEGEL_URL,
     DOMAIN,
     MODEL_REPORT_URL,
+    README_OPTIONAL_URL,
     SUPPORTED_MODELS,
     TESTED_MODEL,
 )
@@ -117,7 +118,12 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             title=title,
             data={CONF_HOST: host, "model": model},
             description="added" if model.upper() == TESTED_MODEL else "added_model_report",
-            description_placeholders={"name": title, "model": model, "report_url": MODEL_REPORT_URL},
+            description_placeholders={
+                "name": title,
+                "model": model,
+                "report_url": MODEL_REPORT_URL,
+                "readme_url": README_OPTIONAL_URL,
+            },
         )
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

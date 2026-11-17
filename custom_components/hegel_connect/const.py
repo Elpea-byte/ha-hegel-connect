@@ -28,6 +28,7 @@ SUPPORTED_MODELS = ("H150", "H200", "H400", "H600")
 CORE_HEGEL_URL = "https://www.home-assistant.io/integrations/hegel/"
 
 # Shown after setup for a model the maintainer has not tested (everything but the H150).
+README_OPTIONAL_URL = "https://github.com/Elpea-byte/ha-hegel-connect#first-steps"
 MODEL_REPORT_URL = "https://github.com/Elpea-byte/ha-hegel-connect/issues/new?template=model_report.yml"
 TESTED_MODEL = "H150"
 
