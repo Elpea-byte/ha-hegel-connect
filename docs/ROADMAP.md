@@ -2,7 +2,7 @@
 
 # Roadmap to 1.0
 
-**Plans, not promises.** This is the direction, in the order the maintainer intends to work. Dates are not given, the order can change, and an item can be dropped. Ideas and requests are welcome in [Discussions](../../../discussions/categories/ideas); what is planned per version is the table below (there are no GitHub milestones yet).
+**Plans, not promises.** This is the direction, in the order the maintainer intends to work. Dates are not given, the order can change, and an item can be dropped. Ideas and requests are welcome in [Discussions](../../../discussions/categories/ideas); what is planned per version is in the table and the lists below (there are no GitHub milestones yet).
 
 ## What 1.0 means
 
@@ -18,7 +18,7 @@ There is no fixed schedule. The plan follows what is actually done:
 - A version is used on the maintainer's own amplifier for at least a week before it is released.
 - Features are bundled: a version comes out when all its items are done and tested, not one by one.
 - A breaking change is announced in the release notes one version ahead.
-- Every release has something in it that users will notice and enjoy, listed in the table below.
+- Every release has something in it that users will notice and enjoy, listed in the table and lists below.
 
 ## How work is done
 
@@ -72,7 +72,7 @@ There is no fixed schedule. The plan follows what is actually done:
 
 **What "supported" means at 1.0:** for the H150 and the H200, what the README and REFERENCE.md say is tested or confirmed. For the H400 and H600 it means *expected to behave like the H150* (Hegel groups them for home automation), nothing more: a bug found there is fixed from a report with the diagnostics file, but nothing is guaranteed. The table says *tested*, *confirmed* or *expected* per model, and that is not changed without a report.
 
-**Getting reports for the H400 and H600:** a post on the Home Assistant forum asking for them, the [model report](https://github.com/Elpea-byte/ha-hegel-connect/issues/new?template=model_report.yml) link at the top of the README (it is there), and a link to it in the text after a successful setup (not built yet).
+**Getting reports for the H400 and H600:** a post on the Home Assistant forum asking for them, the [model report](https://github.com/Elpea-byte/ha-hegel-connect/issues/new?template=model_report.yml) link at the top of the README (it is there), and a link to it in the text after a successful setup (built for 0.7: other models than the H150 get it there).
 
 ## Documentation track (no release needed)
 
