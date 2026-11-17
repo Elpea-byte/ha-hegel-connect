@@ -41,7 +41,7 @@ Good to know, from trying it on an H150:
 
 ### Play the same Spotify track again
 
-The track URI is enough to start exactly that track again, for example on the Spotify Connect device of the amplifier. This is what an automation with the [SpotifyPlus](https://community.home-assistant.io/t/spotifyplus-integration/698651) integration can do (expected to work: the event attributes were checked on an H150 and the action's name and fields come from community posts, but this exact automation was not tried; check the SpotifyPlus documentation for your version):
+The track URI is enough to start exactly that track again, for example on the Spotify Connect device of the amplifier. This is what an automation with the [SpotifyPlus](https://community.home-assistant.io/t/spotifyplus-integration/698651) integration does. Tried on an H150 with SpotifyPlus 1.0.225 (added as a custom repository, with your own Spotify developer app): `player_media_play_tracks` with the track URI started exactly that track within a second, and one event followed with the same `spotify_uri`; `player_media_play_context` with the playlist URI started the playlist. Check the SpotifyPlus documentation for the exact fields of your version:
 
 ```yaml
 actions:
@@ -52,5 +52,10 @@ actions:
       device_id: Hegel H150   # the name of the amplifier as a Spotify Connect device
 ```
 
-The album, artist and playlist URIs can start a whole album, artist or playlist the same way (SpotifyPlus has a separate action for that; not tried). Other services: Hegel Connect has no such ids for them (see the changelog).
+The playlist URI worked as a context the same way; the album and artist URIs were not tried.
+
+Good to know:
+
+- SpotifyPlus lists the amplifier **twice** as a Spotify Connect device, both times named like the amplifier: one is the Google Cast part (not in the device list), the other is the Spotify Connect of the streamer. Use the one that is in the device list.
+- *Next* and *previous* are not offered by Hegel Connect with Spotify (the amplifier refuses them), but they work through the SpotifyPlus media player, and one event follows each. That only works when the track plays on the Spotify account that SpotifyPlus is linked to. Other services: Hegel Connect has no such ids for them (see the changelog).
 
