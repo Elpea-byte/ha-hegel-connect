@@ -28,13 +28,44 @@ There is no fixed schedule. The plan follows what is actually done:
 
 ## Versions
 
-| Version | Status | Theme | What | Nice for users | Done when |
-| :---- | :---- | :---- | :---- | :---- | :---- |
-| **0.6** | Released (2026-11-07) | Daily use | Optional volume per input, reconnect on `update_entity`, *play* after radio, four blueprints, fixes. See the [release](https://github.com/Elpea-byte/ha-hegel-connect/releases/tag/v0.6.0) and the [changelog](../CHANGELOG.md) | Volume starts where you want it, the play button works after radio | Done |
-| **0.7** | In progress | Features | Built on `dev`, with tests, tried on an H150: the now-playing event ([#36](../../../discussions/36)), a recipe for restoring the amplifier after an announcement ([#33](../../../discussions/33)), the amplifier's own auto-standby as an optional select ([#42](../../../discussions/42)), a fifth blueprint for the now-playing event, and hardening of the JSON reading. **Open:** searching internet radio ([#27](../../../discussions/27)); the amplifier has a search form for it, being researched. If #27 turns out too big it moves to after 1.0 | A listening log of what you play and in which quality; choose how long the amplifier may sit idle; finding a station by typing its name | #27 built or moved, and 0.7 released |
-| **0.8** | Planned | Core behaviour and coverage | Entities become *unavailable* when the amplifier cannot be reached at all (network standby stays *off*, the network sensor tells them apart); this is a **breaking change** and is listed as one in the release notes. Larger cover art where the streaming service offers it, only if that can be done reliably. Overall test coverage to 95% or more, with the CI floor raised to match. `pip-audit` in the CI. Make the *Maximum volume* number recognisable for the blueprint picker, which can only filter on device class or unit (the start volume numbers have neither, so the night blueprint list shows all of them); this changes an entity, so it is weighed against the dashboards that rely on it and listed as breaking if it is. A repair issue when the amplifier has been unreachable for a long time or its model is not supported (both `exempt` in `quality_scale.yaml` today). Saving the options without `hidden_sources` keeps the hidden inputs instead of showing them again (today a documented pitfall for scripts, fixed in code instead) | Bigger album art; a clear signal when the amplifier is really gone | CI fails under 95%; the `test-coverage` rule is done |
-| **0.9** | Planned | Own library and quality | `api.py` becomes a separate Python package in its own repository, published on PyPI from GitHub Actions (trusted publishing), with its own tests; the integration requires it in `manifest.json`. Every rule in `quality_scale.yaml` is done or exempt | Mostly under the hood; the documentation track below is announced with it | The package is on PyPI and used by the integration; no `todo` left |
-| **1.0** | Planned | Stable | Entities, attributes and actions frozen; documentation final; release notes say what is stable | A stable base to build on | Every `quality_scale.yaml` rule done or exempt; coverage 95% or more; [REFERENCE.md](REFERENCE.md) frozen; every "not tested yet" in the [streaming services table](streaming-services.md) tested on an H150 or removed from the claims; no open bug report for six weeks |
+| Version | Status | Theme | Done when |
+| :---- | :---- | :---- | :---- |
+| **0.6** | Released (2026-11-07) | Daily use | Done: see the [release](https://github.com/Elpea-byte/ha-hegel-connect/releases/tag/v0.6.0) and the [changelog](../CHANGELOG.md) |
+| **0.7** | In progress | Features | Each item built, with tests and tried on an H150; #27 built or moved |
+| **0.8** | Planned | Core behaviour and coverage | The CI fails under 95% coverage; the `test-coverage` rule is done; *unavailable* works as announced |
+| **0.9** | Planned | Own library and quality | The library is on PyPI and used by the integration; no `todo` left in `quality_scale.yaml` |
+| **1.0** | Planned | Stable | Every `quality_scale.yaml` rule done or exempt; coverage 95% or more; [REFERENCE.md](REFERENCE.md) frozen; every "not tested yet" in the [streaming services table](streaming-services.md) tested on an H150 or removed from the claims; no open bug report for six weeks |
+
+### What is in each version
+
+**0.6** (released): optional volume per input and remember volume ([#29](../../../discussions/29)), reconnect on `update_entity` ([#34](../../../discussions/34)), *play* after radio ([#30](../../../discussions/30)), four blueprints ([#31](../../../discussions/31)), fixes.
+
+**0.7** (in progress), a listening log, an idle timer and finding stations by name:
+
+- **Built:** the now-playing event for listening logs and notifications ([#36](../../../discussions/36)), with a fifth blueprint for it.
+- **Built:** Spotify track, album, artist and playlist URIs in the event, and the track URI as `media_content_id`, so an automation can start exactly that track again; tried with SpotifyPlus on an H150.
+- **Built:** a recipe for putting the amplifier back after an announcement ([#33](../../../discussions/33)); the scene steps were tried on an H150.
+- **Built:** the amplifier's own auto-standby as an optional select ([#42](../../../discussions/42)).
+- **Built:** a text after setup that asks for a model report for models the maintainer has not tested, and setup that takes a pasted browser address.
+- **Built:** hardening of the JSON reading, and the README and `docs/` restructure with [REFERENCE.md](REFERENCE.md).
+- **Open:** searching internet radio ([#27](../../../discussions/27)). The amplifier has a search form for it (fill in a text, activate, read the result list); researched on an H150, feasible. Podcasts work the same way. If it turns out too big it moves to after 1.0.
+- **Open:** the auto-standby select is re-read when the connection returns and every six hours, because the amplifier does not report a change of the setting; decide whether that is enough.
+
+**0.8** (planned), core behaviour and coverage:
+
+- **Open:** entities become *unavailable* when the amplifier cannot be reached at all (network standby stays *off*, the network sensor tells them apart); a **breaking change**, listed as one in the release notes.
+- **Open:** a repair issue when the amplifier has been unreachable for a long time or its model is not supported (both `exempt` in `quality_scale.yaml` today).
+- **Open:** saving the options without `hidden_sources` keeps the hidden inputs instead of showing them again (today a documented pitfall for scripts, fixed in code instead).
+- **Open:** the *Maximum volume* number recognisable for the blueprint picker, which can only filter on device class or unit (the start volume numbers have neither); this changes an entity, so it is weighed against the dashboards that rely on it and listed as breaking if it is.
+- **Open:** larger cover art where the streaming service offers it, only if that can be done reliably.
+- **Open:** overall test coverage to 95% or more, with the CI floor raised to match, and `pip-audit` in the CI.
+
+**0.9** (planned), own library and quality:
+
+- **Open:** `api.py` becomes a separate Python package in its own repository, published on PyPI from GitHub Actions (trusted publishing), with its own tests; the integration requires it in `manifest.json`. The split is decided with the open questions below.
+- **Open:** every rule in `quality_scale.yaml` is done or exempt.
+
+**1.0** (planned): entities, attributes and actions frozen, documentation final, release notes say what is stable.
 
 1.0 does not wait for other people. It was tested on an H150 and confirmed by a user on an H200. The other models are listed in the supported-models table as soon as someone confirms them, and until then they stay "expected to work".
 

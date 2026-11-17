@@ -26,6 +26,7 @@ Changes on the `dev` branch that are not in a release yet.
 These three were only checked with automated tests, not on a real amplifier.
 
 ### Documentation
+- The roadmap table is one line per version, with the items as a list per version below it (built, open), including the Spotify URIs and the text after setup.
 - `docs/REFERENCE.md` now also has a table of the actions (what works and when it is refused), the standard attributes of the media player that dashboards use, and the attributes of the radio favorites sensor. A test checks that every key of the now-playing event is listed.
 - Pages and README lines about features that are not released yet say so (*New in 0.7, not released yet*), and a test fails when such a marker names a version the manifest has reached, so the markers go with the release.
 - New `docs/REFERENCE.md`: media player states, volume, every entity with its translation key, default and states, all attributes, `play_media` ids, every translated error, the rule about the amplifier's own input names, and which entity or attribute to use in a trigger ([#28](https://github.com/Elpea-byte/ha-hegel-connect/discussions/28)).
