@@ -316,3 +316,69 @@ async def test_a_search_that_cannot_run_says_why(answers: list[Any], message: st
     client = HegelClient("192.0.2.10", _Replies(answers))  # type: ignore[arg-type]
     with pytest.raises(HegelError, match=message):
         await client.search_airable("radio", "x")
+
+
+def _search_answers(form: str, query: str) -> list[Any]:
+    return [
+        True,
+        {"result": {"path": rf"airable:{HOST}/airable/radios/search\?q\={query}"}},
+        {"rows": [_station(query, 1)]},
+    ]
+
+
+async def test_the_search_form_is_used_again() -> None:
+    """Every new form stays in the amplifier until it loses power: the second search reuses the first."""
+    session = _Replies(
+        [
+            RADIOS_ONLY,
+            {"rowsRedirect": "airable:form3", "rows": []},
+            *_search_answers("form3", "one"),
+            RADIOS_ONLY,
+            *_search_answers("form3", "two"),
+        ]
+    )
+    client = HegelClient("192.0.2.10", session)  # type: ignore[arg-type]
+    assert [r["title"] for r in await client.search_airable("radio", "one")] == ["one"]
+    assert [r["title"] for r in await client.search_airable("radio", "two")] == ["two"]
+    forms = [p["path"] for m, e, p in session.asked if e == "setData" and p.get("role") == "value"]
+    assert forms == ["airable:form3:q", "airable:form3:q"]
+    assert [p["path"] for m, e, p in session.asked if e == "getRows" and str(p.get("path")).endswith("/search")] == [
+        f"airable:{HOST}/airable/radios/search"
+    ]  # the form was asked for once
+
+
+async def test_a_form_that_is_gone_is_replaced() -> None:
+    """After a power cut the old form no longer exists: the search asks for a new one."""
+
+    class _Gone(_Replies):
+        writes = 0
+
+        def request(self, method: str, url: str, **kwargs: Any):
+            if "airable:form3:q" in json.dumps(kwargs.get("json") or {}):
+                self.writes += 1
+                if self.writes > 1:  # the first search works, the form is gone for the second
+                    raise HegelError("setData 500")
+            return super().request(method, url, **kwargs)
+
+    session = _Gone(
+        [
+            RADIOS_ONLY,
+            {"rowsRedirect": "airable:form3", "rows": []},
+            *_search_answers("form3", "one"),
+            RADIOS_ONLY,
+            {"rowsRedirect": "airable:form1", "rows": []},
+            *_search_answers("form1", "two"),
+        ]
+    )
+    client = HegelClient("192.0.2.10", session)  # type: ignore[arg-type]
+    await client.search_airable("radio", "one")
+    assert [r["title"] for r in await client.search_airable("radio", "two")] == ["two"]
+    assert client._search_forms[f"airable:{HOST}/airable/radios"] == "airable:form1"
+
+
+def test_the_search_node_is_not_shown_in_the_browser() -> None:
+    from custom_components.hegel_connect.media_player import _child
+
+    search = {"title": "Search", "type": "container", "path": f"airable:{HOST}/airable/radios/search"}
+    assert _child(search, "airable:", 0, {}) is None
+    assert _child(_station("Qmusic", 1), "airable:", 0, {}) is not None

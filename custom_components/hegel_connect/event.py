@@ -26,6 +26,10 @@ async def async_setup_entry(
     async_add_entities([HegelNowPlaying(entry.runtime_data)])
 
 
+# Some stations send these as the title around their commercials: markers, not songs.
+AD_MARKERS = frozenset({"commercial-in", "commercial-out"})
+
+
 class HegelNowPlaying(HegelEntity, EventEntity):
     """One ``track_changed`` event per track, with the details the amplifier reports.
 
@@ -75,7 +79,12 @@ class HegelNowPlaying(HegelEntity, EventEntity):
         ):
             self._track = None
             return
-        if player.state != "playing" or not player.title or player.title == player.station:
+        if (
+            player.state != "playing"
+            or not player.title
+            or player.title == player.station
+            or player.title.casefold() in AD_MARKERS
+        ):
             return  # starting up, paused, or a radio station that has not reported a song yet
         # Spotify has no media id, but a track URI: two versions with the same title are two tracks.
         track = (player.title, player.artist, player.album, player.service, player.spotify_track_uri or player.media_id)

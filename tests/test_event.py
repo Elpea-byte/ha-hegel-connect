@@ -259,3 +259,13 @@ async def test_the_event_is_disabled_by_default(hass: HomeAssistant, fake_hegel,
     assert entry is not None
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     assert hass.states.get(NOW_PLAYING) is None
+
+
+async def test_commercial_markers_are_not_tracks(hass: HomeAssistant, fake_hegel, config_entry, fired) -> None:
+    """Some stations send 'commercial-in' as the title around their ads."""
+    await _setup(hass, config_entry)
+    await _push_radio_title(hass, fake_hegel[-1], "commercial-in")
+    await _push_radio_title(hass, fake_hegel[-1], "Commercial-Out")
+    assert fired == []
+    await _push_radio_title(hass, fake_hegel[-1], "Toto - Pamela")
+    assert [(e["artist"], e["title"]) for e in fired] == [("Toto", "Pamela")]

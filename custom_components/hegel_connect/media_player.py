@@ -578,6 +578,9 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
     kind = row.get("type")
     if kind in ("action", "image", "video"):
         return None
+    if row["path"].startswith(PATH_AIRABLE_ROOT) and row["path"].rstrip("/").endswith("/search"):
+        # The search node opens a form the browser cannot show: searching is done with search_media.
+        return None
     if row["path"].startswith("hegel:"):
         # Placeholders of the amplifier itself (e.g. "hegel:emptyServer" while it
         # still looks for media servers): nothing to open or play.

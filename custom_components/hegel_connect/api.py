@@ -505,6 +505,7 @@ class HegelClient:
         self._timeout = request_timeout
         # One search at a time: the amplifier gives every search its own form.
         self._search_lock = asyncio.Lock()
+        self._search_forms: dict[str, str] = {}
 
     # ---------------------------------------------------------------- basics
 
@@ -803,6 +804,16 @@ class HegelClient:
             )
         return result
 
+    async def _submit_search(self, form: str, query: str) -> str:
+        """Fill in and send a search form; the path of the result list."""
+        await self.set_value(f"{form}:q", {"type": "string_", "string_": query})
+        payload = {"path": f"{form}:submit", "role": "activate", "value": {}}
+        reply = await self._request("POST", "setData", payload=payload)
+        result = _dig(reply, "result", "path")
+        if not isinstance(result, str) or not result:
+            raise HegelError("The search gave no result list")
+        return result
+
     async def search_airable(self, kind: str, query: str, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
         """Search internet radio (``kind`` "radio") or podcasts ("podcast"), as the web client does.
 
@@ -829,17 +840,20 @@ class HegelClient:
         if not isinstance(base, str):
             raise HegelError(f"No {section} section found")
         async with self._search_lock:
-            form = await self.get_rows(f"{base}/search", 0, 1)
-            redirect = form.get("rowsRedirect")
-            if not isinstance(redirect, str) or not redirect.startswith("airable:"):
-                raise HegelError("The amplifier gave no search form")
-            await self.set_value(f"{redirect}:q", {"type": "string_", "string_": query})
-            reply = await self._request(
-                "POST", "setData", payload={"path": f"{redirect}:submit", "role": "activate", "value": {}}
-            )
-            result = _dig(reply, "result", "path")
-            if not isinstance(result, str) or not result:
-                raise HegelError("The search gave no result list")
+            result = None
+            if (known := self._search_forms.get(base)) is not None:
+                # Use the same form again: every new one stays in the amplifier until it loses power.
+                try:
+                    result = await self._submit_search(known, query)
+                except HegelError:
+                    del self._search_forms[base]
+            if result is None:
+                form = await self.get_rows(f"{base}/search", 0, 1)
+                redirect = form.get("rowsRedirect")
+                if not isinstance(redirect, str) or not redirect.startswith("airable:"):
+                    raise HegelError("The amplifier gave no search form")
+                result = await self._submit_search(redirect, query)
+                self._search_forms[base] = redirect
             data = await self.get_rows(result, 0, max(limit, 1) - 1)
         rows = [
             row
