@@ -48,6 +48,8 @@ VOLUMES_SAVE_DELAY = 10
 POLL_TIMEOUT = 30
 # Radio favorites only change in the Hegel Control app: re-read now and then.
 FAVORITES_INTERVAL = timedelta(hours=6)
+# The amplifier does not report a change of its auto-standby setting: read it again now and then (one small read).
+AUTO_STANDBY_INTERVAL = timedelta(minutes=15)
 BACKOFF_START = 5
 BACKOFF_MAX = 60
 

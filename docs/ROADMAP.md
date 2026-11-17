@@ -49,7 +49,7 @@ There is no fixed schedule. The plan follows what is actually done:
 - **Built:** a text after setup that asks for a model report for models the maintainer has not tested, and setup that takes a pasted browser address.
 - **Built:** hardening of the JSON reading, and the README and `docs/` restructure with [REFERENCE.md](REFERENCE.md).
 - **Open:** searching internet radio ([#27](../../../discussions/27)). The amplifier has a search form for it (fill in a text, activate, read the result list); researched on an H150, feasible. Podcasts work the same way. If it turns out too big it moves to after 1.0.
-- **Open:** the auto-standby select is re-read when the connection returns and every six hours, because the amplifier does not report a change of the setting; decide whether that is enough.
+- **Built:** the auto-standby select is re-read when the connection returns and every 15 minutes, because the amplifier does not report a change of the setting.
 
 **0.8** (planned), core behaviour and coverage:
 

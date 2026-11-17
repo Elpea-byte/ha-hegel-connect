@@ -10,9 +10,9 @@ rules:
   appropriate-polling:
     status: done
     comment: >-
-      Local push (event queue). Two things are re-read on a timer, both every 6 hours and only while connected:
-      the radio favorites list, and the auto-standby setting when its optional select is enabled
-      (the amplifier does not report a change of it; it is also read when the connection returns).
+      Local push (event queue). Two things are re-read on a timer, only while connected: the radio favorites list
+      (every 6 hours), and the auto-standby setting when its optional select is enabled (every
+      15 minutes; the amplifier does not report a change of it; it is also read when the connection returns).
   brands: done
   common-modules:
     status: done

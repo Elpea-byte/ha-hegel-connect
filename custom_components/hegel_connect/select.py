@@ -12,7 +12,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 
 from . import HegelConfigEntry
 from .api import NETWORK_SOURCE_NAME, HegelError
-from .const import FAVORITES_INTERVAL
+from .const import AUTO_STANDBY_INTERVAL
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
 from .media_player import _command_failed
@@ -159,7 +159,7 @@ class HegelAutoStandby(HegelEntity, SelectEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        self.async_on_remove(async_track_time_interval(self.hass, self._async_tick, FAVORITES_INTERVAL))
+        self.async_on_remove(async_track_time_interval(self.hass, self._async_tick, AUTO_STANDBY_INTERVAL))
         if self.coordinator.connected:
             self._was_connected = True
             await self._async_read()

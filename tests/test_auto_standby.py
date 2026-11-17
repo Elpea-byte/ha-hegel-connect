@@ -100,7 +100,7 @@ async def test_the_value_is_read_again_now_and_then(hass: HomeAssistant, fake_he
     await _setup(hass, config_entry)
     assert hass.states.get(ENTITY).state == "off"
     FakeHegel.idle_seconds = 1200
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=7))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=16))
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY).state == "20_min"
 
