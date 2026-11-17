@@ -62,9 +62,59 @@ Features: next, previous, seek, shuffle, repeat and stop are only offered while 
 
 The sensors and the media player are not `unavailable` when the amplifier cannot be reached: they show `unknown` or `off` (a planned change, see the [roadmap](ROADMAP.md)). The optional entities are enabled under the device page's disabled entities.
 
+### Standard attributes of the media player
+
+The dashboards rely on these. They describe what plays and are `null` unless the network input is selected and the amplifier reports them (the media player is `on` and has no track on other inputs).
+
+| Attribute | Meaning | `null` when |
+| :---- | :---- | :---- |
+| `source` | The selected input, with the name you gave it | The input is not known |
+| `source_list` | The inputs that are not hidden, with your names | |
+| `media_title`, `media_artist`, `media_album_name` | Title, artist and album | Not the network input, or the service does not report it |
+| `media_playlist` | The playlist or album the track plays from, as the service reports it | Not reported |
+| `media_content_id` | Spotify only: the track as a Spotify URI | Any other service |
+| `entity_picture` | The cover art (a link the amplifier gives) | No cover reported |
+| `media_duration`, `media_position`, `media_position_updated_at` | Length and position in seconds | Radio and other streams without a length |
+| `app_name` | The streaming service | Not the network input |
+| `shuffle`, `repeat` | The play mode | Not the network input |
+| `volume_level`, `is_volume_muted` | Volume (0 to 1) and mute | Not read yet |
+
+### The radio favorites sensor
+
+`sensor.hegel_h150_radio_favorites` has the number of favorites as its state and one attribute, for custom dashboard cards that show the station logos:
+
+| Attribute | Meaning |
+| :---- | :---- |
+| `favorites` | A list; every item has `title` (the station name), `path` (what to give to `play_media` with `hegel_path`), `id` (matches `media_id` of the media player while it plays) and `icon` (a logo link or `null`) |
+
 ### The now-playing event
 
 Event type `track_changed`, with the attributes `title`, `artist`, `album`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `spotify_playlist_uri` (Spotify only, otherwise null; the playlist only when it plays from one), `station`, `source` (the shown input name), `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`. A value the amplifier does not report is null. Details and examples: [now playing](now-playing.md).
+
+## Actions
+
+What works, and when an action is refused (the errors are listed at the end of this page).
+
+| Action | Works | Refused or limited |
+| :---- | :---- | :---- |
+| `media_player.turn_on`, `turn_off` | Always; the amplifier switches on from network standby | `command_failed` when it does not answer |
+| `media_player.volume_set` | Within the maximum volume | `fixed_volume` on an input with fixed volume; a value above the maximum is set to the maximum |
+| `media_player.volume_up`, `volume_down`, `volume_mute` | Yes | The same limits as `volume_set` for the steps. *Louder* does nothing while the volume is above the maximum |
+| `media_player.select_source` | The shown name or the amplifier's own name of an input | `unknown_source` for any other name |
+| `media_player.media_play` | Only on the network input: resumes a paused stream (Spotify has its own resume), and starts the last radio favorite again after radio was stopped | `nothing_to_resume` on any other input, in standby or when nothing played |
+| `media_player.media_pause` | Pauses; on live radio it stops (radio has no pause) | |
+| `media_player.media_stop` | Offered while a stream plays, except Spotify Connect | Not offered with Spotify (it would end the session with your phone) |
+| `media_player.media_next_track`, `media_previous_track` | Only where the current service allows it (media server, USB) | Not offered with Spotify Connect or radio; the amplifier answers "Control is not supported" |
+| `media_player.media_seek` | Where the service allows it (media server, USB) | Not offered with Spotify or radio |
+| `media_player.shuffle_set`, `repeat_set` | Where the source offers that combination | `play_mode_not_allowed` |
+| `media_player.play_media` | `media_content_type: hegel_path` with an id from the media browser | `not_playable` for the browser roots, `unknown_media` for a broken track id |
+| `media_player.browse_media` | Radio favorites, internet radio, media servers, USB, recently played | `browse_failed` when the amplifier cannot open a folder |
+| `select.select_option` on the radio favorite | Starts that station | `command_failed` when the amplifier refuses |
+| `select.select_option` on auto standby | Writes the time to the amplifier and reads it back | `command_failed` when it refuses; `unavailable` while not connected |
+| `number.set_value` on the maximum volume | 1 to 100; a volume above the new maximum comes down at once (not on an input with fixed volume, not in standby) | |
+| `number.set_value` on a start volume | 0 (off) up to the maximum volume | `fixed_volume_input` on an input with fixed volume (the entity is `unavailable` then) |
+| `switch.turn_on`, `turn_off` on remember volume | Turning it off throws the remembered volumes away | |
+| `homeassistant.update_entity` on any Hegel Connect entity | Makes a waiting connection retry at once | Nothing changes while the connection is healthy |
 
 ## Which entity or attribute to use in a trigger
 

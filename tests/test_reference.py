@@ -47,3 +47,17 @@ def test_the_readme_models_match_the_supported_models() -> None:
     table = table[: table.index("\n\n")]
     for model in SUPPORTED_MODELS:
         assert model in table, f"{model} is not in the README models table"
+
+
+def test_the_reference_lists_every_key_of_the_now_playing_event() -> None:
+    source = (ROOT / "custom_components" / "hegel_connect" / "event.py").read_text(encoding="utf-8")
+    block = source[source.index("def _event_data") :]
+    keys = re.findall(r'^\s+"(\w+)":', block, re.M)
+    assert len(keys) >= 12
+    missing = [key for key in keys if f"`{key}`" not in REFERENCE]
+    assert not missing, f"docs/REFERENCE.md does not mention: {missing}"
+
+
+def test_the_reference_has_the_standard_attributes_and_the_favorites_attributes() -> None:
+    for name in ("source_list", "media_playlist", "entity_picture", "shuffle", "media_position", "favorites"):
+        assert f"`{name}`" in REFERENCE, name

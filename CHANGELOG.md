@@ -26,6 +26,7 @@ Changes on the `dev` branch that are not in a release yet.
 These three were only checked with automated tests, not on a real amplifier.
 
 ### Documentation
+- `docs/REFERENCE.md` now also has a table of the actions (what works and when it is refused), the standard attributes of the media player that dashboards use, and the attributes of the radio favorites sensor. A test checks that every key of the now-playing event is listed.
 - Pages and README lines about features that are not released yet say so (*New in 0.7, not released yet*), and a test fails when such a marker names a version the manifest has reached, so the markers go with the release.
 - New `docs/REFERENCE.md`: media player states, volume, every entity with its translation key, default and states, all attributes, `play_media` ids, every translated error, the rule about the amplifier's own input names, and which entity or attribute to use in a trigger ([#28](https://github.com/Elpea-byte/ha-hegel-connect/discussions/28)).
 - README: the troubleshooting section lists the usual symptoms with cause and fix (not discovered, cannot reach, does not look like a Hegel, entity ids, Spotify controls, start volume, inputs not known, empty now playing). Two entries come from the code and were not tried on a real amplifier; they say so.
