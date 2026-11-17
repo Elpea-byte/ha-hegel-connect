@@ -17,7 +17,7 @@
         "data": {
           "host": "Vert"
         },
-        "description": "Skriv inn den nye IP-adressen til denne forsterkeren. Det må være samme forsterker: en annen legges til som ny enhet.",
+        "description": "Skriv inn den nye adressen til denne forsterkeren. Det må være samme forsterker: en annen legges til som ny enhet.",
         "data_description": {
           "host": "IP-adresse eller vertsnavn til forsterkeren, f.eks. 192.168.1.50. Du kan også lime inn adressen fra nettleseren."
         }

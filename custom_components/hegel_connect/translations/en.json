@@ -17,7 +17,7 @@
         "data": {
           "host": "Host"
         },
-        "description": "Enter the new IP address of this amplifier. It must be the same amplifier: another one is added as a new device.",
+        "description": "Enter the new address of this amplifier. It must be the same amplifier: another one is added as a new device.",
         "data_description": {
           "host": "IP address or host name of the amplifier, e.g. 192.168.1.50. You can also paste the address from your browser."
         }

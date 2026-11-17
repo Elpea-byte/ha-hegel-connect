@@ -17,7 +17,7 @@
         "data": {
           "host": "Adres"
         },
-        "description": "Voer het nieuwe IP-adres van deze versterker in. Het moet dezelfde versterker zijn: een andere voeg je toe als nieuw apparaat.",
+        "description": "Voer het nieuwe adres van deze versterker in. Het moet dezelfde versterker zijn: een andere voeg je toe als nieuw apparaat.",
         "data_description": {
           "host": "IP-adres of hostnaam van de versterker, bijv. 192.168.1.50. Je kunt ook het adres uit je browser plakken."
         }

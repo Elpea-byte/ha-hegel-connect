@@ -17,7 +17,7 @@
         "data": {
           "host": "Host"
         },
-        "description": "Gib die neue IP-Adresse dieses Verstärkers ein. Es muss derselbe Verstärker sein: ein anderer wird als neues Gerät hinzugefügt.",
+        "description": "Gib die neue Adresse dieses Verstärkers ein. Es muss derselbe Verstärker sein: ein anderer wird als neues Gerät hinzugefügt.",
         "data_description": {
           "host": "IP-Adresse oder Hostname des Verstärkers, z. B. 192.168.1.50. Du kannst auch die Adresse aus dem Browser einfügen."
         }
