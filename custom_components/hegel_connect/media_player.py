@@ -396,16 +396,41 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
 
         if set(query.media_filter_classes or []) == {MediaClass.PODCAST}:
             return SearchMedia(result=[])
+        # The favorites that match come first (Assist plays the first result: "play Qmusic" then starts the
+        # favorite), then everything the amplifier finds in all radio, without the favorites twice.
+        needle = query.search_query.strip().casefold()
+        favorites = [
+            fav for fav in self.coordinator.favorites if needle and fav["title"] and needle in fav["title"].casefold()
+        ]
+        results: list[BrowseMedia] = [
+            BrowseMedia(
+                media_class=MediaClass.CHANNEL,
+                media_content_id=str(fav["path"]),
+                media_content_type=MEDIA_TYPE_HEGEL,
+                title=str(fav["title"]),
+                can_play=True,
+                can_expand=False,
+                thumbnail=fav["icon"],
+            )
+            for fav in favorites
+        ]
+        known = {fav["id"] for fav in favorites if fav["id"]}
         try:
             rows = await self.coordinator.client.search_airable("radio", query.search_query)
         except HegelError as err:
+            if results:
+                return SearchMedia(result=results)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="search_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        items = (_child(row, PATH_AIRABLE_ROOT, index, {}) for index, row in enumerate(rows))
-        return SearchMedia(result=[item for item in items if item is not None])
+        for index, row in enumerate(rows):
+            if row.get("id") in known:
+                continue
+            if (item := _child(row, PATH_AIRABLE_ROOT, index, {})) is not None:
+                results.append(item)
+        return SearchMedia(result=results)
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):

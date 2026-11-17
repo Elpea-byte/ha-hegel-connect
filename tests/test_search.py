@@ -96,9 +96,9 @@ async def test_the_search_gives_stations(hass: HomeAssistant, fake_hegel, config
 
 @needs_search
 async def test_a_found_station_starts_like_a_favorite(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    FakeHegel.search_results = {"radio": [_station("Qmusic", 5)]}
+    FakeHegel.search_results = {"radio": [_station("Sublime", 5)]}
     await _setup(hass, config_entry)
-    found = (await _search(hass, "qmusic"))[0]
+    found = (await _search(hass, "sublime"))[0]
     await hass.services.async_call(
         "media_player",
         "play_media",
@@ -143,6 +143,45 @@ async def test_a_failing_search_tells_the_user_why(hass: HomeAssistant, fake_heg
     await _setup(hass, config_entry)
     with pytest.raises(HomeAssistantError, match="boom"):
         await _search(hass, "radio 10")
+
+
+@needs_search
+async def test_a_matching_favorite_comes_first_and_is_not_listed_twice(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """Assist plays the first result: 'play qmusic' must start the favorite (the fake one is 'Qmusic', id fav-1)."""
+    twin = {**_station("Qmusic", 5), "id": "fav-1"}
+    FakeHegel.search_results = {"radio": [twin, _station("Qmusic Foute Uur", 6)]}
+    await _setup(hass, config_entry)
+    result = await _search(hass, "qmusic")
+    assert [(item["title"], item["media_content_id"]) for item in result] == [
+        ("Qmusic", "airable:fav/qmusic"),
+        ("Qmusic Foute Uur", f"airable:{HOST}/id/airable/radio/6"),
+    ]
+
+
+@needs_search
+async def test_the_favorite_is_still_found_when_the_search_fails(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    FakeHegel.search_results = {"radio": HegelError("boom")}
+    await _setup(hass, config_entry)
+    assert [item["title"] for item in await _search(hass, "QMUSIC")] == ["Qmusic"]
+
+
+@needs_search
+async def test_the_media_search_and_play_intent_starts_the_favorite(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """What Assist does for 'play Qmusic on the amplifier': search, then play the first result."""
+    from homeassistant.components.media_player import intent as media_player_intent
+    from homeassistant.helpers import intent
+
+    FakeHegel.search_results = {"radio": [_station("Qmusic Foute Uur", 6)]}
+    await _setup(hass, config_entry)
+    await media_player_intent.async_setup_intents(hass)
+    await intent.async_handle(
+        hass, "test", "HassMediaSearchAndPlay", {"search_query": {"value": "qmusic"}, "name": {"value": ENTITY}}
+    )
+    assert ("play_path", "airable:fav/qmusic") in fake_hegel[-1].calls
 
 
 # ------------------------------------------------------------------ the client against recorded-style answers

@@ -16,6 +16,7 @@ Changes on the `dev` branch that are not in a release yet.
 
 ### Added (search)
 - Search internet radio from the media browser ([#27](https://github.com/Elpea-byte/ha-hegel-connect/discussions/27)): the search box (and the action `media_player.search_media`) finds stations on the amplifier, and a found station starts like a favorite. Needs a Home Assistant version that has search in the media browser; older ones just do not offer it. Tested with the fake amplifier and with the amplifier's answers as recorded in a test report; the search through the integration is not yet seen on an H150. Podcasts are planned for 0.8.
+- Search puts matching radio favorites first, then all radio. Home Assistant's Assist ("play Qmusic on the amplifier", intent `HassMediaSearchAndPlay`) searches with `media_player.search_media` and plays the first result, so a spoken name now starts the favorite. Tested with the fake amplifier and Home Assistant's own intent; not yet tried by voice on a real amplifier.
 
 ### Changed
 - The diagnostics file now also lists the model, firmware, volume range, the auto-standby choices of the amplifier and the features of the media player, so a model report shows what the amplifier offers. Nothing that identifies the amplifier or its owner is added.
