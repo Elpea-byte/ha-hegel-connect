@@ -52,6 +52,9 @@ async def test_pictures_over_plain_http_are_fetched_by_home_assistant(
         ("HTTPS://cdn.example/cover.jpg", True),
         ("http://static.example/logo.png", False),
         ("http://192.0.2.5/cover.jpg", False),
+        ("https://192.0.2.5/cover.jpg", False),  # local https: the browser cannot reach it from outside
+        ("https://nas.local/cover.jpg", False),
+        ("https://nas/cover.jpg", False),
         (None, False),
     ):
         monkeypatch.setattr(HegelMediaPlayer, "media_image_url", url)
@@ -67,6 +70,7 @@ async def test_the_maximum_volume_follows_the_range_of_the_amplifier(
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
     assert hass.states.get(MAX_VOLUME).attributes["max"] == 60
+    assert float(hass.states.get(MAX_VOLUME).state) == 60  # the saved 100 does not stay above the range
     with pytest.raises(ServiceValidationError):  # Home Assistant refuses a value above the range
         await hass.services.async_call("number", "set_value", {"entity_id": MAX_VOLUME, "value": 90}, blocking=True)
 

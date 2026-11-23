@@ -48,7 +48,7 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
         await super().async_added_to_hass()
         last = await self.async_get_last_number_data()
         if last is not None and last.native_value is not None:
-            self.coordinator.max_volume = int(last.native_value)
+            self.coordinator.max_volume = max(1, min(int(last.native_value), self.coordinator.volume_max))
 
     @property
     def available(self) -> bool:
@@ -60,7 +60,8 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
 
     @property
     def native_value(self) -> float:
-        return self.coordinator.max_volume
+        # Never above the range of the amplifier, also before anyone has touched the slider.
+        return min(self.coordinator.max_volume, self.coordinator.volume_max)
 
     async def async_set_native_value(self, value: float) -> None:
         self.coordinator.max_volume = max(1, min(int(value), self.coordinator.volume_max))

@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 from datetime import datetime
+import ipaddress
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -86,6 +88,19 @@ _PLAYER_STATES = {
     "buffering": MediaPlayerState.BUFFERING,
     "transitioning": MediaPlayerState.BUFFERING,
 }
+
+
+def _is_public_https(url: str | None) -> bool:
+    """True for an https picture on a public host (not an IP on the local network, not a local name)."""
+    parts = urlsplit(url or "")
+    host = (parts.hostname or "").lower()
+    if parts.scheme.lower() != "https" or not host:
+        return False
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return "." in host and not host.endswith((".local", ".lan", ".home", ".internal", ".localdomain"))
+    return address.is_global
 
 
 async def async_setup_entry(
@@ -258,9 +273,10 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         """Only public https pictures go to the browser directly.
 
         Radio logos come over plain http and a NAS picture sits on the local network: Home Assistant fetches
-        those itself, so they also show over https (Nabu Casa, a certificate) and outside the house.
+        those itself, so they also show over https (Nabu Casa, a certificate) and outside the house. That
+        includes https on a local address, which the browser would not reach from outside either.
         """
-        return (self.media_image_url or "").lower().startswith("https://")
+        return _is_public_https(self.media_image_url)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -7,7 +7,9 @@ blueprint:
     notification. Nothing is sent unless you choose an action. You can limit it
     to certain audio qualities and leave out internet radio. In your own action
     you can use the variables title, artist, album, station, service, source,
-    quality, codec, sample_rate, bit_depth, bitrate and is_radio.
+    quality, codec, sample_rate, bit_depth, bitrate, is_radio, image_url (the
+    cover or station logo), spotify_uri, spotify_album_uri, spotify_artist_uri
+    and spotify_playlist_uri.
   domain: automation
   homeassistant:
     min_version: 2025.4.0
