@@ -33,6 +33,10 @@ LINK_TITLES = frozenset({"home assistant", "upnp renderer"})
 MEDIA_SERVERS = "media servers"
 # Stations with a name shorter than this are not checked for jingles ("Radio" would hide "Radio Ga Ga").
 JINGLE_MIN_NAME = 5
+# A capitalised last part that is no artist: "Song - LIVE" stays "Artist - Title".
+VERSION_WORDS = frozenset(
+    {"live", "remix", "intro", "edit", "radio edit", "acoustic", "remastered", "instrumental", "extended", "version"}
+)
 
 
 def _is_no_track(player: Any) -> bool:
@@ -114,11 +118,13 @@ class HegelNowPlaying(HegelEntity, EventEntity):
             # Radio stations send "Artist - Title" as one text.
             first, second = (part.strip() for part in title.split(" - ", 1))
             # Most stations send "Artist - Title"; Qmusic sends "Title - ARTIST" with the artist in capitals.
-            artist, title = (second, first) if second.isupper() and not first.isupper() else (first, second)
+            swapped = second.isupper() and not first.isupper() and second.casefold() not in VERSION_WORDS
+            artist, title = (second, first) if swapped else (first, second)
         return {
             "title": title,
             "artist": artist,
             "album": player.album,
+            "image_url": player.image_url,
             "service": player.service,
             "spotify_uri": player.spotify_track_uri,
             "spotify_album_uri": player.spotify_album_uri,

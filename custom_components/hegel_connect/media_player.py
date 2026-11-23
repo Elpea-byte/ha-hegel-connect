@@ -11,6 +11,7 @@ from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -99,7 +100,9 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     """The amplifier and its built-in streamer."""
 
     _attr_name = None
-    _attr_media_content_type = MediaType.MUSIC
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    # Static or double (the volume is also the volume_level) and changing often: not worth a row in the recorder.
+    _unrecorded_attributes = frozenset({"input_names", "fixed_volume", "max_volume", "can_pause", "volume_raw"})
     _attr_volume_step = 0.02
     _BASE_FEATURES = (
         MediaPlayerEntityFeature.TURN_ON
@@ -240,8 +243,24 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return self.coordinator.data.player.service if self._playing_network() else None
 
     @property
+    def media_content_type(self) -> MediaType | str | None:
+        if not self._playing_network():
+            return None
+        return MediaType.CHANNEL if self.coordinator.data.player.is_radio else MediaType.MUSIC
+
+    @property
+    def media_channel(self) -> str | None:
+        player = self.coordinator.data.player
+        return player.station if self._playing_network() and player.is_radio else None
+
+    @property
     def media_image_remotely_accessible(self) -> bool:
-        return True
+        """Only public https pictures go to the browser directly.
+
+        Radio logos come over plain http and a NAS picture sits on the local network: Home Assistant fetches
+        those itself, so they also show over https (Nabu Casa, a certificate) and outside the house.
+        """
+        return (self.media_image_url or "").lower().startswith("https://")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

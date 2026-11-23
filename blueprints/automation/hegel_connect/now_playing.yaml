@@ -79,6 +79,11 @@ variables:
   bit_depth: "{{ trigger.to_state.attributes.bit_depth }}"
   bitrate: "{{ trigger.to_state.attributes.bitrate }}"
   is_radio: "{{ trigger.to_state.attributes.is_radio }}"
+  image_url: "{{ trigger.to_state.attributes.image_url }}"
+  spotify_uri: "{{ trigger.to_state.attributes.spotify_uri }}"
+  spotify_album_uri: "{{ trigger.to_state.attributes.spotify_album_uri }}"
+  spotify_artist_uri: "{{ trigger.to_state.attributes.spotify_artist_uri }}"
+  spotify_playlist_uri: "{{ trigger.to_state.attributes.spotify_playlist_uri }}"
 
 conditions:
   - condition: template

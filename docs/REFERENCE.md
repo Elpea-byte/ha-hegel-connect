@@ -34,6 +34,8 @@ Features: next, previous, seek, shuffle, repeat and stop are only offered while 
 | `audio_format` | text or null | Codec and format, for example `FLAC · 24-bit/96kHz`; null when not reported or another input plays |
 | `volume_raw` | number or null | Volume on the amplifier's scale |
 | `media_content_id` (standard attribute) | text or null | While Spotify plays: the track as a Spotify URI (`spotify:track:...`); null for other services |
+| `media_channel` (standard attribute) | text or null | The station name while internet radio plays; null otherwise |
+| `media_content_type` (standard attribute) | text or null | `channel` while internet radio plays, `music` for other network streams, null on other inputs |
 | `max_volume` | number | The volume ceiling Home Assistant applies, on the amplifier's scale |
 | `input_names` | object | Shown input name to the amplifier's own name, for the visible inputs |
 
@@ -89,7 +91,7 @@ The dashboards rely on these. They describe what plays and are `null` unless the
 
 ### The now-playing event
 
-Event type `track_changed`, with the attributes `title`, `artist`, `album`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `spotify_playlist_uri` (Spotify only, otherwise null; the playlist only when it plays from one), `station`, `source` (the shown input name), `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`. A value the amplifier does not report is null. Details and examples: [now playing](now-playing.md).
+Event type `track_changed`, with the attributes `title`, `artist`, `album`, `image_url`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `spotify_playlist_uri` (Spotify only, otherwise null; the playlist only when it plays from one), `station`, `source` (the shown input name), `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`. A value the amplifier does not report is null. Details and examples: [now playing](now-playing.md).
 
 ## Actions
 

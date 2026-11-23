@@ -36,10 +36,14 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: HegelCo
     state = coordinator.data
     # What a model report needs to see: what the amplifier offers and what Home Assistant makes of it.
     # Only settings and capabilities, nothing that identifies the amplifier or its owner.
-    try:
-        idle_choices: list[int] | str = await coordinator.client.idle_time_options()
-    except HegelError as err:
-        idle_choices = f"not available: {err}"
+    idle_choices: list[int] | str
+    if not coordinator.connected:
+        idle_choices = "not available: the amplifier does not answer"  # do not wait for a timeout
+    else:
+        try:
+            idle_choices = await coordinator.client.idle_time_options()
+        except HegelError as err:
+            idle_choices = f"not available: {err}"
     registry = er.async_get(hass)
     player = next(
         (e for e in er.async_entries_for_config_entry(registry, entry.entry_id) if e.domain == "media_player"),
@@ -58,6 +62,11 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: HegelCo
         },
         "entry": {"config": async_redact_data(dict(entry.data), TO_REDACT), "options": dict(entry.options)},
         "connected": coordinator.connected,
+        "started_offline": coordinator.started_offline,
+        "max_volume": coordinator.max_volume,
+        "remember_volume": coordinator.remember_volume,
+        "fixed_inputs": sorted(coordinator.fixed_inputs),
+        "favorites_count": len(coordinator.favorites),
         "volume_max": coordinator.volume_max,
         "sources": [asdict(source) for source in coordinator.sources],
         "state": None

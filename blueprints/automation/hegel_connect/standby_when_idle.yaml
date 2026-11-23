@@ -61,7 +61,7 @@ conditions:
   # So the state alone tells that nothing plays on the network input, whatever the input is called.
   - condition: template
     value_template: >-
-      {{ (when_away and not is_state(amplifier, 'off')) if trigger.id == 'away'
+      {{ (when_away and states(amplifier) not in ['off', 'unavailable', 'unknown']) if trigger.id == 'away'
          else states(amplifier) in ['idle', 'paused'] }}
 
 actions:

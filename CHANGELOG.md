@@ -23,6 +23,14 @@ Changes on the `dev` branch that are not in a release yet.
 - Internet radio titles: Qmusic sends `Title - ARTIST` where most stations send `Artist - Title`. When only the second part is in capitals the event takes it as the artist, so `Take Me Back - KYGO & MAX MCNOWN` gives artist KYGO & MAX MCNOWN. Seen on an H150 (the order was wrong before); other stations unchanged.
 
 ### Changed
+- **Announcement for 0.8 (breaking):** when the amplifier cannot be reached at all (switched off at the mains, network down), its entities will become *unavailable* instead of showing *off*. Standby stays *off*, and the *Network* binary sensor keeps telling the two apart. Automations that test for `off` should also look at `unavailable`; the blueprints already do (see below).
+- The media player is now a receiver (`device_class: receiver`) and reports `media_content_type: channel` and `media_channel` (the station) while internet radio plays, `music` for other network streams, and nothing on other inputs. Before it always said `music`. Tested with the fake amplifier, not looked at on a real one.
+- Pictures that come over plain `http://` (radio logos, a NAS) are now fetched by Home Assistant instead of by the browser, so they also show on an https page (Nabu Casa, your own certificate) and outside the house. Only `https://` pictures still go straight to the browser. Tested with the fake amplifier; not seen over https on a real setup.
+- Attributes that only repeat or rarely change (`input_names`, `fixed_volume`, `max_volume`, `can_pause`, `volume_raw`) are no longer stored in the Home Assistant database. They are still on the entity; only their history is gone.
+- The *Maximum volume* number and the start volumes follow the volume range of the amplifier instead of a fixed 100. There is now a start volume entity for every input, also the hidden ones (all disabled until you enable them), so unhiding an input later finds it.
+- The *Fixed volume* sensor is *unknown* while the amplifier does not answer, instead of keeping the last value. The diagnostics file no longer waits for a timeout when the amplifier is gone and lists a few more settings (`max_volume`, `remember_volume`, `fixed_inputs`, `favorites_count`, `started_offline`).
+- Blueprints: the amplifier being *unavailable* or *unknown* now counts as not on in *Radio at a time* and *Standby when idle*; *Reconnect after the smart plug* also starts when the plug comes back from *unavailable*; *Log or announce what is playing* has the cover picture and the Spotify URIs as variables for your action.
+- The now-playing event also has `image_url` (the cover or station logo, for example for a notification). A title ending in a capitalised version word (`LIVE`, `REMIX`, `EDIT` ...) is no longer taken for an artist.
 - The diagnostics file now also lists the model, firmware, volume range, the auto-standby choices of the amplifier and the features of the media player, so a model report shows what the amplifier offers. Nothing that identifies the amplifier or its owner is added. Seen on an H150: no address, id or account name in the file.
 - The text after setup now links to the README section that explains how to enable the optional entities.
 - The automated tests also run against Home Assistant 2025.4, the oldest supported version.
@@ -33,6 +41,7 @@ Changes on the `dev` branch that are not in a release yet.
 
 ### Fixed
 - Answers with an integer of more than 19 digits are refused as invalid JSON instead of causing repeated errors. A normal answer is not affected (the largest integer in the recording of an H150 has 16 digits).
+- A new internet radio search no longer makes a second search form when the amplifier does not answer at all.
 - The saved volumes of "remember volume per input" are removed when you remove the integration from Home Assistant, instead of staying behind in its storage.
 - "Remember volume per input" no longer saves a volume under an input the amplifier does not list.
 

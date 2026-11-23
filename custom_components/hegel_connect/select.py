@@ -102,15 +102,21 @@ class HegelRadioFavorite(HegelEntity, SelectEntity):
         options = list(self._paths())
         return options[favorite_ids.index(media_id)] if media_id in favorite_ids else None
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """The chosen station is no longer "pending" once it plays, or when the amplifier is gone or off."""
+        coordinator = self.coordinator
+        gone = not coordinator.connected or not coordinator.data.is_on
+        if gone or (self._pending is not None and self._playing_option() == self._pending):
+            self._clear_pending()
+        super()._handle_coordinator_update()
+
     @property
     def current_option(self) -> str | None:
         coordinator = self.coordinator
         if not coordinator.connected or not coordinator.data.is_on:
-            self._clear_pending()
             return None
         playing = self._playing_option()
-        if self._pending is not None and playing == self._pending:
-            self._clear_pending()
         # Still switching: keep the chosen station until it plays or the time-out ends.
         return self._pending if self._pending is not None else playing
 
@@ -185,7 +191,8 @@ class HegelAutoStandby(HegelEntity, SelectEntity):
         if not connected:
             self._seconds = None  # do not show the old value for a moment when the connection returns
         if connected and not self._was_connected:
-            self.hass.async_create_task(self._async_read())  # back from a lost connection: read it again
+            # Back from a lost connection: read it again.
+            self.coordinator.config_entry.async_create_task(self.hass, self._async_read())
         self._was_connected = connected
         super()._handle_coordinator_update()
 

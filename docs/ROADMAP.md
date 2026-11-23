@@ -50,6 +50,7 @@ There is no fixed schedule. The plan follows what is actually done:
 - **Built:** hardening of the JSON reading, and the README and `docs/` restructure with [REFERENCE.md](REFERENCE.md).
 - **Built:** searching internet radio ([#27](../../../discussions/27)): the action `media_player.search_media` finds stations on the amplifier (Home Assistant's own media browser has no search box yet) (the amplifier has a search form for it: fill in a text, activate, read the result list), and a found station starts like a favorite. Matching favorites come first, so Assist's "play <station> on <amplifier>" (which plays the first search result) starts the favorite; the intent was checked in Home Assistant's source and with a test, not yet by voice. Tried on an H150: searches, no result, several at once, and starting a found station. Open smaller points: only the first page (up to 17) is returned, two stations with the same name (NL and BE) look alike, and the logos load over `http://`.
 - **Built:** the auto-standby select is re-read when the connection returns and every 15 minutes, because the amplifier does not report a change of the setting.
+- **Built:** a round of review points before the release: receiver device class, `media_channel` and `media_content_type`, pictures over `http://` fetched by Home Assistant, some attributes left out of the recorder, limits that follow the volume range, a start volume entity for hidden inputs too, tasks tied to the config entry, offline-safe diagnostics and fixed-volume sensor, `image_url` in the now-playing event, and more robust blueprints. Tested with the fake amplifier; the picture proxy over https and the media type were not looked at on a real amplifier.
 
 **0.8** (planned), core behaviour and coverage:
 
@@ -62,12 +63,24 @@ There is no fixed schedule. The plan follows what is actually done:
 - **Open:** two blueprints: *switch on from the mains* (plug on, wait for the network sensor, amplifier on, optional input and volume up to the maximum) and *sleep timer* (lower the volume in steps, then standby, restore the volume).
 - **Open:** searching podcasts ([#27](../../../discussions/27)), the user feature of this version: it works the same way on the amplifier (the result is a podcast, which opens to its episodes; an episode is a track that starts like a radio item, not tried yet).
 - **Open:** larger cover art where the streaming service offers it, only if that can be done reliably.
-- **Open:** overall test coverage to 95% or more, with the CI floor raised to match, and `pip-audit` in the CI.
+- **Open:** overall test coverage to 95% or more, with the CI floor raised to match, and `pip-audit` in the CI. The tests for the client should cover timeouts, the size limit, broken JSON, HTTP errors, a lost queue, IPv6 and the search form.
+- **Open:** two buttons: *Reconnect* (diagnostic, calls the reconnect that `homeassistant.update_entity` triggers today) and *Refresh radio favorites* (config, so a new favorite shows up without waiting for the six-hour timer). Disabled by default is not needed for a button nobody presses by accident, but it is decided with the entity rules.
+- **Open:** *play* after *stop* also resumes a station that was found by search or browsing, not only a favorite (remember the last `airable:` path that was started).
+- **Open:** the saved copy of the inputs, volume range and firmware moves from the config entry to Home Assistant's `Store`, with a one-time migration; and after a start without the amplifier that data is read again when it comes back (today the saved copy stays until the next restart).
+- **Open:** reading the independent values at start and reconnect in parallel (`asyncio.gather`), if the amplifier copes with it; to be tried on an H150 first.
+- **Open:** switching input waits for the amplifier's own confirmation instead of a fixed pause, and a failed switch (the input did not stick after three tries) becomes an error instead of a log line. Both need the power-on case on a real amplifier: it jumps back to Network within a second there, which is why the pause is there.
+- **Open:** the options form cannot clash with an input that is called like the field *hidden inputs*, and the start volume entities show a renamed input's new name without a reload.
+- **Open (research):** whether the queue can be cancelled on unload instead of just dropped.
+- **Open:** four blueprints that people will use: *TV or HT bypass follows the TV* (amplifier on and to the TV input when the TV starts; back to standby only if it is still on that input), *announcement with restore* (the recipe in [announcements](announcements.md) as a script blueprint, with a wait instead of a fixed pause), plus the two above (*switch on from the mains*, *sleep timer*).
 
 **0.9** (planned), own library and quality:
 
 - **Open:** `api.py` becomes a separate Python package in its own repository, published on PyPI from GitHub Actions (trusted publishing), with its own tests; the integration requires it in `manifest.json`. The split is decided with the open questions below.
 - **Open:** every rule in `quality_scale.yaml` is done or exempt.
+- **Open:** typed models in the library instead of the raw player dictionary, and a small core (power, volume, input, push) with browse, search and settings as extensions, so a first core pull request with only the media player stays small.
+- **Open (research):** the amplifier's MAC address as a device connection, if the web API gives it; checked first against how it works together with Google Cast and DLNA entries of the same device.
+- **Open:** a configurable volume step (1, 2 or 5 percent per press) in the options.
+- **Open:** three more blueprints: *rotary knob or buttons* (turn = volume, click = play/pause, double click = next, long press = standby or input), *plug off after standby* (switch the plug off safely after a time in standby, within a time window) and *turntable or CD player on power* (switch to the analog input when a plug measures power).
 
 **1.0** (planned): entities, attributes and actions frozen, documentation final, release notes say what is stable.
 
@@ -77,6 +90,8 @@ There is no fixed schedule. The plan follows what is actually done:
 
 **Getting reports for the H400 and H600:** a post on the Home Assistant forum asking for them, the [model report](https://github.com/Elpea-byte/ha-hegel-connect/issues/new?template=model_report.yml) link at the top of the README (it is there), and a link to it in the text after a successful setup (built for 0.7: other models than the H150 get it there).
 
+**Considered and not planned for now:** hiding volume or play and pause from the media player's features when the volume is fixed or another input is on. Today the call is refused with a message that says why (and `can_pause`, `fixed_volume` explain it), which is more useful than a missing button; features that come and go with the state also make cards flicker. Reconsidered if a reviewer asks for it.
+
 ## Documentation track (no release needed)
 
 Merged as documentation-only changes whenever they are ready, independent of the versions above:
@@ -84,7 +99,8 @@ Merged as documentation-only changes whenever they are ready, independent of the
 - **Done:** ready-made blueprints with import buttons ([#31](../../../discussions/31)), five of them now.
 - **Done:** the README is shorter and follows a new user's order, with long sections in `docs/`, and [REFERENCE.md](REFERENCE.md) lists states, entities, attributes and errors, checked by a test.
 - **Open:** a test plan per service on the H150, so the "not tested yet" cells in the [streaming services table](streaming-services.md) get tested or removed: TIDAL and Qobuz Connect, AirPlay, Google Cast, a USB stick, and a media server (NAS) for the now-playing event.
-- **Open:** a dashboard example with a screenshot ([#32](../../../discussions/32)).
+- **Open:** a dashboard example with a screenshot ([#32](../../../discussions/32)): plain tile cards, a radio favorites grid with logos and the audio-quality badge.
+- **Open:** a short guide for Music Assistant: power, input and volume through Hegel Connect, the music over AirPlay, Cast or DLNA. Not tried on an H150 yet, so it is written as a plan until it is.
 - **Open:** a listening-quality overview recipe with `history_stats`: how much you listen in Hi-Res, lossless or lossy, and per streaming service ([#37](../../../discussions/37)).
 - **Done:** *Which entity or attribute to use in a trigger* ([#28](../../../discussions/28)), in [REFERENCE.md](REFERENCE.md). It replaces the idea of device triggers and conditions: Home Assistant no longer accepts new device automations and points to entity triggers, and our states and attributes are already available as such, so nothing is built for it. The one case a plain state change cannot cover, a new track with all its details, is handled by the now-playing event (built in 0.7).
 

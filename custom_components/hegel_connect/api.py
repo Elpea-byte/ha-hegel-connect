@@ -845,6 +845,8 @@ class HegelClient:
                 # Use the same form again: every new one stays in the amplifier until it loses power.
                 try:
                     result = await self._submit_search(known, query)
+                except HegelConnectionError:
+                    raise  # the amplifier is gone: a new form would not help
                 except HegelError:
                     del self._search_forms[base]
             if result is None:

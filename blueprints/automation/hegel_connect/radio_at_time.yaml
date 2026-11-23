@@ -88,7 +88,7 @@ actions:
   - action: media_player.turn_on
     target:
       entity_id: !input amplifier
-  - wait_template: "{{ not is_state(amplifier, 'off') }}"
+  - wait_template: "{{ states(amplifier) not in ['off', 'unavailable', 'unknown'] }}"
     timeout: {seconds: 30}
     continue_on_timeout: false
   - action: media_player.select_source

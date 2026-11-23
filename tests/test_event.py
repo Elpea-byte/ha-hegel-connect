@@ -135,6 +135,7 @@ async def test_internet_radio_waits_for_the_song_and_splits_artist_and_title(
     assert radio["is_radio"] is True
     assert radio["audio_quality"] == "lossy"
     assert radio["bitrate"] == 128
+    assert "image_url" in radio
     await _push_radio_title(hass, fake, "Carole King - You've Got A Friend")  # the same text again
     assert len(fired) == 2
     await _push_radio_title(hass, fake, "Toto - Pamela")
@@ -279,10 +280,12 @@ async def test_qmusic_sends_the_title_first_and_the_artist_in_capitals(
     await _push_radio_title(hass, fake_hegel[-1], "Take Me Back - KYGO & MAX MCNOWN")
     await _push_radio_title(hass, fake_hegel[-1], "The Weeknd - In Your Eyes")
     await _push_radio_title(hass, fake_hegel[-1], "ABBA - WATERLOO")  # both in capitals: not guessed
+    await _push_radio_title(hass, fake_hegel[-1], "Alive - LIVE")  # a version word, not an artist
     assert [(e["artist"], e["title"]) for e in fired] == [
         ("KYGO & MAX MCNOWN", "Take Me Back"),
         ("The Weeknd", "In Your Eyes"),
         ("ABBA", "WATERLOO"),
+        ("Alive", "LIVE"),
     ]
 
 
