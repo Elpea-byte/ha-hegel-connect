@@ -43,7 +43,7 @@ There is no fixed schedule. The plan follows what is actually done:
 **0.7** (released), a listening log, an idle timer and finding stations by name:
 
 - **Built:** the now-playing event for listening logs and notifications ([#36](../../../discussions/36)), with a fifth blueprint for it.
-- **Built:** Spotify track, album, artist and playlist URIs in the event, and the track URI as `media_content_id`, so an automation can start exactly that track again; tried with SpotifyPlus on an H150.
+- **Built:** Spotify track, album, artist and playlist URIs in the event, and the track URI as `media_content_id`, so an automation can start exactly that track again; tried with SpotifyPlus on an H150; the album and artist URIs were seen in the event when playing from an artist and from an album.
 - **Built:** a recipe for putting the amplifier back after an announcement ([#33](../../../discussions/33)); the scene steps were tried on an H150.
 - **Built:** the amplifier's own auto-standby as an optional select ([#42](../../../discussions/42)).
 - **Built:** a text after setup that asks for a model report for models the maintainer has not tested, and setup that takes a pasted browser address.

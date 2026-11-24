@@ -50,7 +50,7 @@ actions:
       device_id: Hegel H150   # the name of the amplifier as a Spotify Connect device
 ```
 
-The playlist URI worked as a context the same way; the album and artist URIs were not tried.
+The playlist URI worked as a context the same way. The album and artist URIs were seen in the event on an H150 when playing from an artist and from an album (the album URI follows the album, `spotify_playlist_uri` stays empty); starting them again as a context was not tried.
 
 Good to know:
 
