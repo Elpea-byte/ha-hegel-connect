@@ -4,7 +4,7 @@
 
 Facts about what Hegel Connect creates and does, in one place. For setup and everyday use see the [README](../README.md). Example names are for an amplifier named *Hegel H150*.
 
-> **New in 0.7 (not released yet).** In this page: `select.hegel_h150_auto_standby`, `event.hegel_h150_now_playing`, the Spotify URIs of the event and `media_content_id` of the media player.
+> **New in 0.7.** In this page: `select.hegel_h150_auto_standby`, `event.hegel_h150_now_playing`, the Spotify URIs of the event and `media_content_id` of the media player.
 
 ## Names and ids
 
@@ -110,7 +110,7 @@ What works, and when an action is refused (the errors are listed at the end of t
 | `media_player.media_seek` | Where the service allows it (media server, USB) | Not offered with Spotify or radio |
 | `media_player.shuffle_set`, `repeat_set` | Where the source offers that combination | `play_mode_not_allowed` |
 | `media_player.play_media` | `media_content_type: hegel_path` with an id from the media browser | `not_playable` for the browser roots, `unknown_media` for a broken track id |
-| `media_player.search_media` (new in 0.7, not released yet) | Searches internet radio on the amplifier (matching radio favorites first); a found station starts with `play_media`. Assist's "play <station>" uses it. Needs a Home Assistant version that has the action (a newer one than 2025.4; older ones do not offer it). Home Assistant's own media browser has no search box (2026.11) | `search_failed` when the amplifier cannot search; a search for podcasts only gives nothing (planned for 0.8) |
+| `media_player.search_media` (new in 0.7) | Searches internet radio on the amplifier (matching radio favorites first); a found station starts with `play_media`. Assist's "play <station>" uses it. Needs a Home Assistant version that has the action (a newer one than 2025.4; older ones do not offer it). Home Assistant's own media browser has no search box (2026.11) | `search_failed` when the amplifier cannot search; a search for podcasts only gives nothing (planned for 0.8) |
 | `media_player.browse_media` | Radio favorites, internet radio, media servers, USB, recently played | `browse_failed` when the amplifier cannot open a folder |
 | `select.select_option` on the radio favorite | Starts that station | `command_failed` when the amplifier refuses |
 | `select.select_option` on auto standby | Writes the time to the amplifier and reads it back | `command_failed` when it refuses; `unavailable` while not connected |

@@ -41,7 +41,7 @@ data:
   media_content_id: "upnp:/uuid:<server>/<album>?itemType=container"
 ```
 
-Search a radio station by name (new in 0.7, not released yet) from a script, then start the first result (Home Assistant's own media browser has no search box yet; cards and Assist that use the action can search):
+Search a radio station by name (new in 0.7) from a script, then start the first result (Home Assistant's own media browser has no search box yet; cards and Assist that use the action can search):
 
 ```yaml
 actions:

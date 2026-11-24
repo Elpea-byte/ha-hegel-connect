@@ -2,8 +2,6 @@
 
 # Now-playing event
 
-> **New in 0.7 (not released yet).** The now-playing event, the Spotify URIs and the blueprint on this page are not in a release. It is on the `dev` branch; the released version is 0.6.0.
-
 `event.hegel_h150_now_playing` is off until you enable it (Settings > Devices & services > Hegel Connect > your amplifier > disabled entities), because every track it fires is stored in the Home Assistant database. It fires once for every new track, so an automation can log or announce what you play without watching the media player's attributes. It fires when the amplifier says "playing", so the quality details are there. It does not fire on pause or resume, nor when the same track plays on (repeat); a track that plays again after another one, or after you stopped, fires again. A track that is already playing when Home Assistant starts is not announced.
 
 The event data has `title`, `artist`, `album`, `image_url`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `spotify_playlist_uri`, `station`, `source`, `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`; a value the amplifier does not report is empty. Write what you play to the logbook:

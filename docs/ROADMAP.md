@@ -14,7 +14,7 @@ The Home Assistant [integration quality scale](https://developers.home-assistant
 
 There is no fixed schedule. The plan follows what is actually done:
 
-- A release comes when all its items are done and tested, on average every two to three weeks (0.5.0 to 0.6.0 took 18 days); a bug that needs a fix can get its own release.
+- A release comes when all its items are done and tested, on average every two to three weeks (0.5.0 to 0.6.0 took 18 days, 0.6.0 to 0.7.0 took 20); a bug that needs a fix can get its own release.
 - A version is used on the maintainer's own amplifier for at least a week before it is released.
 - Features are bundled: a version comes out when all its items are done and tested, not one by one.
 - A breaking change is announced in the release notes one version ahead.
@@ -31,7 +31,7 @@ There is no fixed schedule. The plan follows what is actually done:
 | Version | Status | Theme | Done when |
 | :---- | :---- | :---- | :---- |
 | **0.6** | Released (2026-11-07) | Daily use | Done: see the [release](https://github.com/Elpea-byte/ha-hegel-connect/releases/tag/v0.6.0) and the [changelog](../CHANGELOG.md) |
-| **0.7** | In progress | Features | Each item built, with tests and tried on an H150; #27 built or moved |
+| **0.7** | Released (2026-11-27) | Features | Done: see the [release](https://github.com/Elpea-byte/ha-hegel-connect/releases/tag/v0.7.0) and the [changelog](../CHANGELOG.md) |
 | **0.8** | Planned | Core behaviour and coverage | The CI fails under 95% coverage; the `test-coverage` rule is done; *unavailable* works as announced |
 | **0.9** | Planned | Own library and quality | The library is on PyPI and used by the integration; no `todo` left in `quality_scale.yaml` |
 | **1.0** | Planned | Stable | Every `quality_scale.yaml` rule done or exempt; coverage 95% or more; [REFERENCE.md](REFERENCE.md) frozen; every "not tested yet" in the [streaming services table](streaming-services.md) tested on an H150 or removed from the claims; no open bug report for six weeks |
@@ -40,7 +40,7 @@ There is no fixed schedule. The plan follows what is actually done:
 
 **0.6** (released): optional volume per input and remember volume ([#29](../../../discussions/29)), reconnect on `update_entity` ([#34](../../../discussions/34)), *play* after radio ([#30](../../../discussions/30)), four blueprints ([#31](../../../discussions/31)), fixes.
 
-**0.7** (in progress), a listening log, an idle timer and finding stations by name:
+**0.7** (released), a listening log, an idle timer and finding stations by name:
 
 - **Built:** the now-playing event for listening logs and notifications ([#36](../../../discussions/36)), with a fifth blueprint for it.
 - **Built:** Spotify track, album, artist and playlist URIs in the event, and the track URI as `media_content_id`, so an automation can start exactly that track again; tried with SpotifyPlus on an H150.

@@ -61,14 +61,14 @@ You get one device with a **media player** (power, volume, mute, inputs, playbac
 | Optional | What it does |
 | :---- | :---- |
 | [Start volume per input and remember volume](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/volume-per-input.md) | The volume that is set when Home Assistant switches input |
-| [Auto standby](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/auto-standby.md) | The amplifier's own idle timer (5, 10 or 20 minutes). New in 0.7, not released yet |
-| [Now-playing event](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/now-playing.md) | One event per new track, for listening logs and notifications. New in 0.7, not released yet |
+| [Auto standby](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/auto-standby.md) | The amplifier's own idle timer (5, 10 or 20 minutes). New in 0.7 |
+| [Now-playing event](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/now-playing.md) | One event per new track, for listening logs and notifications. New in 0.7 |
 
 **Inputs:** Settings > Devices & services > Hegel Connect > *Configure* lets you hide inputs you do not use and give inputs your own name, for example *RCA* → *TV*. This only changes how Home Assistant shows them; automations can still use the amplifier's own names. If you save the options through the API or a script instead of the form, send `hidden_sources` again with the new names; leaving it out shows the hidden inputs again.
 
 **Maximum volume** is a number on the device page. Home Assistant never makes the volume louder than it; the amplifier's own remote and knob are not limited. Set it to protect your speakers and ears. [More about it](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/volume-per-input.md#maximum-volume).
 
-**Automate:** [five blueprints](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/blueprints.md) with one-click import (reconnect after a smart plug, radio at a set time, standby when idle, lower volume at night, log what plays, new in 0.7 and not released yet), [examples](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/examples.md), and a recipe to [put the amplifier back after an announcement](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/announcements.md).
+**Automate:** [five blueprints](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/blueprints.md) with one-click import (reconnect after a smart plug, radio at a set time, standby when idle, lower volume at night, log what plays, new in 0.7), [examples](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/examples.md), and a recipe to [put the amplifier back after an announcement](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/announcements.md).
 
 ## Troubleshooting
 
@@ -101,7 +101,7 @@ Then open an [issue](https://github.com/Elpea-byte/ha-hegel-connect/issues/new/c
 
 - **Control:** power (on and network standby), volume and mute with a maximum Home Assistant never exceeds, inputs read from the amplifier (hide and rename them), reliable input switching (waits until the amplifier is on and checks the input stays selected).
 - **Playback:** play, pause, next, previous, stop, seek, shuffle and repeat, only where the current [streaming service allows it](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/streaming-services.md).
-- **Media browser:** your radio favorites, all internet radio, media servers (UPnP/DLNA, for example a NAS), a USB stick in the amplifier (not tested yet) and recently played, and a search for internet radio through the action `media_player.search_media` (new in 0.7, not released yet; Home Assistant's own media browser has no search box yet, but cards and Assist that use the action do). Nothing to set up.
+- **Media browser:** your radio favorites, all internet radio, media servers (UPnP/DLNA, for example a NAS), a USB stick in the amplifier (not tested yet) and recently played, and a search for internet radio through the action `media_player.search_media` (new in 0.7; Home Assistant's own media browser has no search box yet, but cards and Assist that use the action do). Nothing to set up.
 - **Radio favorite select** and a **radio favorites sensor** with the station logos, for automations, voice and dashboard cards.
 - **Now playing:** title, artist, album, cover art, service, length and position; sensors for audio quality (Hi-Res, CD, Lossless, Lossy, DSD), codec, sample rate, bit depth and bitrate.
 - **Status you can trust:** instant updates (local push), a network sensor that tells standby from switched off at the mains, starts while the amplifier is off at the mains, a fixed-volume indicator.

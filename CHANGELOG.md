@@ -6,6 +6,10 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+## [0.7.0] - 2026-11-27
+
+Requires Home Assistant 2025.4 or newer (searching needs a newer one; older versions just do not offer it). Nothing needs to be done after updating: the new entities (the now-playing event, auto standby, the extra start volumes) are disabled until you enable them. Two small things you can notice are listed under *Changed*: the media type of the media player and the attributes that are no longer in the history. Version 0.8 will make the entities *unavailable* when the amplifier cannot be reached (announced under *Changed*).
+
 ### Added
 - Now-playing event ([#36](https://github.com/Elpea-byte/ha-hegel-connect/discussions/36)): `event.<name>_now_playing` fires `track_changed` when a new track starts, with title, artist, album, service, input, audio quality, codec, sample rate, bit depth, bitrate and `is_radio`. Pause, resume and a repeating track do not fire it, and a track already playing at startup is not announced. Internet radio waits for the song (the station name alone is not a track) and splits `Artist - Title` into artist and title, with the station in `station`. Disabled until you enable it, because every track is stored in the Home Assistant database; nothing existing changes. Tried on an H150 with Spotify and internet radio; not with a media server.
 
@@ -227,7 +231,8 @@ First release. Tested on the H150; H200, H400 and H600 are expected to work.
 - Diagnostics without IP address or device ids.
 - English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
-[Unreleased]: ../../compare/v0.6.0...dev
+[Unreleased]: ../../compare/v0.7.0...dev
+[0.7.0]: ../../compare/v0.6.0...v0.7.0
 [0.6.0]: ../../compare/v0.5.0...v0.6.0
 [0.5.0]: ../../compare/v0.4.1...v0.5.0
 [0.4.1]: ../../compare/v0.4.0...v0.4.1
