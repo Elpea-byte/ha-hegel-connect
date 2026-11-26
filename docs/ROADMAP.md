@@ -54,7 +54,7 @@ There is no fixed schedule. The plan follows what is actually done:
 
 **0.8** (planned), core behaviour and coverage:
 
-- **Open:** entities become *unavailable* when the amplifier cannot be reached at all (network standby stays *off*, the network sensor tells them apart); a **breaking change**, listed as one in the release notes.
+- **Built:** entities become *unavailable* when the amplifier cannot be reached at all (network standby stays *off*, the network sensor tells them apart); a **breaking change**, listed as one in the changelog. Checked with automated tests; still to be tried on an H150 (a night with the power strip off).
 - **Open:** a repair issue when the amplifier has been unreachable for a long time or its model is not supported (both `exempt` in `quality_scale.yaml` today).
 - **Open:** saving the options without `hidden_sources` keeps the hidden inputs instead of showing them again (today a documented pitfall for scripts, fixed in code instead).
 - **Open:** the *Maximum volume* number recognisable for the blueprint picker, which can only filter on device class or unit (the start volume numbers have neither); this changes an entity, so it is weighed against the dashboards that rely on it and listed as breaking if it is.

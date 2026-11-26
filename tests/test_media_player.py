@@ -227,16 +227,16 @@ async def test_stream_sensors_and_network(hass: HomeAssistant, fake_hegel, confi
     assert hass.states.get("binary_sensor.hegel_h150_network").state == "on"
 
 
-async def test_lost_connection_shows_off(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    """Off at the mains: media player off (not unavailable), network sensor off."""
+async def test_lost_connection_makes_the_player_unavailable(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Off at the mains: media player and stream sensors unavailable, network sensor off (see test_unavailable)."""
     await _setup(hass, config_entry)
     coordinator = config_entry.runtime_data
     coordinator.connected = False
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY).state == "off"
+    assert hass.states.get(ENTITY).state == "unavailable"
     assert hass.states.get("binary_sensor.hegel_h150_network").state == "off"
-    assert hass.states.get("sensor.hegel_h150_audio_quality").state == "unknown"
+    assert hass.states.get("sensor.hegel_h150_audio_quality").state == "unavailable"
 
 
 async def test_play_after_pause_resumes_spotify_even_without_service(
@@ -253,7 +253,7 @@ async def test_play_after_pause_resumes_spotify_even_without_service(
 
 
 async def test_starts_while_off_at_the_mains(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    """Power strip off when Home Assistant starts: set up from saved data, shown as off."""
+    """Power strip off when Home Assistant starts: set up from saved data, unavailable until it answers."""
     await _setup(hass, config_entry)
     assert config_entry.data["cache"]["sources"]
     await hass.config_entries.async_unload(config_entry.entry_id)
@@ -263,7 +263,7 @@ async def test_starts_while_off_at_the_mains(hass: HomeAssistant, fake_hegel, co
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
-    assert state.state == "off"
+    assert state.state == "unavailable"
     assert hass.states.get("binary_sensor.hegel_h150_network").state == "off"
 
 

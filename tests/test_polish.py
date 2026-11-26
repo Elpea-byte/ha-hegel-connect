@@ -88,7 +88,7 @@ async def test_hidden_inputs_have_a_start_volume_entity_too(hass: HomeAssistant,
     assert len(entries) == len(coordinator.sources)
 
 
-async def test_fixed_volume_is_unknown_while_the_amplifier_does_not_answer(
+async def test_fixed_volume_is_unavailable_while_the_amplifier_does_not_answer(
     hass: HomeAssistant, fake_hegel, config_entry
 ) -> None:
     await _setup(hass, config_entry)
@@ -100,7 +100,7 @@ async def test_fixed_volume_is_unknown_while_the_amplifier_does_not_answer(
     coordinator.connected = False
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
-    assert hass.states.get(FIXED).state == "unknown"
+    assert hass.states.get(FIXED).state == "unavailable"
 
 
 async def test_diagnostics_do_not_wait_for_an_amplifier_that_is_gone(

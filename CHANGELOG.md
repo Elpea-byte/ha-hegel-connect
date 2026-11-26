@@ -6,6 +6,9 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Changed
+- **Breaking:** while the amplifier does not answer at all (switched off at the mains, unplugged, network down), the media player, the stream sensors (audio quality, codec, sample rate, bit depth, bitrate, streaming service), *Fixed volume* and the radio favorite select are now *unavailable*. Before, the media player showed *off* and the sensors *unknown*. Standby does not change: the amplifier still answers, the media player is *off* and everything stays available. The *Network* sensor (*off* when gone), the radio favorites sensor, *Maximum volume*, the start volumes, *Remember volume per input* and the now-playing event stay available. **What to do:** an automation, script, template or card that tests for `off` to mean "gone" should test `binary_sensor.<name>_network` instead, or also accept `unavailable`; the blueprints already do. A normal start does not show the entities as unavailable for a moment, and `homeassistant.update_entity` still reconnects at once. Announced in 0.7.0. Checked with automated tests; not yet tried on an H150.
+
 ## [0.7.0] - 2026-11-26
 
 Requires Home Assistant 2025.4 or newer (searching needs a newer one; older versions just do not offer it). Nothing needs to be done after updating: the new entities (the now-playing event, auto standby, the extra start volumes) are disabled until you enable them. Two small things you can notice are listed under *Changed*: the media type of the media player and the attributes that are no longer in the history. Version 0.8 will make the entities *unavailable* when the amplifier cannot be reached (announced under *Changed*).

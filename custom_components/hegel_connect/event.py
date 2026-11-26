@@ -71,6 +71,9 @@ class HegelNowPlaying(HegelEntity, EventEntity):
     _attr_translation_key = "now_playing"
     # Every track lands in the Home Assistant database: only when you ask for it.
     _attr_entity_registry_enabled_default = False
+    # Stays available while the amplifier is gone: coming back from unavailable would look like a
+    # new event to a plain state trigger, every night the power strip switches off.
+    _follows_connection = False
 
     def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "now_playing")

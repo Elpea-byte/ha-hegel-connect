@@ -39,7 +39,7 @@ rules:
   test-before-configure: done
   test-before-setup:
     status: done
-    comment: Setup fails (retry) when the amplifier cannot be reached, unless a saved copy of its inputs exists (amplifier switched off at the mains); it then starts as unavailable/off and connects when it is back.
+    comment: Setup fails (retry) when the amplifier cannot be reached, unless a saved copy of its inputs exists (amplifier switched off at the mains); it then starts as unavailable and connects when it is back.
   unique-config-entry: done
 
   # Silver
@@ -48,12 +48,14 @@ rules:
   docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable:
-    status: todo
+    status: done
     comment: >-
-      Known gap, planned for 0.8 as a breaking change (see docs/ROADMAP.md): when the amplifier
-      cannot be reached (switched off at the mains, unplugged) the media player shows "off"
-      instead of "unavailable". The network binary sensor tells standby and unreachable apart.
-      Only the optional auto-standby select is already unavailable while not connected.
+      Since 0.8: while the amplifier does not answer at all, the entities that need it (media
+      player, stream sensors, fixed volume, radio favorite select, auto standby) are unavailable.
+      Standby still answers and stays "off". Available on purpose: the network sensor (it reports
+      the loss), the saved favorites list, the settings kept in Home Assistant (maximum volume,
+      start volumes, remember volume) and the now-playing event (a return from unavailable would
+      look like a new event).
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done

@@ -104,7 +104,7 @@ Then open an [issue](https://github.com/Elpea-byte/ha-hegel-connect/issues/new/c
 - **Media browser:** your radio favorites, all internet radio, media servers (UPnP/DLNA, for example a NAS), a USB stick in the amplifier (not tested yet) and recently played, and a search for internet radio through the action `media_player.search_media` (new in 0.7; Home Assistant's own media browser has no search box yet, but cards and Assist that use the action do). Nothing to set up.
 - **Radio favorite select** and a **radio favorites sensor** with the station logos, for automations, voice and dashboard cards.
 - **Now playing:** title, artist, album, cover art, service, length and position; sensors for audio quality (Hi-Res, CD, Lossless, Lossy, DSD), codec, sample rate, bit depth and bitrate.
-- **Status you can trust:** instant updates (local push), a network sensor that tells standby from switched off at the mains, starts while the amplifier is off at the mains, a fixed-volume indicator.
+- **Status you can trust:** instant updates (local push), a network sensor that tells standby from switched off at the mains (then the other entities are *unavailable*, new in 0.8 and not released yet), starts while the amplifier is off at the mains, a fixed-volume indicator.
 - **Setup:** found automatically, older models recognised, diagnostics without IP address or device ids, English, Dutch, Norwegian (Bokmål), German, French and Spanish.
 
 ## Reference

@@ -33,15 +33,15 @@ class HegelFixedVolume(HegelEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        # Not a value from before the amplifier went away.
-        return self.coordinator.data.volume_fixed if self.coordinator.connected else None
+        # Unavailable while the amplifier is gone (see HegelEntity), so never a value from before.
+        return self.coordinator.data.volume_fixed
 
 
 class HegelNetwork(HegelEntity, BinarySensorEntity):
     """On while the amplifier answers on the network, in standby too.
 
-    Off: switched off at the mains, unplugged or network down. Together with the
-    media player (off in standby) this tells standby and "gone" apart.
+    Off: switched off at the mains, unplugged or network down. The other entities
+    are then unavailable; in standby the media player is off and this stays on.
     """
 
     _attr_translation_key = "network"

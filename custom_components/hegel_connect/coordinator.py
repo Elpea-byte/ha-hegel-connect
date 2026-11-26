@@ -85,6 +85,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         # Volume ceiling, set by the "Maximum volume" number entity.
         self.max_volume = DEFAULT_MAX_VOLUME
         self.connected = False
+        # True until the first state read (the one at setup) has been tried.
+        self._first_read = True
         # Optional volume per input; all off by default, so nothing changes unless you set it:
         # a start volume per input index (0 = off) and "remember the last volume of each input".
         self.start_volumes: dict[int, int] = {}
@@ -173,15 +175,24 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     async def _async_update_data(self) -> HegelState:
         # Every entity shares this refresh, so homeassistant.update_entity on any of them lands here.
         self.request_reconnect()
+        first, self._first_read = self._first_read, False
         try:
-            return self._carry_over(await self.client.fetch_state())
+            state = self._carry_over(await self.client.fetch_state())
         except HegelConnectionError as err:
             if self.started_offline or self.data is not None:
-                # Not reachable: shown as off (connected stays False), not unavailable.
+                # Not reachable: keep the last data; the entities are unavailable while connected is False.
                 return self.data or HegelState()
             raise UpdateFailed(str(err)) from err
         except HegelError as err:
             raise UpdateFailed(str(err)) from err
+        if first and not self.connected:
+            # The first read at setup worked, so the amplifier answers: do not show the entities as
+            # unavailable for the moment until the listener has subscribed. Only this first read:
+            # a later one (update_entity) leaves "connected" to the listener, which also reads the
+            # favorites when it connects.
+            _LOGGER.info("Connected to Hegel at %s", self.client.host)
+            self.connected = True
+        return state
 
     def _carry_over(self, state: HegelState) -> HegelState:
         """Keep what a fresh read cannot know (the last streaming service)."""
@@ -274,11 +285,11 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 backoff = await self._backoff_wait(backoff)
 
     async def _async_connection_lost(self, reason: str) -> None:
-        """Show the amplifier as off (not unavailable) until it answers again."""
+        """Mark the amplifier as gone until it answers again: its entities turn unavailable."""
         if self.connected:
             _LOGGER.warning("Lost connection to Hegel at %s: %s", self.client.host, reason)
-            # Not unavailable: the media player shows off and the network
-            # sensor off (switched off at the mains, unplugged, network down).
+            # Switched off at the mains, unplugged or network down: the network sensor goes off and
+            # the entities that need the amplifier become unavailable (standby is not this).
             self.connected = False
             self.async_update_listeners()
 

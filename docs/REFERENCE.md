@@ -17,7 +17,8 @@ Facts about what Hegel Connect creates and does, in one place. For setup and eve
 
 | State | Meaning |
 | :---- | :---- |
-| `off` | The amplifier is in standby, switched off at the mains or not reachable. Tell them apart with `binary_sensor.hegel_h150_network` (on in standby, off when unreachable) |
+| `off` | The amplifier is in standby (it still answers on the network) |
+| `unavailable` | The amplifier does not answer at all: switched off at the mains, unplugged or the network is down; `binary_sensor.hegel_h150_network` is then `off`. *New in 0.8, not released yet: in 0.7 and older this was `off` too* |
 | `on` | The amplifier is on and an input other than the network input is selected (it cannot tell whether that input plays) |
 | `idle`, `playing`, `paused`, `buffering` | Only on the network input. `buffering` is also reported while the amplifier switches to a new track or service |
 
@@ -62,7 +63,7 @@ Features: next, previous, seek, shuffle, repeat and stop are only offered while 
 | `select.hegel_h150_auto_standby` | `auto_standby` | no | config | `off`, `5_min`, `10_min`, `20_min` (the amplifier's own list); `unavailable` while not connected or when the amplifier does not have the setting |
 | `event.hegel_h150_now_playing` | `now_playing` | no | | event type `track_changed`, see below |
 
-The sensors and the media player are not `unavailable` when the amplifier cannot be reached: they show `unknown` or `off` (a planned change, see the [roadmap](ROADMAP.md)). The optional entities are enabled under the device page's disabled entities.
+**When the amplifier does not answer at all** (switched off at the mains, unplugged, network down), the media player, the stream sensors, *Fixed volume*, the radio favorite select and auto standby are `unavailable`. These stay available: the network sensor (it is `off` then), the radio favorites sensor (the saved list), *Maximum volume*, the start volumes and *Remember volume per input* (their values are kept in Home Assistant), and the now-playing event (so the next track after the night is not mistaken for a repeat). Standby is not "gone": the amplifier still answers, the media player is `off` and everything is available. *New in 0.8, not released yet: in 0.7 and older the media player showed `off` and the sensors `unknown`.* The optional entities are enabled under the device page's disabled entities.
 
 ### Standard attributes of the media player
 
@@ -128,7 +129,7 @@ What works, and when an action is refused (the errors are listed at the end of t
 | The input changed | The `source` attribute of the media player (the shown name) |
 | The volume changed | `volume_level` or `volume_raw` of the media player |
 | Quality of what plays | `sensor.hegel_h150_audio_quality` |
-| Standby or gone | The media player is `off` in both cases; `binary_sensor.hegel_h150_network` is `on` in standby and `off` when gone |
+| Standby or gone | The media player is `off` in standby and `unavailable` when gone; `binary_sensor.hegel_h150_network` is `on` in standby and `off` when gone (new in 0.8, not released yet; before, the media player was `off` in both cases) |
 | A radio station started | The state of `select.hegel_h150_radio_favorite` |
 
 Home Assistant no longer accepts new device triggers and conditions and points to entity triggers, so Hegel Connect does not add any.

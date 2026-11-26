@@ -66,10 +66,8 @@ class HegelRadioFavorite(HegelEntity, SelectEntity):
         self._pending = None
         self.async_write_ha_state()
 
-    @property
-    def available(self) -> bool:
-        # Like the favorites sensor: the saved list stays usable while the amplifier is off.
-        return True
+    # In standby the list stays usable (choosing a station switches the amplifier on); while the
+    # amplifier is gone nothing can start, so this one is unavailable then (see HegelEntity).
 
     def _paths(self) -> dict[str, str]:
         """Option text -> path of the station. Equal titles get a number so every option is unique."""
