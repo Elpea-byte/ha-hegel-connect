@@ -9,25 +9,34 @@
           "host": "Host"
         },
         "data_description": {
-          "host": "IP-Adresse oder Hostname des Verstärkers, z. B. 192.168.1.50"
+          "host": "IP-Adresse oder Hostname des Verstärkers, z. B. 192.168.1.50. Du kannst auch die Adresse aus dem Browser einfügen."
         }
       },
       "reconfigure": {
         "title": "Adresse ändern",
         "data": {
           "host": "Host"
+        },
+        "description": "Gib die neue Adresse dieses Verstärkers ein. Es muss derselbe Verstärker sein: ein anderer wird als neues Gerät hinzugefügt.",
+        "data_description": {
+          "host": "IP-Adresse oder Hostname des Verstärkers, z. B. 192.168.1.50. Du kannst auch die Adresse aus dem Browser einfügen."
         }
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "**{name}** unter {host} gefunden.\n\nZu Home Assistant hinzufügen?"
+        "description": "**{name}** ({model}) unter {host} gefunden.\n\nZu Home Assistant hinzufügen?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** wurde hinzugefügt. Optionale Entitäten (Startlautstärke pro Eingang, automatischer Standby, Ereignis für den aktuellen Titel) sind aus, bis du sie auf der Geräteseite aktivierst; [die README]({readme_url}) erklärt wie.",
+      "added_model_report": "**{name}** wurde hinzugefügt. Optionale Entitäten (Startlautstärke pro Eingang, automatischer Standby, Ereignis für den aktuellen Titel) sind aus, bis du sie auf der Geräteseite aktivierst; [die README]({readme_url}) erklärt wie. Dein {model} wurde vom Maintainer nicht getestet: [sende einen Modellbericht]({report_url}), auch wenn alles funktioniert."
+    },
     "error": {
-      "cannot_connect": "Der Verstärker ist unter dieser Adresse nicht erreichbar. Ist er mit dem Netzwerk verbunden (funktioniert auch im Standby)?",
+      "cannot_connect": "Der Verstärker ist unter dieser Adresse nicht erreichbar. Ist er mit dem Netzwerk verbunden (funktioniert auch im Standby)? Prüfe, ob die Adresse mit /webclient/ im Browser geöffnet wird, zum Beispiel http://192.168.1.50/webclient/.",
       "not_supported": "Ein Gerät hat geantwortet, scheint aber kein Hegel H150, H200, H400 oder H600 zu sein.",
       "unknown": "Unerwarteter Fehler, siehe Protokoll.",
-      "legacy_model": "Dies ist ein älterer Hegel-Verstärker (H95, H120, H190, H390, H590 oder Röst). Er wird über Hegels IP-Steuerprotokoll gesteuert: Verwende die in Home Assistant integrierte [Hegel-Integration]({core_url}). Hegel Connect ist für den H150, H200, H400 und H600."
+      "legacy_model": "Dies ist ein älterer Hegel-Verstärker (H95, H120, H190, H190V, H390, H590 oder Röst). Er wird über Hegels IP-Steuerprotokoll gesteuert: Verwende die in Home Assistant integrierte [Hegel-Integration]({core_url}). Hegel Connect ist für den H150, H200, H400 und H600.",
+      "invalid_host": "Gib die Adresse des Verstärkers ein, zum Beispiel 192.168.1.50."
     },
     "abort": {
       "already_configured": "Dieser Verstärker ist bereits eingerichtet.",
@@ -46,6 +55,18 @@
       },
       "network": {
         "name": "Netzwerk"
+      }
+    },
+    "event": {
+      "now_playing": {
+        "name": "Aktuelle Wiedergabe",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Titel gewechselt"
+            }
+          }
+        }
       }
     },
     "sensor": {
@@ -89,6 +110,15 @@
     "select": {
       "radio_favorite": {
         "name": "Radio-Favorit"
+      },
+      "auto_standby": {
+        "name": "Automatischer Standby",
+        "state": {
+          "off": "Aus",
+          "5_min": "5 Minuten",
+          "10_min": "10 Minuten",
+          "20_min": "20 Minuten"
+        }
       }
     },
     "switch": {
@@ -124,6 +154,9 @@
     },
     "fixed_volume_input": {
       "message": "{input} hat am Verstärker eine feste Lautstärke, daher kann keine Startlautstärke eingestellt werden."
+    },
+    "search_failed": {
+      "message": "Die Suche am Verstärker ist fehlgeschlagen: {error}"
     }
   },
   "options": {

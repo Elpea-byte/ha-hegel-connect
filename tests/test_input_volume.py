@@ -177,6 +177,35 @@ async def test_remembered_volumes_are_saved_and_loaded(
     assert 29 in saved.values()
 
 
+async def test_a_volume_at_an_unknown_input_is_not_remembered(
+    hass: HomeAssistant, fake_hegel, config_entry, hass_storage: dict
+) -> None:
+    coordinator = await _setup(hass, config_entry)
+    coordinator.remember_volume = True
+    fake = fake_hegel[-1]
+    fake.push("hegel:activePhysicalSource", {"type": "i32_", "i32_": 9999})
+    await hass.async_block_till_done()
+    fake.push("player:volume", {"type": "i32_", "i32_": 41})
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    assert 9999 not in coordinator.last_volumes
+    saved = hass_storage.get(f"{DOMAIN}.{config_entry.entry_id}.volumes", {}).get("data", {}).get("volumes", {})
+    assert "9999" not in saved
+
+
+async def test_removing_the_entry_removes_the_saved_volumes(
+    hass: HomeAssistant, fake_hegel, config_entry, hass_storage: dict
+) -> None:
+    key = f"{DOMAIN}.{config_entry.entry_id}.volumes"
+    hass_storage[key] = {"version": 1, "key": key, "data": {"volumes": {"2": 18}, "fixed": []}}
+    await _setup(hass, config_entry)
+    assert key in hass_storage
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert key not in hass_storage
+
+
 async def _reload_after_registry_change(hass: HomeAssistant) -> None:
     """Enabling or disabling an entity makes Home Assistant reload the entry after a short delay."""
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))

@@ -9,25 +9,34 @@
           "host": "Adres"
         },
         "data_description": {
-          "host": "IP-adres of naam van de versterker, bv. 192.168.1.50"
+          "host": "IP-adres of hostnaam van de versterker, bijv. 192.168.1.50. Je kunt ook het adres uit je browser plakken."
         }
       },
       "reconfigure": {
         "title": "Adres wijzigen",
         "data": {
           "host": "Adres"
+        },
+        "description": "Voer het nieuwe adres van deze versterker in. Het moet dezelfde versterker zijn: een andere voeg je toe als nieuw apparaat.",
+        "data_description": {
+          "host": "IP-adres of hostnaam van de versterker, bijv. 192.168.1.50. Je kunt ook het adres uit je browser plakken."
         }
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "**{name}** gevonden op {host}.\n\nToevoegen aan Home Assistant?"
+        "description": "**{name}** ({model}) gevonden op {host}.\n\nToevoegen aan Home Assistant?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** is toegevoegd. Optionele entiteiten (startvolume per ingang, automatische stand-by, nu-aan-het-spelen-event) staan uit tot je ze aanzet op de apparaatpagina; [de README]({readme_url}) legt uit hoe.",
+      "added_model_report": "**{name}** is toegevoegd. Optionele entiteiten (startvolume per ingang, automatische stand-by, nu-aan-het-spelen-event) staan uit tot je ze aanzet op de apparaatpagina; [de README]({readme_url}) legt uit hoe. Jouw {model} is nog niet door de beheerder getest: [stuur een modelrapport]({report_url}), ook als alles werkt."
+    },
     "error": {
-      "cannot_connect": "De versterker is op dit adres niet bereikbaar. Staat hij op het netwerk (werkt ook in standby)?",
+      "cannot_connect": "De versterker is op dit adres niet bereikbaar. Staat hij op het netwerk (werkt ook in standby)? Controleer of het adres gevolgd door /webclient/ opent in je browser, bijvoorbeeld http://192.168.1.50/webclient/.",
       "not_supported": "Er antwoordt een apparaat, maar het lijkt geen Hegel H150, H200, H400 of H600.",
       "unknown": "Onverwachte fout, zie het logboek.",
-      "legacy_model": "Dit is een oudere Hegel-versterker (H95, H120, H190, H390, H590 of Röst). Die wordt bediend via Hegels IP-control: gebruik de ingebouwde [Hegel-integratie]({core_url}) van Home Assistant. Hegel Connect is voor de H150, H200, H400 en H600."
+      "legacy_model": "Dit is een oudere Hegel-versterker (H95, H120, H190, H190V, H390, H590 of Röst). Die wordt bediend via Hegels IP-control: gebruik de ingebouwde [Hegel-integratie]({core_url}) van Home Assistant. Hegel Connect is voor de H150, H200, H400 en H600.",
+      "invalid_host": "Voer het adres van de versterker in, bijvoorbeeld 192.168.1.50."
     },
     "abort": {
       "already_configured": "Deze versterker is al ingesteld.",
@@ -46,6 +55,18 @@
       },
       "network": {
         "name": "Netwerk"
+      }
+    },
+    "event": {
+      "now_playing": {
+        "name": "Nu aan het spelen",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Nummer gewijzigd"
+            }
+          }
+        }
       }
     },
     "sensor": {
@@ -89,6 +110,15 @@
     "select": {
       "radio_favorite": {
         "name": "Radiofavoriet"
+      },
+      "auto_standby": {
+        "name": "Automatische stand-by",
+        "state": {
+          "off": "Uit",
+          "5_min": "5 minuten",
+          "10_min": "10 minuten",
+          "20_min": "20 minuten"
+        }
       }
     },
     "switch": {
@@ -124,6 +154,9 @@
     },
     "fixed_volume_input": {
       "message": "{input} heeft een vast volume op de versterker, dus er kan geen startvolume voor worden ingesteld."
+    },
+    "search_failed": {
+      "message": "Zoeken op de versterker is niet gelukt: {error}"
     }
   },
   "options": {

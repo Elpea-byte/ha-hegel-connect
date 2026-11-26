@@ -27,7 +27,16 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 import voluptuous as vol
 
 from .api import HegelClient, HegelConnectionError, HegelError, async_has_ip_control
-from .const import CONF_HIDDEN_SOURCES, CONF_SOURCE_NAMES, CORE_HEGEL_URL, DOMAIN, SUPPORTED_MODELS
+from .const import (
+    CONF_HIDDEN_SOURCES,
+    CONF_SOURCE_NAMES,
+    CORE_HEGEL_URL,
+    DOMAIN,
+    MODEL_REPORT_URL,
+    README_OPTIONAL_URL,
+    SUPPORTED_MODELS,
+    TESTED_MODEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +47,25 @@ def _parse_ipv4(value: str) -> ipaddress.IPv4Address | None:
         return ipaddress.IPv4Address(value)
     except ValueError:
         return None
+
+
+def _clean_host(value: str) -> str:
+    """What was typed or pasted as the address, reduced to the host (and an explicit port).
+
+    People paste what their browser shows: ``http://192.168.1.50/webclient/``. The scheme, a user
+    name, the path and a query are removed, and so are the brackets around an IPv6 address
+    (they stay when a port follows). An address that is empty after that is refused by the caller.
+    """
+    text = value.strip()
+    if "://" in text:
+        text = text.split("://", 1)[1]
+    text = text.split("/", 1)[0].split("?", 1)[0].split("#", 1)[0].rsplit("@", 1)[-1]
+    if text.startswith("[") and "]" in text:
+        # IPv6: the brackets only stay when a port follows ([addr]:port), because the client puts a bare
+        # address in brackets itself but cannot tell where the address ends in addr:port.
+        address, _, rest = text[1:].partition("]")
+        return f"[{address}]{rest}" if rest.startswith(":") and rest[1:] else address
+    return text.strip("[]")
 
 
 def _ssdp_host(location: str | None) -> str | None:
@@ -84,23 +112,40 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         title = name if name.lower().startswith("hegel") else f"Hegel {name}"
         return model, title, unique_id
 
+    def _create_entry(self, title: str, host: str, model: str) -> ConfigFlowResult:
+        """The new entry, with a text after setup; for a model the maintainer has not tested it asks for a report."""
+        return self.async_create_entry(
+            title=title,
+            data={CONF_HOST: host, "model": model},
+            description="added" if model.upper() == TESTED_MODEL else "added_model_report",
+            description_placeholders={
+                "name": title,
+                "model": model,
+                "report_url": MODEL_REPORT_URL,
+                "readme_url": README_OPTIONAL_URL,
+            },
+        )
+
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST].strip().strip("[]")  # IPv6 may be typed as [addr]
-            try:
-                model, title, unique_id = await self._async_probe(host)
-            except HegelConnectionError:
-                errors["base"] = "legacy_model" if await async_has_ip_control(host) else "cannot_connect"
-            except HegelError:
-                errors["base"] = "legacy_model" if await async_has_ip_control(host) else "not_supported"
-            except Exception:  # show a friendly error, log the rest
-                _LOGGER.exception("Unexpected error talking to %s", host)
-                errors["base"] = "unknown"
+            host = _clean_host(user_input[CONF_HOST])  # a pasted browser address works too; IPv6 as [addr] or addr
+            if not host:
+                errors["base"] = "invalid_host"
             else:
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                return self.async_create_entry(title=title, data={CONF_HOST: host, "model": model})
+                try:
+                    model, title, unique_id = await self._async_probe(host)
+                except HegelConnectionError:
+                    errors["base"] = "legacy_model" if await async_has_ip_control(host) else "cannot_connect"
+                except HegelError:
+                    errors["base"] = "legacy_model" if await async_has_ip_control(host) else "not_supported"
+                except Exception:  # show a friendly error, log the rest
+                    _LOGGER.exception("Unexpected error talking to %s", host)
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                    return self._create_entry(title, host, model)
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),  # type: ignore[arg-type]
@@ -160,11 +205,11 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Ask the user to confirm adding a discovered amplifier."""
         if user_input is not None:
-            return self.async_create_entry(title=self._title, data={CONF_HOST: self._host, "model": self._model})
+            return self._create_entry(self._title, self._host, self._model)
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={"name": self._title, "host": self._host},
+            description_placeholders={"name": self._title, "host": self._host, "model": self._model},
         )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -172,21 +217,24 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST].strip().strip("[]")  # IPv6 may be typed as [addr]
-            try:
-                _model, _title, unique_id = await self._async_probe(host)
-            except HegelConnectionError:
-                errors["base"] = "cannot_connect"
-            except HegelError:
-                errors["base"] = "not_supported"
-            except Exception:  # show a friendly error, log the rest
-                _LOGGER.exception("Unexpected error talking to %s", host)
-                errors["base"] = "unknown"
+            host = _clean_host(user_input[CONF_HOST])
+            if not host:
+                errors["base"] = "invalid_host"
             else:
-                # Same amplifier only: a different one is a new device, not a new address.
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_mismatch(reason="wrong_device")
-                return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
+                try:
+                    _model, _title, unique_id = await self._async_probe(host)
+                except HegelConnectionError:
+                    errors["base"] = "cannot_connect"
+                except HegelError:
+                    errors["base"] = "not_supported"
+                except Exception:  # show a friendly error, log the rest
+                    _LOGGER.exception("Unexpected error talking to %s", host)
+                    errors["base"] = "unknown"
+                else:
+                    # Same amplifier only: a different one is a new device, not a new address.
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                    return self.async_update_reload_and_abort(entry, data_updates={CONF_HOST: host})
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}),  # type: ignore[arg-type]

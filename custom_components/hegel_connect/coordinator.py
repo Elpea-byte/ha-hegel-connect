@@ -237,7 +237,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 if not self.connected:
                     _LOGGER.info("Connected to Hegel at %s", self.client.host)
                     if not self.favorites:
-                        self.hass.async_create_task(self.async_refresh_favorites())
+                        self.config_entry.async_create_task(self.hass, self.async_refresh_favorites())
                 self.connected = True
                 self._reconnect_now.clear()
                 backoff = BACKOFF_START
@@ -302,12 +302,12 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         # Just after a seek the amplifier is still buffering; the seek check reads the position.
         if player_changed and state.is_on and self._seek_check is None:
             if state.player.duration:
-                self.hass.async_create_task(self.async_update_position())
+                self.config_entry.async_create_task(self.hass, self.async_update_position())
             else:
                 state.set_play_time(None)
         if not was_on and state.is_on:
             # Just switched on: read everything once (player data was invalid in standby).
-            self.hass.async_create_task(self.async_request_refresh())
+            self.config_entry.async_create_task(self.hass, self.async_request_refresh())
         if volume_changed:
             # Only a volume change counts: right after a switch the amplifier still reports the old volume.
             self._remember(state)
@@ -343,6 +343,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         """Save the volume under the current input; only when "remember volume" is on."""
         if not self.remember_volume or not state.is_on or state.volume is None or state.source_index is None:
             return
+        if all(source.index != state.source_index for source in self.sources):
+            return  # an input this amplifier does not list: nothing to come back to
         if self.last_volumes.get(state.source_index) != state.volume:
             self.last_volumes[state.source_index] = state.volume
             self._volume_store.async_delay_save(self._volumes_to_save, VOLUMES_SAVE_DELAY)

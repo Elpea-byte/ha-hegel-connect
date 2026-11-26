@@ -33,7 +33,8 @@ class HegelFixedVolume(HegelEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        return self.coordinator.data.volume_fixed
+        # Not a value from before the amplifier went away.
+        return self.coordinator.data.volume_fixed if self.coordinator.connected else None
 
 
 class HegelNetwork(HegelEntity, BinarySensorEntity):

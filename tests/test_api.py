@@ -21,6 +21,7 @@ from custom_components.hegel_connect.api import (
     HegelQueueLost,
     HegelState,
     PlayerData,
+    _bounded_int,
     _finite_float,
     _reject_constant,
     play_mode_parts,
@@ -342,11 +343,27 @@ async def test_request_ordinary_numbers_are_unchanged() -> None:
     assert isinstance(result["b"][0], int)
 
 
+@pytest.mark.parametrize(
+    "body", [b'{"a": ' + b"9" * 400 + b"}", b'{"a": -' + b"9" * 25 + b"}", b'{"a": ' + b"1" * 20 + b"}"]
+)
+async def test_request_refuses_huge_integers(body: bytes) -> None:
+    """An integer with 400 digits parses fine, but ms / 1000 on it raises OverflowError later: refuse it here."""
+    with pytest.raises(HegelError, match="getData: invalid JSON"):
+        await _ask(_FakeResponse(200, [body]))
+
+
+async def test_request_large_but_ordinary_integers_stay_readable() -> None:
+    result = await _ask(
+        _FakeResponse(200, [b'{"a": 9223372036854775807, "b": 2116826320067048, "c": -9223372036854775808}'])
+    )
+    assert result == {"a": 9223372036854775807, "b": 2116826320067048, "c": -9223372036854775808}
+
+
 def test_recorded_h150_session_has_no_non_finite_numbers() -> None:
     """The check does not touch the real recording: every body of the session still loads."""
     session = Path(__file__).parent / "fixtures" / "h150_session.json"
     text = session.read_text(encoding="utf-8")
-    json.loads(text, parse_float=_finite_float, parse_constant=_reject_constant)
+    json.loads(text, parse_float=_finite_float, parse_int=_bounded_int, parse_constant=_reject_constant)
     # Many values inside it are JSON texts themselves (the recorded answer bodies).
     checked = 0
 
@@ -359,8 +376,76 @@ def test_recorded_h150_session_has_no_non_finite_numbers() -> None:
             for value in node:
                 walk(value)
         elif isinstance(node, str) and node.lstrip().startswith(("{", "[")):
-            json.loads(node, parse_float=_finite_float, parse_constant=_reject_constant)
+            json.loads(node, parse_float=_finite_float, parse_int=_bounded_int, parse_constant=_reject_constant)
             checked += 1
 
     walk(json.loads(text))
     assert checked > 10
+
+
+def _rows(*pairs: tuple[str, int]) -> bytes:
+    rows = [{"title": title, "type": "value", "value": {"type": "i32_", "i32_": value}} for title, value in pairs]
+    return json.dumps({"rowsCount": len(rows), "rows": rows}).encode()
+
+
+def _client(body: bytes) -> HegelClient:
+    return HegelClient("192.0.2.10", _FakeSession(_FakeResponse(200, [body])))  # type: ignore[arg-type]
+
+
+async def test_idle_time_options_are_read_from_the_rows() -> None:
+    body = _rows(("Off", 0), ("5 minutes", 300), ("10 minutes", 600), ("20 minutes", 1200))
+    assert await _client(body).idle_time_options() == [0, 300, 600, 1200]
+
+
+@pytest.mark.parametrize("body", [b'{"rows": []}', b"{}", b'{"rows": ["x", {"title": "t"}]}'])
+async def test_idle_time_options_without_usable_rows_are_an_error(body: bytes) -> None:
+    with pytest.raises(HegelError, match="no auto-standby times"):
+        await _client(body).idle_time_options()
+
+
+async def test_idle_time_is_read_and_checked() -> None:
+    assert await _client(b'[{"type":"i32_","i32_":300}]').idle_time() == 300
+    for body in (b'[{"type":"i32_","i32_":-5}]', b'[{"type":"bool_","bool_":true}]', b'"soon"'):
+        with pytest.raises(HegelError, match="unexpected auto-standby value"):
+            await _client(body).idle_time()
+
+
+async def test_set_idle_time_writes_a_typed_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent: list[tuple] = []
+
+    async def fake_request(self, method, endpoint, **kwargs):
+        sent.append((method, endpoint, kwargs.get("payload")))
+
+    monkeypatch.setattr(HegelClient, "_request", fake_request)
+    await HegelClient("192.0.2.10", None).set_idle_time(600)  # type: ignore[arg-type]
+    assert sent == [
+        (
+            "POST",
+            "setData",
+            {"path": "settings:/system/maxIdleTime", "role": "value", "value": {"type": "i32_", "i32_": 600}},
+        )
+    ]
+
+
+async def test_the_client_puts_an_ipv6_address_in_brackets_in_the_url() -> None:
+    """The request goes to http://[addr]/api/...; checked on the URL only (the test sockets cannot use ::1).
+
+    Not tried with an amplifier that has an IPv6 address.
+    """
+    urls: list[str] = []
+
+    class _Session(_FakeSession):
+        def request(self, method, url, **kwargs):
+            urls.append(url)
+            return super().request(method, url, **kwargs)
+
+    body = b'{"value": {"type": "i32_", "i32_": 7}}'
+    client = HegelClient("fe80::1%eth0", _Session(_FakeResponse(200, [body])))  # type: ignore[arg-type]
+    assert await client.get_value("any:path") == 7
+    assert urls == ["http://[fe80::1%25eth0]/api/getData"]
+
+
+def test_the_client_keeps_a_bracketed_ipv6_address_with_a_port() -> None:
+    """[addr]:port from the setup form goes into the URL as it is (a bare address gets its brackets)."""
+    assert HegelClient("[2001:db8::10]:8080", None).base_url == "http://[2001:db8::10]:8080"  # type: ignore[arg-type]
+    assert HegelClient("2001:db8::10", None).base_url == "http://[2001:db8::10]"  # type: ignore[arg-type]

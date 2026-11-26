@@ -9,25 +9,34 @@
           "host": "Hôte"
         },
         "data_description": {
-          "host": "Adresse IP ou nom d'hôte de l'amplificateur, par ex. 192.168.1.50"
+          "host": "Adresse IP ou nom d'hôte de l'amplificateur, p. ex. 192.168.1.50. Vous pouvez aussi coller l'adresse depuis votre navigateur."
         }
       },
       "reconfigure": {
         "title": "Modifier l'adresse",
         "data": {
           "host": "Hôte"
+        },
+        "description": "Saisissez la nouvelle adresse de cet amplificateur. Ce doit être le même amplificateur : un autre s'ajoute comme nouvel appareil.",
+        "data_description": {
+          "host": "Adresse IP ou nom d'hôte de l'amplificateur, p. ex. 192.168.1.50. Vous pouvez aussi coller l'adresse depuis votre navigateur."
         }
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "**{name}** trouvé à l'adresse {host}.\n\nL'ajouter à Home Assistant ?"
+        "description": "**{name}** ({model}) trouvé à l'adresse {host}.\n\nL'ajouter à Home Assistant ?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** a été ajouté. Les entités facultatives (volume de départ par entrée, veille automatique, événement de lecture en cours) sont désactivées jusqu'à ce que vous les activiez sur la page de l'appareil ; [le README]({readme_url}) explique comment.",
+      "added_model_report": "**{name}** a été ajouté. Les entités facultatives (volume de départ par entrée, veille automatique, événement de lecture en cours) sont désactivées jusqu'à ce que vous les activiez sur la page de l'appareil ; [le README]({readme_url}) explique comment. Votre {model} n'a pas été testé par le mainteneur : [envoyez un rapport de modèle]({report_url}), même si tout fonctionne."
+    },
     "error": {
-      "cannot_connect": "Impossible de joindre l'amplificateur à cette adresse. Est-il connecté au réseau (fonctionne aussi en veille) ?",
+      "cannot_connect": "Impossible de joindre l'amplificateur à cette adresse. Est-il connecté au réseau (fonctionne aussi en veille) ? Vérifiez que l'adresse suivie de /webclient/ s'ouvre dans votre navigateur, par exemple http://192.168.1.50/webclient/.",
       "not_supported": "Un appareil a répondu, mais il ne ressemble pas à un Hegel H150, H200, H400 ou H600.",
       "unknown": "Erreur inattendue, consultez le journal.",
-      "legacy_model": "Il s'agit d'un amplificateur Hegel plus ancien (H95, H120, H190, H390, H590 ou Röst). Il se pilote avec le protocole de contrôle IP de Hegel : utilisez l'[intégration Hegel]({core_url}) intégrée à Home Assistant. Hegel Connect est destiné aux H150, H200, H400 et H600."
+      "legacy_model": "Il s'agit d'un amplificateur Hegel plus ancien (H95, H120, H190, H190V, H390, H590 ou Röst). Il se pilote avec le protocole de contrôle IP de Hegel : utilisez l'[intégration Hegel]({core_url}) intégrée à Home Assistant. Hegel Connect est destiné aux H150, H200, H400 et H600.",
+      "invalid_host": "Saisissez l'adresse de l'amplificateur, par exemple 192.168.1.50."
     },
     "abort": {
       "already_configured": "Cet amplificateur est déjà configuré.",
@@ -46,6 +55,18 @@
       },
       "network": {
         "name": "Réseau"
+      }
+    },
+    "event": {
+      "now_playing": {
+        "name": "Lecture en cours",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Piste changée"
+            }
+          }
+        }
       }
     },
     "sensor": {
@@ -89,6 +110,15 @@
     "select": {
       "radio_favorite": {
         "name": "Favori radio"
+      },
+      "auto_standby": {
+        "name": "Veille automatique",
+        "state": {
+          "off": "Désactivée",
+          "5_min": "5 minutes",
+          "10_min": "10 minutes",
+          "20_min": "20 minutes"
+        }
       }
     },
     "switch": {
@@ -124,6 +154,9 @@
     },
     "fixed_volume_input": {
       "message": "{input} a un volume fixe sur l'amplificateur : un volume de départ ne peut pas être défini."
+    },
+    "search_failed": {
+      "message": "La recherche sur l'amplificateur a échoué : {error}"
     }
   },
   "options": {

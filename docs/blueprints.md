@@ -1,0 +1,18 @@
+[← README](../README.md) · [Reference](REFERENCE.md) · [All pages](README.md)
+
+# Blueprints
+
+Ready-made automations with a one-click import (Settings > Automations & scenes > Blueprints). They only list this integration's own entities.
+
+- **Smart plug: reconnect at once**: Asks Hegel Connect to reconnect every few seconds after the plug that powers the amplifier turns on, until the amplifier answers (no waiting for the next retry).
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fsmart_plug_reconnect.yaml)
+- **Radio at a set time**: Switches the amplifier on at a set time on the days you choose and starts one of your radio favorites, at a volume you pick (never above the maximum volume).
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fradio_at_time.yaml)
+- **Standby when idle or nobody is home**: Puts the amplifier in standby after it has been idle on the network input for a while, and optionally when everyone has left home; other inputs are never switched off.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fstandby_when_idle.yaml)
+- **Lower the maximum volume at night**: Sets the maximum volume lower at night and back in the morning; a volume above the new maximum comes down at once.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnight_volume_limit.yaml)
+- **Log or announce what is playing** (new in 0.7): Writes every new track of the now-playing event to the logbook and, if you choose an action, runs it too (for example a notification); nothing is sent unless you choose one. Optional filters on audio quality and on internet radio. Enable the now-playing event first: it is off by default.
+  [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2FElpea-byte%2Fha-hegel-connect%2Fmain%2Fblueprints%2Fautomation%2Fhegel_connect%2Fnow_playing.yaml)
+
+The blueprints use the amplifier's own name for the network input (*Network*). Hegel Connect accepts that name even when you gave the input your own name in the options.

@@ -1,14 +1,27 @@
-name: Model report (H200, H400, H600, other)
+name: Model report (H400, H600, H200, other)
 description: Tell us whether Hegel Connect works on your amplifier
 labels: [model-report]
 body:
   - type: markdown
     attributes:
-      value: Thank you! Only the H150 is tested by the maintainer. A 5-minute check on your model helps everyone.
+      value: Thank you! The maintainer owns an H150 and a user confirmed the H200; the H400 and H600 are still expected to work. A 5-minute check on your model helps everyone, also when everything works; for the H200 more services are welcome (only status, artwork, track info and pause/play were confirmed).
   - type: input
     id: model
     attributes:
       label: Model and firmware
+    validations:
+      required: true
+  - type: input
+    id: ha
+    attributes:
+      label: Home Assistant version
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Hegel Connect version
+      description: Shown in HACS or the Marketplace, or in `custom_components/hegel_connect/manifest.json`.
     validations:
       required: true
   - type: checkboxes
@@ -16,14 +29,21 @@ body:
     attributes:
       label: What works?
       options:
+        - label: Found automatically (discovery)
         - label: Setup with the IP address
         - label: Power on / standby
         - label: Volume and mute (also when changed on the amplifier or in the Hegel app)
         - label: Input selection (all inputs listed)
         - label: Now playing (Spotify, AirPlay, radio)
         - label: Radio favorites in the media browser
+        - label: Media browser (media server, USB, recently played)
+  - type: textarea
+    id: broken
+    attributes:
+      label: What does not work?
+      description: Anything that is missing, wrong or slow. Leave empty if everything works.
   - type: textarea
     id: diagnostics
     attributes:
       label: Diagnostics file
-      description: Settings > Devices & services > Hegel Connect > ⋮ > Download diagnostics.
+      description: Settings > Devices & services > Hegel Connect > ⋮ > Download diagnostics. It lists the model, firmware, volume range, the auto-standby choices and the features Home Assistant offers; the address and ids are removed.

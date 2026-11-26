@@ -5,12 +5,15 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable
 from datetime import datetime
-from typing import Any
+import ipaddress
+from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaClass,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -35,6 +38,9 @@ from .api import (
 from .const import DOMAIN
 from .coordinator import HegelCoordinator
 from .entity import HegelEntity
+
+if TYPE_CHECKING:
+    from homeassistant.components.media_player.browse_media import SearchMedia, SearchMediaQuery
 
 # Commands go one at a time to the amplifier; state comes from the coordinator (push).
 PARALLEL_UPDATES = 1
@@ -73,12 +79,28 @@ _ROOT_TITLES = {
     PATH_PLAY_HISTORY: "Recently played",
 }
 
+# Search in the media browser exists from a newer Home Assistant on; older ones simply do not offer it.
+_SEARCH = getattr(MediaPlayerEntityFeature, "SEARCH_MEDIA", MediaPlayerEntityFeature(0))
+
 _PLAYER_STATES = {
     "playing": MediaPlayerState.PLAYING,
     "paused": MediaPlayerState.PAUSED,
     "buffering": MediaPlayerState.BUFFERING,
     "transitioning": MediaPlayerState.BUFFERING,
 }
+
+
+def _is_public_https(url: str | None) -> bool:
+    """True for an https picture on a public host (not an IP on the local network, not a local name)."""
+    parts = urlsplit(url or "")
+    host = (parts.hostname or "").lower()
+    if parts.scheme.lower() != "https" or not host:
+        return False
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return "." in host and not host.endswith((".local", ".lan", ".home", ".internal", ".localdomain"))
+    return address.is_global
 
 
 async def async_setup_entry(
@@ -93,7 +115,9 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     """The amplifier and its built-in streamer."""
 
     _attr_name = None
-    _attr_media_content_type = MediaType.MUSIC
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    # Static or double (the volume is also the volume_level) and changing often: not worth a row in the recorder.
+    _unrecorded_attributes = frozenset({"input_names", "fixed_volume", "max_volume", "can_pause", "volume_raw"})
     _attr_volume_step = 0.02
     _BASE_FEATURES = (
         MediaPlayerEntityFeature.TURN_ON
@@ -116,7 +140,7 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Next/previous only when the current service allows it (not Spotify, not radio)."""
-        features = self._BASE_FEATURES
+        features = self._BASE_FEATURES | _SEARCH
         data = self.coordinator.data
         if self._playing_network():
             if data.player.control_allowed("next_"):
@@ -204,6 +228,11 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return self.coordinator.data.player.album if self._playing_network() else None
 
     @property
+    def media_content_id(self) -> str | None:
+        """The Spotify URI of the track (spotify:track:...) while Spotify plays, so it can be started again."""
+        return self.coordinator.data.player.spotify_track_uri if self._playing_network() else None
+
+    @property
     def media_playlist(self) -> str | None:
         """The playlist or album the track plays from, as the service reports it."""
         return self.coordinator.data.player.playback_source if self._playing_network() else None
@@ -229,8 +258,25 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return self.coordinator.data.player.service if self._playing_network() else None
 
     @property
+    def media_content_type(self) -> MediaType | str | None:
+        if not self._playing_network():
+            return None
+        return MediaType.CHANNEL if self.coordinator.data.player.is_radio else MediaType.MUSIC
+
+    @property
+    def media_channel(self) -> str | None:
+        player = self.coordinator.data.player
+        return player.station if self._playing_network() and player.is_radio else None
+
+    @property
     def media_image_remotely_accessible(self) -> bool:
-        return True
+        """Only public https pictures go to the browser directly.
+
+        Radio logos come over plain http and a NAS picture sits on the local network: Home Assistant fetches
+        those itself, so they also show over https (Nabu Casa, a certificate) and outside the house. That
+        includes https on a local address, which the browser would not reach from outside either.
+        """
+        return _is_public_https(self.media_image_url)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -374,6 +420,52 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         position_ms = round(position * 1000)
         await self._run(self.coordinator.client.seek(position_ms))
         self.coordinator.position_seeked(position_ms)
+
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search internet radio on the amplifier (Home Assistant's search box in the media browser).
+
+        Podcasts can be searched the same way on the amplifier; that is planned for a later version, so a
+        search that asks for podcasts only gives nothing.
+        """
+        from homeassistant.components.media_player.browse_media import SearchMedia
+
+        if set(query.media_filter_classes or []) == {MediaClass.PODCAST}:
+            return SearchMedia(result=[])
+        # The favorites that match come first (Assist plays the first result: "play Qmusic" then starts the
+        # favorite), then everything the amplifier finds in all radio, without the favorites twice.
+        needle = query.search_query.strip().casefold()
+        favorites = [
+            fav for fav in self.coordinator.favorites if needle and fav["title"] and needle in fav["title"].casefold()
+        ]
+        results: list[BrowseMedia] = [
+            BrowseMedia(
+                media_class=MediaClass.CHANNEL,
+                media_content_id=str(fav["path"]),
+                media_content_type=MEDIA_TYPE_HEGEL,
+                title=str(fav["title"]),
+                can_play=True,
+                can_expand=False,
+                thumbnail=fav["icon"],
+            )
+            for fav in favorites
+        ]
+        known = {fav["id"] for fav in favorites if fav["id"]}
+        try:
+            rows = await self.coordinator.client.search_airable("radio", query.search_query)
+        except HegelError as err:
+            if results:
+                return SearchMedia(result=results)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="search_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        for index, row in enumerate(rows):
+            if row.get("id") in known:
+                continue
+            if (item := _child(row, PATH_AIRABLE_ROOT, index, {})) is not None:
+                results.append(item)
+        return SearchMedia(result=results)
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):
@@ -520,6 +612,9 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
         return None
     kind = row.get("type")
     if kind in ("action", "image", "video"):
+        return None
+    if row["path"].startswith(PATH_AIRABLE_ROOT) and row["path"].rstrip("/").endswith("/search"):
+        # The search node opens a form the browser cannot show: searching is done with search_media.
         return None
     if row["path"].startswith("hegel:"):
         # Placeholders of the amplifier itself (e.g. "hegel:emptyServer" while it

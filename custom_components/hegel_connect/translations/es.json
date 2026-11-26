@@ -9,25 +9,34 @@
           "host": "Host"
         },
         "data_description": {
-          "host": "Dirección IP o nombre de host del amplificador, p. ej. 192.168.1.50"
+          "host": "Dirección IP o nombre de host del amplificador, p. ej. 192.168.1.50. También puedes pegar la dirección desde tu navegador."
         }
       },
       "reconfigure": {
         "title": "Cambiar dirección",
         "data": {
           "host": "Host"
+        },
+        "description": "Introduce la nueva dirección de este amplificador. Debe ser el mismo amplificador: otro se añade como dispositivo nuevo.",
+        "data_description": {
+          "host": "Dirección IP o nombre de host del amplificador, p. ej. 192.168.1.50. También puedes pegar la dirección desde tu navegador."
         }
       },
       "discovery_confirm": {
         "title": "Hegel Connect",
-        "description": "Se ha encontrado **{name}** en {host}.\n\n¿Añadirlo a Home Assistant?"
+        "description": "Se ha encontrado **{name}** ({model}) en {host}.\n\n¿Añadirlo a Home Assistant?"
       }
     },
+    "create_entry": {
+      "added": "**{name}** se ha añadido. Las entidades opcionales (volumen inicial por entrada, espera automática, evento de reproducción actual) están desactivadas hasta que las actives en la página del dispositivo; [el README]({readme_url}) explica cómo.",
+      "added_model_report": "**{name}** se ha añadido. Las entidades opcionales (volumen inicial por entrada, espera automática, evento de reproducción actual) están desactivadas hasta que las actives en la página del dispositivo; [el README]({readme_url}) explica cómo. Tu {model} no ha sido probado por el mantenedor: [envía un informe de modelo]({report_url}), aunque todo funcione."
+    },
     "error": {
-      "cannot_connect": "No se puede conectar con el amplificador en esta dirección. ¿Está conectado a la red (también funciona en reposo)?",
+      "cannot_connect": "No se puede conectar con el amplificador en esta dirección. ¿Está conectado a la red (también funciona en reposo)? Comprueba que la dirección seguida de /webclient/ se abre en tu navegador, por ejemplo http://192.168.1.50/webclient/.",
       "not_supported": "Un dispositivo ha respondido, pero no parece un Hegel H150, H200, H400 o H600.",
       "unknown": "Error inesperado, consulta el registro.",
-      "legacy_model": "Es un amplificador Hegel más antiguo (H95, H120, H190, H390, H590 o Röst). Se controla con el protocolo de control IP de Hegel: usa la [integración Hegel]({core_url}) incluida en Home Assistant. Hegel Connect es para el H150, H200, H400 y H600."
+      "legacy_model": "Es un amplificador Hegel más antiguo (H95, H120, H190, H190V, H390, H590 o Röst). Se controla con el protocolo de control IP de Hegel: usa la [integración Hegel]({core_url}) incluida en Home Assistant. Hegel Connect es para el H150, H200, H400 y H600.",
+      "invalid_host": "Introduce la dirección del amplificador, por ejemplo 192.168.1.50."
     },
     "abort": {
       "already_configured": "Este amplificador ya está configurado.",
@@ -46,6 +55,18 @@
       },
       "network": {
         "name": "Red"
+      }
+    },
+    "event": {
+      "now_playing": {
+        "name": "Reproduciendo ahora",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "track_changed": "Pista cambiada"
+            }
+          }
+        }
       }
     },
     "sensor": {
@@ -89,6 +110,15 @@
     "select": {
       "radio_favorite": {
         "name": "Favorito de radio"
+      },
+      "auto_standby": {
+        "name": "Espera automática",
+        "state": {
+          "off": "Desactivada",
+          "5_min": "5 minutos",
+          "10_min": "10 minutos",
+          "20_min": "20 minutos"
+        }
       }
     },
     "switch": {
@@ -124,6 +154,9 @@
     },
     "fixed_volume_input": {
       "message": "{input} tiene un volumen fijo en el amplificador, por lo que no se puede establecer un volumen inicial."
+    },
+    "search_failed": {
+      "message": "No se pudo buscar en el amplificador: {error}"
     }
   },
   "options": {

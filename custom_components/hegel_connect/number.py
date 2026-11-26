@@ -24,7 +24,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities([HegelMaxVolume(coordinator)])
     # Optional: one per input, switched off until you enable it in the entity settings.
-    async_add_entities(HegelStartVolume(coordinator, source.index) for source in coordinator.visible_sources)
+    async_add_entities(HegelStartVolume(coordinator, source.index) for source in coordinator.sources)
 
 
 class HegelMaxVolume(HegelEntity, RestoreNumber):
@@ -38,7 +38,6 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
     _attr_translation_key = "max_volume"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value = 1
-    _attr_native_max_value = 100
     _attr_native_step = 1
     _attr_mode = NumberMode.SLIDER
 
@@ -49,18 +48,23 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
         await super().async_added_to_hass()
         last = await self.async_get_last_number_data()
         if last is not None and last.native_value is not None:
-            self.coordinator.max_volume = int(last.native_value)
+            self.coordinator.max_volume = max(1, min(int(last.native_value), self.coordinator.volume_max))
 
     @property
     def available(self) -> bool:
         return True
 
     @property
+    def native_max_value(self) -> float:
+        return self.coordinator.volume_max
+
+    @property
     def native_value(self) -> float:
-        return self.coordinator.max_volume
+        # Never above the range of the amplifier, also before anyone has touched the slider.
+        return min(self.coordinator.max_volume, self.coordinator.volume_max)
 
     async def async_set_native_value(self, value: float) -> None:
-        self.coordinator.max_volume = max(1, min(int(value), 100))
+        self.coordinator.max_volume = max(1, min(int(value), self.coordinator.volume_max))
         # Also refreshes the media player (its max_volume attribute and volume limit).
         self.coordinator.async_update_listeners()
         # A volume above the new maximum comes down now, not at the next press of volume up.
@@ -116,7 +120,7 @@ class HegelStartVolume(HegelEntity, RestoreNumber):
                 translation_key="fixed_volume_input",
                 translation_placeholders={"input": self.coordinator.source_label(self._index) or str(self._index)},
             )
-        if volume := max(0, min(int(value), 100)):
+        if volume := max(0, min(int(value), int(self.native_max_value))):
             self.coordinator.start_volumes[self._index] = volume
         else:
             self.coordinator.start_volumes.pop(self._index, None)

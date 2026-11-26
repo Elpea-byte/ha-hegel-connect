@@ -47,6 +47,7 @@ class FakeHegel:
         self.host = host
         self.base_url = f"http://{url_host(host)}"
         self.calls: list[tuple] = []
+        self.searches: list[tuple[str, str]] = []
         self.values = {path: snapshot_value(path) for path in FIXTURE["snap"]}
         self._events: asyncio.Queue = asyncio.Queue()
 
@@ -137,6 +138,37 @@ class FakeHegel:
             # Like the real amplifier: a bare play without a track has nothing to play.
             raise HegelError('setData 500: "Directory is empty. No playable items found."')
 
+    # The streamer's own auto-standby (settings:/system/maxIdleTime); False: an amplifier without it.
+    idle_supported = True
+    idle_seconds = 0
+
+    async def idle_time_options(self) -> list[int]:
+        self._check()
+        if not FakeHegel.idle_supported:
+            raise HegelError("getRows 404: invalid path")
+        return [0, 300, 600, 1200]
+
+    async def idle_time(self) -> int:
+        self._check()
+        if not FakeHegel.idle_supported:
+            raise HegelError("getData 404: invalid path")
+        return FakeHegel.idle_seconds
+
+    async def set_idle_time(self, seconds: int) -> None:
+        self.calls.append(("set_idle_time", seconds))
+        FakeHegel.idle_seconds = seconds
+
+    # Search (internet radio and podcasts): rows per kind, or an error to raise.
+    search_results: ClassVar[dict[str, Any]] = {}
+
+    async def search_airable(self, kind: str, query: str, limit: int = 20) -> list[dict]:
+        self._check()
+        self.searches.append((kind, query))
+        found = FakeHegel.search_results.get(kind, [])
+        if isinstance(found, Exception):
+            raise found
+        return found[:limit]
+
     async def play_time(self) -> dict:
         self.calls.append(("play_time",))
         return {"type": "i64_", "i64_": 30000}
@@ -183,6 +215,9 @@ def fake_hegel():
     FakeHegel.model = "H150"
     FakeHegel.uid = "00000000-0000-0000-0000-000000000000"
     FakeHegel.queue_broken = False
+    FakeHegel.idle_supported = True
+    FakeHegel.idle_seconds = 0
+    FakeHegel.search_results = {}
     FakeHegel.rows = {}
     FakeHegel.raw = {}
     instances: list[FakeHegel] = []

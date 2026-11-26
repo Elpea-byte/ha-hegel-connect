@@ -1,0 +1,141 @@
+"""Now-playing event: fires when a new track starts."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.event import EventEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import HegelConfigEntry
+from .api import ACTIVE_STATES, NETWORK_SOURCE_NAME
+from .coordinator import HegelCoordinator
+from .entity import HegelEntity
+
+PARALLEL_UPDATES = 0
+
+EVENT_TRACK_CHANGED = "track_changed"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HegelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    async_add_entities([HegelNowPlaying(entry.runtime_data)])
+
+
+# Some stations send these as the title around their commercials: markers, not songs.
+AD_MARKERS = frozenset({"commercial-in", "commercial-out", "ad break"})
+# What the amplifier shows while it plays a link from outside (an announcement through the DLNA renderer).
+LINK_TITLES = frozenset({"home assistant", "upnp renderer"})
+MEDIA_SERVERS = "media servers"
+# Stations with a name shorter than this are not checked for jingles ("Radio" would hide "Radio Ga Ga").
+JINGLE_MIN_NAME = 5
+# A capitalised last part that is no artist: "Song - LIVE" stays "Artist - Title".
+VERSION_WORDS = frozenset(
+    {"live", "remix", "intro", "edit", "radio edit", "acoustic", "remastered", "instrumental", "extended", "version"}
+)
+
+
+def _is_no_track(player: Any) -> bool:
+    """The text the amplifier shows is no song: the station itself, a commercial marker, a station jingle or a link."""
+    title = player.title.casefold()
+    station = (player.station or "").casefold()
+    if title == station or title in AD_MARKERS:
+        return True
+    if len(station) >= JINGLE_MIN_NAME and title.startswith(f"{station} "):
+        return True  # "Qmusic nieuws"
+    return (player.service or "").casefold() == MEDIA_SERVERS and title in LINK_TITLES
+
+
+class HegelNowPlaying(HegelEntity, EventEntity):
+    """One ``track_changed`` event per track, with the details the amplifier reports.
+
+    For a listening log, scrobbling through another integration or a notification.
+    It fires when the amplifier says "playing" for a track it has not played yet, so
+    the quality details are there. Pause and resume do not fire it, and neither does
+    the same track playing on (repeat). A track that played before starts a new event
+    when something else, or nothing, played in between. A track that is already
+    playing when Home Assistant starts or reconnects is not announced.
+
+    Internet radio: a start only shows the station name as the title, and the song
+    follows a moment later. The station name is not a track, so the event comes with
+    the song title (``Artist - Title`` is split into artist and title; the station is
+    in ``station``). A station that never reports a song title gives no events.
+
+    Disabled until you enable it: each event stores the track in the recorder.
+    """
+
+    _attr_translation_key = "now_playing"
+    # Every track lands in the Home Assistant database: only when you ask for it.
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, coordinator: HegelCoordinator) -> None:
+        super().__init__(coordinator, "now_playing")
+        self._attr_event_types = [EVENT_TRACK_CHANGED]
+        # Which track was announced last; None while nothing plays on the network input.
+        self._track: tuple[str | None, ...] | None = None
+        # The first state read after the entity is added only tells what plays now.
+        self._seen_state = False
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._observe()
+        super()._handle_coordinator_update()
+
+    def _observe(self) -> None:
+        coordinator = self.coordinator
+        if not coordinator.connected:
+            return  # the data is old: keep what was seen, so a reconnect does not announce the same track again
+        announce, self._seen_state = self._seen_state, True
+        data = coordinator.data
+        player = data.player
+        if (
+            not data.is_on
+            or coordinator.source_name(data.source_index) != NETWORK_SOURCE_NAME
+            or player.state not in ACTIVE_STATES
+        ):
+            self._track = None
+            return
+        if player.state != "playing" or not player.title or _is_no_track(player):
+            return  # starting up, paused, or a radio station that has not reported a song yet
+        # Spotify has no media id, but a track URI: two versions with the same title are two tracks.
+        track = (player.title, player.artist, player.album, player.service, player.spotify_track_uri or player.media_id)
+        if track == self._track:
+            return
+        self._track = track
+        if announce:
+            self._trigger_event(EVENT_TRACK_CHANGED, self._event_data())
+
+    def _event_data(self) -> dict[str, Any]:
+        coordinator = self.coordinator
+        data = coordinator.data
+        player = data.player
+        title, artist = player.title, player.artist
+        if player.is_radio and not artist and title and " - " in title:
+            # Radio stations send "Artist - Title" as one text.
+            first, second = (part.strip() for part in title.split(" - ", 1))
+            # Most stations send "Artist - Title"; Qmusic sends "Title - ARTIST" with the artist in capitals.
+            swapped = second.isupper() and not first.isupper() and second.casefold() not in VERSION_WORDS
+            artist, title = (second, first) if swapped else (first, second)
+        return {
+            "title": title,
+            "artist": artist,
+            "album": player.album,
+            "image_url": player.image_url,
+            "service": player.service,
+            "spotify_uri": player.spotify_track_uri,
+            "spotify_album_uri": player.spotify_album_uri,
+            "spotify_artist_uri": player.spotify_artist_uri,
+            "spotify_playlist_uri": player.spotify_playlist_uri,
+            "station": player.station,
+            "source": coordinator.source_label(data.source_index),
+            "audio_quality": player.quality,
+            "codec": player.short_codec,
+            "sample_rate": player.sample_rate,
+            "bit_depth": player.bit_depth,
+            "bitrate": player.bitrate,
+            "is_radio": player.is_radio,
+        }

@@ -20,6 +20,7 @@ import ipaddress
 import json
 import logging
 import math
+import re
 from typing import Any, NoReturn
 
 import aiohttp
@@ -46,6 +47,9 @@ PATH_PRODUCT_NAME = "settings:/system/productName"
 PATH_DEVICE_NAME = "settings:/deviceName"
 PATH_MEMBER = "systemmanager:systemMember"
 PATH_FIRMWARE = "settings:/version"
+# The streamer's own auto-standby: seconds without activity (0 = off) and the values the amplifier offers.
+PATH_MAX_IDLE_TIME = "settings:/system/maxIdleTime"
+PATH_MAX_IDLE_TIME_VALUES = "settings:/system/maxIdleTimeValues"
 PATH_AIRABLE_ROOT = "airable:"
 PATH_PLAY_HISTORY = "ui:/playHistory"
 PATH_MEDIA_SERVERS = "ui:/upnp"
@@ -112,6 +116,17 @@ def _finite_float(text: str) -> float:
     return value
 
 
+# An integer has at most 19 digits (a signed 64-bit value); more than that only comes from a broken answer.
+MAX_INT_DIGITS = 19
+
+
+def _bounded_int(text: str) -> int:
+    """json.loads hook: a huge integer parses fine, but dividing it later raises OverflowError."""
+    if len(text.lstrip("-")) > MAX_INT_DIGITS:
+        raise ValueError("integer too large")
+    return int(text)
+
+
 def _reject_constant(name: str) -> NoReturn:
     """json.loads hook for NaN, Infinity and -Infinity, which are not valid JSON anyway."""
     raise ValueError(f"non-finite constant {name}")
@@ -147,6 +162,13 @@ def _dig(data: Any, *keys: str) -> Any:
             return None
         data = data.get(key)
     return data
+
+
+_SPOTIFY_ID = re.compile(r"(?P<id>[0-9A-Za-z]{22})")
+_SPOTIFY_URI = re.compile(r"spotify:(?P<kind>track|album|artist|playlist):(?P<id>[0-9A-Za-z]{22})")
+_SPOTIFY_URL = re.compile(
+    r"https://open\.spotify\.com/(?:intl-[a-z]+/)?(?P<kind>track|album|artist|playlist)/(?P<id>[0-9A-Za-z]{22})(?:[?#].*)?"
+)
 
 
 @dataclass(slots=True)
@@ -196,9 +218,50 @@ class PlayerData:
         media_id = _dig(self.raw, "mediaRoles", "id")
         return str(media_id) if media_id else None
 
+    def _spotify_uri(self, kind: str, key: str) -> str | None:
+        """``spotify:<kind>:<id>`` from the metadata, only while Spotify plays.
+
+        The amplifier reports the id as a URI already (``spotify:track:...``); a bare id of 22
+        characters or an open.spotify.com link is turned into the same URI.
+        """
+        if str(self._meta.get("serviceID") or "").lower() != "spotify":
+            return None
+        value = self._meta.get(key)
+        if not isinstance(value, str):
+            return None
+        value = value.strip()
+        match = _SPOTIFY_ID.fullmatch(value) or _SPOTIFY_URI.fullmatch(value) or _SPOTIFY_URL.fullmatch(value)
+        if match is None:
+            return None
+        found_kind, found_id = (match.groupdict().get("kind") or kind), match.group("id")
+        return f"spotify:{kind}:{found_id}" if found_kind == kind else None
+
+    @property
+    def spotify_track_uri(self) -> str | None:
+        return self._spotify_uri("track", "trackId")
+
+    @property
+    def spotify_album_uri(self) -> str | None:
+        return self._spotify_uri("album", "albumId")
+
+    @property
+    def spotify_artist_uri(self) -> str | None:
+        return self._spotify_uri("artist", "artistId")
+
+    @property
+    def spotify_playlist_uri(self) -> str | None:
+        """The playlist the track plays from (not set when it plays from an album or an artist)."""
+        return self._spotify_uri("playlist", "playbackSourceId")
+
     @property
     def is_radio(self) -> bool:
         return bool(self._meta.get("radioStation"))
+
+    @property
+    def station(self) -> str | None:
+        """Name of the radio station; None when something else plays."""
+        name = _dig(self.raw, "mediaRoles", "title") if self.is_radio else None
+        return name if isinstance(name, str) and name else None
 
     @property
     def image_url(self) -> str | None:
@@ -308,6 +371,9 @@ class PlayerData:
             parts.append(f"{resource['bitsPerSample']}-bit/{khz:g}kHz")
         return " · ".join(parts) or None
 
+
+# Rows of a search the amplifier gives at most per request.
+SEARCH_LIMIT = 20
 
 # Player states in which something is really playing (or about to).
 ACTIVE_STATES = ("playing", "paused", "buffering", "transitioning")
@@ -437,6 +503,9 @@ class HegelClient:
         self.base_url = f"http://{url_host(host)}"
         self._session = session
         self._timeout = request_timeout
+        # One search at a time: the amplifier gives every search its own form.
+        self._search_lock = asyncio.Lock()
+        self._search_forms: dict[str, str] = {}
 
     # ---------------------------------------------------------------- basics
 
@@ -468,7 +537,7 @@ class HegelClient:
         if not text:
             return None
         try:
-            return json.loads(text, parse_float=_finite_float, parse_constant=_reject_constant)
+            return json.loads(text, parse_float=_finite_float, parse_int=_bounded_int, parse_constant=_reject_constant)
         except ValueError as err:
             raise HegelError(f"{endpoint}: invalid JSON") from err
 
@@ -566,6 +635,28 @@ class HegelClient:
             if isinstance(name, str) and isinstance(index, int):
                 result.append(HegelSource(index, name))
         return result
+
+    async def idle_time(self) -> int:
+        """Seconds of inactivity after which the amplifier goes to standby by itself (0 = off)."""
+        value = await self.get_value(PATH_MAX_IDLE_TIME)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise HegelError(f"unexpected auto-standby value: {value!r}")
+        return value
+
+    async def idle_time_options(self) -> list[int]:
+        """The auto-standby times the amplifier offers, in seconds, in its own order."""
+        data = await self.get_rows(PATH_MAX_IDLE_TIME_VALUES)
+        options: list[int] = []
+        for row in data.get("rows", []):
+            seconds = unwrap(row.get("value")) if isinstance(row, dict) else None
+            if isinstance(seconds, int) and not isinstance(seconds, bool) and seconds >= 0:
+                options.append(seconds)
+        if not options:
+            raise HegelError("no auto-standby times offered")
+        return options
+
+    async def set_idle_time(self, seconds: int) -> None:
+        await self.set_value(PATH_MAX_IDLE_TIME, {"type": "i32_", "i32_": seconds})
 
     async def volume_max(self) -> int:
         """Upper end of the volume range as reported by the amplifier."""
@@ -712,6 +803,66 @@ class HegelClient:
                 }
             )
         return result
+
+    async def _submit_search(self, form: str, query: str) -> str:
+        """Fill in and send a search form; the path of the result list."""
+        await self.set_value(f"{form}:q", {"type": "string_", "string_": query})
+        payload = {"path": f"{form}:submit", "role": "activate", "value": {}}
+        reply = await self._request("POST", "setData", payload=payload)
+        result = _dig(reply, "result", "path")
+        if not isinstance(result, str) or not result:
+            raise HegelError("The search gave no result list")
+        return result
+
+    async def search_airable(self, kind: str, query: str, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
+        """Search internet radio (``kind`` "radio") or podcasts ("podcast"), as the web client does.
+
+        The search is a form on the amplifier: the section's search node redirects to a form
+        (``airable:formN``, N counts up), the text goes into its ``q`` field, activating ``submit``
+        answers with the path of the result list, and that list is read like any other folder.
+        The result rows are returned as the amplifier gives them, without the three filter rows
+        (by location, language and genre) that start every list. At most ``limit`` rows (the
+        amplifier gives 20 per request).
+        """
+        query = query.strip()
+        if not query:
+            return []
+        section = "radios" if kind == "radio" else "feeds"
+        root = await self.get_rows(PATH_AIRABLE_ROOT, 0, 10)
+        base = next(
+            (
+                r.get("path")
+                for r in root.get("rows", [])
+                if isinstance(r, dict) and str(r.get("path", "")).endswith(f"/{section}")
+            ),
+            None,
+        )
+        if not isinstance(base, str):
+            raise HegelError(f"No {section} section found")
+        async with self._search_lock:
+            result = None
+            if (known := self._search_forms.get(base)) is not None:
+                # Use the same form again: every new one stays in the amplifier until it loses power.
+                try:
+                    result = await self._submit_search(known, query)
+                except HegelConnectionError:
+                    raise  # the amplifier is gone: a new form would not help
+                except HegelError:
+                    del self._search_forms[base]
+            if result is None:
+                form = await self.get_rows(f"{base}/search", 0, 1)
+                redirect = form.get("rowsRedirect")
+                if not isinstance(redirect, str) or not redirect.startswith("airable:"):
+                    raise HegelError("The amplifier gave no search form")
+                result = await self._submit_search(redirect, query)
+                self._search_forms[base] = redirect
+            data = await self.get_rows(result, 0, max(limit, 1) - 1)
+        rows = [
+            row
+            for row in data.get("rows", [])
+            if isinstance(row, dict) and row.get("path") and "/filter" not in str(row.get("id") or row["path"])
+        ]
+        return rows[:limit]
 
     # ------------------------------------------------------------------ push
 

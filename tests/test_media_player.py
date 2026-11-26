@@ -585,3 +585,19 @@ def test_browse_skips_amplifier_placeholders() -> None:
     assert _child({"path": "hegel:emptyServer", "title": "No servers found"}, "ui:/upnp", 0, {}) is None
     assert _child({"path": "upnp:/x", "title": "Info", "type": "value"}, "upnp:/folder", 0, {}) is None
     assert _child({"path": "upnp:/x/1", "title": "So What", "type": "audio"}, "upnp:/folder", 0, {}) is not None
+
+
+async def test_without_media_search_the_player_still_loads_and_browses(
+    hass: HomeAssistant, fake_hegel, config_entry, hass_ws_client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Home Assistant 2025.4 has no search in the media browser: the player must simply not offer it."""
+    from custom_components.hegel_connect import media_player as module
+
+    monkeypatch.setattr(module, "_SEARCH", MediaPlayerEntityFeature(0))
+    _library()
+    await _setup(hass, config_entry)
+    features = hass.states.get(ENTITY).attributes["supported_features"]
+    assert not features & getattr(MediaPlayerEntityFeature, "SEARCH_MEDIA", 0)
+    assert features & MediaPlayerEntityFeature.BROWSE_MEDIA
+    root = await _browse(hass, await hass_ws_client(hass), None)
+    assert "Media servers" in [c["title"] for c in root["children"]]

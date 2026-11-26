@@ -51,7 +51,6 @@ mode: restart
 triggers:
   - trigger: state
     entity_id: !input plug
-    from: "off"
     to: "on"
 
 variables:
