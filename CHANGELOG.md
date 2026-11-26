@@ -22,6 +22,9 @@ Changes on the `dev` branch that are not in a release yet.
   - the five blueprints already handle *unavailable*: nothing to do there.
 - **Stays as it was:** the *Network* sensor, the radio favorites sensor (its list of stations), *Maximum volume*, the start volumes, *Remember volume per input* and the now-playing event stay available while the amplifier is gone. A normal start of Home Assistant does not show anything as unavailable, and `homeassistant.update_entity` still reconnects at once.
 
+### Added
+- Search podcasts ([#27](https://github.com/Elpea-byte/ha-hegel-connect/discussions/27)): `media_player.search_media` with `media_filter_classes: [podcast]` (or `episode`) searches the amplifier's podcasts; with radio and podcast classes together it gives stations first, then podcasts. Without a filter it still searches radio only, so Assist's "play <station>" keeps starting a station. A found podcast is a folder: open it to its *Episodes* and play one episode, or play the list as a whole. The shape of podcasts, episode lists and episodes was read on an H150 and the tests use it; starting an episode was not tried yet.
+
 ### Changed
 - **Breaking (see above):** while the amplifier does not answer at all (switched off at the mains, unplugged, network down), the media player, the stream sensors (audio quality, codec, sample rate, bit depth, bitrate, streaming service), *Fixed volume* and the radio favorite select are now *unavailable*. Before, the media player showed *off* and the sensors *unknown*. Standby does not change: the amplifier still answers, the media player is *off* and everything stays available. The *Network* sensor (*off* when gone), the radio favorites sensor, *Maximum volume*, the start volumes, *Remember volume per input* and the now-playing event stay available. **What to do:** an automation, script, template or card that tests for `off` to mean "gone" should test `binary_sensor.<name>_network` instead, or also accept `unavailable`; the blueprints already do. A normal start does not show the entities as unavailable for a moment, and `homeassistant.update_entity` still reconnects at once. Announced in 0.7.0. Checked with automated tests; not yet tried on an H150.
 - Renaming an input in the options now reloads the integration once, so its *Start volume* entity shows the new name at once (before it kept the old name until the next restart). Hiding or showing inputs still needs no reload.
@@ -31,7 +34,9 @@ Changes on the `dev` branch that are not in a release yet.
 - *Play* after *stop* also starts a station again that was found with search or picked in the media browser, not only a radio favorite. Up to 20 such stations are remembered until Home Assistant restarts.
 - Just after the amplifier is switched on, the radio favorites could come back empty (the amplifier answers before its cloud part is ready), and the list then stayed empty for up to six hours. An empty or failed answer is now read again after 45 seconds, up to three times; a list that was known stays until a new one arrives. An empty list still counts after those retries (for example when you removed every favorite).
 
-These three and the rename were checked with automated tests, not yet on an H150.
+- Podcasts in the media browser could not be opened past a podcast: its *Episodes* list is a folder that can also be played, and such a folder was only offered to play, so no single episode could be picked. It now opens as well (radio stations, which are also playable folders, still only play). Podcasts and episodes get their own media class (`podcast`, `episode`).
+
+These four and the rename were checked with automated tests, not yet on an H150.
 
 ## [0.7.0] - 2026-11-26
 

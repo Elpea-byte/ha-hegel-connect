@@ -79,6 +79,11 @@ _ROOT_TITLES = {
     PATH_PLAY_HISTORY: "Recently played",
 }
 
+# Search filters that mean podcasts; any other class (or none) searches internet radio.
+_PODCAST_CLASSES = {MediaClass.PODCAST, MediaClass.EPISODE}
+# Airable marks podcasts, their episode lists and episodes with this service id.
+_PODCAST_SERVICE = "airablePodcasts"
+
 # Search in the media browser exists from a newer Home Assistant on; older ones simply do not offer it.
 _SEARCH = getattr(MediaPlayerEntityFeature, "SEARCH_MEDIA", MediaPlayerEntityFeature(0))
 
@@ -423,18 +428,47 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         self.coordinator.position_seeked(position_ms)
 
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
-        """Search internet radio on the amplifier (Home Assistant's search box in the media browser).
+        """Search internet radio and podcasts on the amplifier.
 
-        Podcasts can be searched the same way on the amplifier; that is planned for a later version, so a
-        search that asks for podcasts only gives nothing.
+        Without a filter, or with a filter for anything but podcasts, internet radio is searched (Assist plays
+        the first result, so "play Qmusic" keeps starting the station). Podcasts are searched when the filter
+        asks for podcasts or episodes; with both in the filter, radio comes first. A podcast is a folder:
+        open it to pick an episode, or play its episode list.
         """
         from homeassistant.components.media_player.browse_media import SearchMedia
 
-        if set(query.media_filter_classes or []) == {MediaClass.PODCAST}:
-            return SearchMedia(result=[])
+        classes = set(query.media_filter_classes or [])
+        want_podcasts = bool(classes & _PODCAST_CLASSES)
+        want_radio = not classes or bool(classes - _PODCAST_CLASSES)
+        results: list[BrowseMedia] = []
+        errors: list[HegelError] = []
+        if want_radio:
+            try:
+                results.extend(await self._search_radio(query.search_query))
+            except _SearchPartial as partial:
+                results.extend(partial.found)
+                errors.append(partial.error)
+        if want_podcasts:
+            try:
+                rows = await self.coordinator.client.search_airable("podcast", query.search_query)
+            except HegelError as err:
+                errors.append(err)
+            else:
+                items = (_child(row, PATH_AIRABLE_ROOT, index, {}) for index, row in enumerate(rows))
+                results.extend(item for item in items if item is not None)
+        if errors and not results:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="search_failed",
+                translation_placeholders={"error": str(errors[0])},
+            ) from errors[0]
+        return SearchMedia(result=results)
+
+    async def _search_radio(self, text: str) -> list[BrowseMedia]:
+        """Matching radio favorites first, then the stations the amplifier finds (raises _SearchPartial)."""
         # The favorites that match come first (Assist plays the first result: "play Qmusic" then starts the
         # favorite), then everything the amplifier finds in all radio, without the favorites twice.
-        needle = query.search_query.strip().casefold()
+        needle = text.strip().casefold()
         favorites = [
             fav for fav in self.coordinator.favorites if needle and fav["title"] and needle in fav["title"].casefold()
         ]
@@ -452,21 +486,15 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         ]
         known = {fav["id"] for fav in favorites if fav["id"]}
         try:
-            rows = await self.coordinator.client.search_airable("radio", query.search_query)
+            rows = await self.coordinator.client.search_airable("radio", text)
         except HegelError as err:
-            if results:
-                return SearchMedia(result=results)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="search_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            raise _SearchPartial(results, err) from err
         for index, row in enumerate(rows):
             if row.get("id") in known:
                 continue
             if (item := _child(row, PATH_AIRABLE_ROOT, index, {})) is not None:
                 results.append(item)
-        return SearchMedia(result=results)
+        return results
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         if media_id in (ROOT_ID, FAVORITES_ID, PATH_MEDIA_SERVERS, PATH_USB):
@@ -591,6 +619,15 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         return folder, rows
 
 
+class _SearchPartial(Exception):
+    """A search failed on the amplifier after some results (the matching favorites) were already known."""
+
+    def __init__(self, found: list[BrowseMedia], error: HegelError) -> None:
+        super().__init__(str(error))
+        self.found = found
+        self.error = error
+
+
 def _command_failed(err: HegelError) -> HomeAssistantError:
     return HomeAssistantError(
         translation_domain=DOMAIN,
@@ -630,6 +667,26 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
     icon = row.get("icon") or meta.get("albumArtUri") or meta.get("albumArtURI")
     thumbnail = icon if isinstance(icon, str) and icon.startswith(("http://", "https://")) else None
     broadcast = row.get("audioType") == "audioBroadcast"
+    if row["path"].startswith(PATH_AIRABLE_ROOT) and meta.get("serviceID") == _PODCAST_SERVICE:
+        # Podcasts: a podcast opens to "Episodes", a list that opens (pick an episode) and also plays as a
+        # whole (from the newest); an episode plays. Seen on an H150; starting an episode was not tried yet.
+        is_folder = kind == "container"
+        row_id = str(row.get("id") or "")
+        if kind == "audio":
+            media_class = MediaClass.EPISODE
+        elif "/feed/" in row_id:
+            media_class = MediaClass.PODCAST
+        else:
+            media_class = MediaClass.DIRECTORY
+        return BrowseMedia(
+            media_class=media_class,
+            media_content_id=row["path"],
+            media_content_type=MEDIA_TYPE_HEGEL,
+            title=row["title"],
+            can_play=bool(row.get("containerPlayable")) or kind == "audio",
+            can_expand=is_folder,
+            thumbnail=thumbnail,
+        )
     if row["path"].startswith(PATH_AIRABLE_ROOT) or broadcast:
         # Internet radio and favorites: stations are containers that play directly
         is_folder = kind == "container"

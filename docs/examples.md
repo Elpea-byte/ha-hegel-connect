@@ -59,7 +59,20 @@ actions:
       media_content_id: "{{ found['media_player.hegel_h150'].result[0].media_content_id }}"
 ```
 
-Tried on an H150 (Home Assistant 2026.11): about 15 results per search in under a second, and the first result started with `play_media`. Searching podcasts is planned.
+Tried on an H150 (Home Assistant 2026.11): about 15 results per search in under a second, and the first result started with `play_media`.
+
+Search podcasts (new in 0.8, not released yet): add `media_filter_classes: [podcast]` to the search. A result is a podcast, not an episode: open it in the media browser (or browse it with `media_player.browse_media`) to its *Episodes*, then play one episode or the whole list. The podcast folders were read on an H150; starting an episode was not tried yet.
+
+```yaml
+actions:
+  - action: media_player.search_media
+    target:
+      entity_id: media_player.hegel_h150
+    data:
+      search_query: nieuws
+      media_filter_classes: [podcast]
+    response_variable: found
+```
 
 **By voice (Assist):** Home Assistant's own sentence "play Radio 10 on the Hegel H150" searches with this action and plays the first result; matching radio favorites come first. Say the name Home Assistant knows for the amplifier (the entity is called *Hegel H150*: "the Hegel" was not found), or give the entity an alias under *Settings > Voice assistants > Expose*. Tried on an H150 in text; spoken sentences were not tried.
 

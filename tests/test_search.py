@@ -53,6 +53,15 @@ def _feed(title: str, number: int) -> dict[str, Any]:
     }
 
 
+def _podcast(title: str, number: int) -> dict[str, Any]:
+    """A podcast as a search answers it on an H150 (feed folder, Airable's podcast service)."""
+    return {
+        **_feed(title, number),
+        "containerType": "none",
+        "mediaData": {"metaData": {"serviceID": "airablePodcasts"}},
+    }
+
+
 async def _setup(hass: HomeAssistant, config_entry) -> None:
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -122,12 +131,52 @@ async def test_a_filter_for_anything_but_podcasts_still_searches_radio(
     assert len(await _search(hass, "x", media_filter_classes=filter_classes)) == 1
 
 
+@pytest.mark.parametrize("filter_classes", [["podcast"], ["episode"], ["podcast", "episode"]])
 @needs_search
-async def test_podcasts_alone_are_not_searched_yet(hass: HomeAssistant, fake_hegel, config_entry) -> None:
-    FakeHegel.search_results = {"radio": [_station("A", 1)]}
+async def test_a_podcast_filter_searches_podcasts_only(
+    hass: HomeAssistant, fake_hegel, config_entry, filter_classes: list[str]
+) -> None:
+    FakeHegel.search_results = {"radio": [_station("A", 1)], "podcast": [_podcast("Nieuwsweekend", 7)]}
     await _setup(hass, config_entry)
-    assert await _search(hass, "x", media_filter_classes=["podcast"]) == []
-    assert fake_hegel[-1].searches == []
+    result = await _search(hass, "nieuws", media_filter_classes=filter_classes)
+    assert [(item["title"], item["media_class"]) for item in result] == [("Nieuwsweekend", "podcast")]
+    podcast = result[0]
+    assert podcast["can_expand"] and not podcast["can_play"]  # open it to pick an episode
+    assert podcast["media_content_id"] == f"airable:{HOST}/id/airable/feed/7"
+    assert fake_hegel[-1].searches == [("podcast", "nieuws")]
+
+
+@needs_search
+async def test_radio_and_podcasts_together_put_radio_first(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    FakeHegel.search_results = {"radio": [_station("NPO Radio 1", 1)], "podcast": [_podcast("NOS Nieuws", 2)]}
+    await _setup(hass, config_entry)
+    result = await _search(hass, "nos", media_filter_classes=["channel", "podcast"])
+    assert [item["media_class"] for item in result] == ["channel", "podcast"]
+
+
+@needs_search
+async def test_without_a_filter_only_radio_is_searched(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    """Assist plays the first result: "play Qmusic" must stay a station, not a podcast."""
+    FakeHegel.search_results = {"radio": [_station("A", 1)], "podcast": [_podcast("B", 2)]}
+    await _setup(hass, config_entry)
+    assert [item["title"] for item in await _search(hass, "x")] == ["A"]
+    assert fake_hegel[-1].searches == [("radio", "x")]
+
+
+@needs_search
+async def test_a_failing_podcast_search_keeps_the_stations(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    FakeHegel.search_results = {"radio": [_station("A", 1)], "podcast": HegelError("form gone")}
+    await _setup(hass, config_entry)
+    result = await _search(hass, "x", media_filter_classes=["channel", "podcast"])
+    assert [item["title"] for item in result] == ["A"]
+
+
+@needs_search
+async def test_both_searches_failing_is_an_error(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    FakeHegel.search_results = {"radio": HegelError("a"), "podcast": HegelError("b")}
+    await _setup(hass, config_entry)
+    with pytest.raises(HomeAssistantError):
+        await _search(hass, "zzz", media_filter_classes=["channel", "podcast"])
 
 
 @needs_search
