@@ -38,8 +38,11 @@ from .const import (
     DEFAULT_MAX_VOLUME,
     DOMAIN,
     FAVORITES_INTERVAL,
+    FAVORITES_RETRIES,
+    FAVORITES_RETRY_DELAY,
     POLL_TIMEOUT,
     POWER_ON_WAIT,
+    RADIO_PATHS_KEPT,
     SOURCE_ATTEMPTS,
     SOURCE_VERIFY_WAIT,
     VOLUMES_SAVE_DELAY,
@@ -77,6 +80,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             update_interval=None,  # push, see async_listen
         )
         self.client = client
+        # The input names from the options when this entry was set up; a change reloads (see __init__).
+        self.names_at_setup: dict[str, str] = dict(entry.options.get(CONF_SOURCE_NAMES) or {})
         self.sources: list[HegelSource] = []
         self.volume_max = 100
         self.firmware: str | None = None
@@ -97,6 +102,14 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self._volume_store: Store[dict[str, Any]] = Store(
             hass, VOLUMES_STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}.volumes"
         )
+        # Radio started from Home Assistant by path (search, media browser): (path, radio id before it).
+        # Once the amplifier reports the new station, its id is bound to that path, so *play* after a
+        # stop can start it again like a favorite. At most RADIO_PATHS_KEPT ids are kept.
+        self._started_radio: tuple[str, str | None] | None = None
+        self.radio_paths: dict[str, str] = {}
+        # Favorites read again after a start that gave none (see async_refresh_favorites).
+        self._favorites_retries = 0
+        self._favorites_retry: Callable[[], None] | None = None
         # Set by a refresh (homeassistant.update_entity) while the listener waits to reconnect.
         self._reconnect_now = asyncio.Event()
         # Pending position check after a seek (cancel callback), see position_seeked().
@@ -128,6 +141,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             async_track_time_interval(self.hass, self._async_favorites_tick, FAVORITES_INTERVAL)
         )
         self.config_entry.async_on_unload(self._cancel_seek_check)
+        self.config_entry.async_on_unload(self._cancel_favorites_retry)
         saved = await self._volume_store.async_load()
         saved = saved or {}
         # Earlier dev versions saved the volumes alone, without the "volumes" key.
@@ -146,11 +160,38 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             favorites = await self.client.favorites()
         except HegelError as err:
             _LOGGER.debug("Radio favorites not available: %s", err)
+            self._retry_favorites()  # the last good list stays
             return
+        if not favorites and self._retry_favorites():
+            # Right after power-on the amplifier can answer before its cloud part is ready and give an
+            # empty list: keep what is known and read again in a moment instead.
+            return
+        self._favorites_retries = 0
         if favorites != self.favorites:
             self.favorites = favorites
             if self.data is not None:
                 self.async_update_listeners()
+
+    def _retry_favorites(self) -> bool:
+        """Read the favorites again in a moment; False once the retries are used up (the answer then counts)."""
+        if self._favorites_retries >= FAVORITES_RETRIES:
+            self._favorites_retries = 0
+            return False
+        self._favorites_retries += 1
+        if self._favorites_retry is None:
+
+            async def _again(_now: datetime) -> None:
+                self._favorites_retry = None
+                if self.connected:
+                    await self.async_refresh_favorites()
+
+            self._favorites_retry = async_call_later(self.hass, FAVORITES_RETRY_DELAY, _again)
+        return True
+
+    def _cancel_favorites_retry(self) -> None:
+        if self._favorites_retry is not None:
+            self._favorites_retry()
+            self._favorites_retry = None
 
     def _save_cache(self) -> None:
         cache = {
@@ -203,9 +244,31 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         return state
 
     def last_radio_path(self) -> str | None:
-        """Path of the favorite that played last, if radio was the last thing played."""
+        """Path of the station that played last, if radio was the last thing played.
+
+        A favorite, or a station Home Assistant started by its path (search, media browser).
+        """
         radio_id = self.data.last_radio_id if self.data is not None else None
-        return next((f["path"] for f in self.favorites if radio_id and f["id"] == radio_id and f["path"]), None)
+        if not radio_id:
+            return None
+        favorite = next((f["path"] for f in self.favorites if f["id"] == radio_id and f["path"]), None)
+        return favorite or self.radio_paths.get(radio_id)
+
+    def radio_started(self, path: str) -> None:
+        """Home Assistant started ``path`` (an internet radio path); bind it once the station plays."""
+        self._started_radio = (path, self.data.last_radio_id if self.data is not None else None)
+
+    def _bind_started_radio(self, state: HegelState) -> None:
+        if self._started_radio is None or not state.last_radio_id:
+            return
+        path, before = self._started_radio
+        if state.last_radio_id == before:
+            return  # still the station from before the command
+        self._started_radio = None
+        self.radio_paths.pop(state.last_radio_id, None)
+        self.radio_paths[state.last_radio_id] = path
+        while len(self.radio_paths) > RADIO_PATHS_KEPT:
+            self.radio_paths.pop(next(iter(self.radio_paths)))
 
     # ------------------------------------------------------------------ push
 
@@ -322,6 +385,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         if volume_changed:
             # Only a volume change counts: right after a switch the amplifier still reports the old volume.
             self._remember(state)
+        if player_changed:
+            self._bind_started_radio(state)
         if changed:
             self.async_set_updated_data(state)
 

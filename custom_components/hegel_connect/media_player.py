@@ -363,7 +363,8 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         if data.player.state in ("playing", "buffering", "transitioning"):
             return  # already playing
         if radio_path := self.coordinator.last_radio_path():
-            # Live radio cannot pause, so stopping it left nothing to resume: start the same station again.
+            # Live radio cannot pause, so stopping it left nothing to resume: start the same station again
+            # (a favorite, or a station Home Assistant started from search or the media browser).
             await self._run(client.play_path(radio_path))
             return
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="nothing_to_resume")
@@ -482,6 +483,8 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             await self._run(client.play_in_container(folder, int(index)))
             return
         await self._run(client.play_path(media_id))
+        if media_id.startswith(PATH_AIRABLE_ROOT):
+            self.coordinator.radio_started(media_id)  # so play after a stop can start it again
 
     # ------------------------------------------------------------- browsing
 

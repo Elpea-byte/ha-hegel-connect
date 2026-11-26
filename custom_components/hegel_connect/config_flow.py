@@ -259,7 +259,13 @@ class HegelOptionsFlow(OptionsFlow):
         names: dict[str, str] = dict(options.get(CONF_SOURCE_NAMES) or {})
         errors: dict[str, str] = {}
         if user_input is not None:
-            hidden = [str(i) for i in user_input.get(CONF_HIDDEN_SOURCES, [])]
+            if CONF_HIDDEN_SOURCES in user_input:
+                hidden = [str(i) for i in user_input[CONF_HIDDEN_SOURCES]]
+            else:
+                # Left out (a script or the API that only changes names): keep what is hidden. The form
+                # itself always sends the list, also an empty one when nothing is hidden any more.
+                known = {str(s.index) for s in sources}
+                hidden = [i for i in options.get(CONF_HIDDEN_SOURCES) or [] if i in known]
             new_names: dict[str, str] = {}
             for source in sources:
                 label = str(user_input.get(source.name) or "").strip()

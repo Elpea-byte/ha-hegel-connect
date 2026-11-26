@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 
 from .api import HegelClient
-from .const import DOMAIN, PLATFORMS, VOLUMES_STORAGE_VERSION
+from .const import CONF_SOURCE_NAMES, DOMAIN, PLATFORMS, VOLUMES_STORAGE_VERSION
 from .coordinator import HegelCoordinator
 
 type HegelConfigEntry = ConfigEntry[HegelCoordinator]
@@ -41,6 +41,14 @@ async def async_remove_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> No
 
 
 async def _async_entry_updated(hass: HomeAssistant, entry: HegelConfigEntry) -> None:
-    """Options changed (input names, hidden inputs): show them at once, no reload."""
-    if (coordinator := getattr(entry, "runtime_data", None)) is not None:
-        coordinator.async_update_listeners()
+    """Options changed: show hidden inputs at once; a new input name reloads.
+
+    Hiding needs no reload. A renamed input does: the start volume entities carry the input's name,
+    which Home Assistant only reads when an entity is added.
+    """
+    if (coordinator := getattr(entry, "runtime_data", None)) is None:
+        return
+    if dict(entry.options.get(CONF_SOURCE_NAMES) or {}) != coordinator.names_at_setup:
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
+    coordinator.async_update_listeners()

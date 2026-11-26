@@ -49,6 +49,12 @@ VOLUMES_SAVE_DELAY = 10
 POLL_TIMEOUT = 30
 # Radio favorites only change in the Hegel Control app: re-read now and then.
 FAVORITES_INTERVAL = timedelta(hours=6)
+# An empty or failed read of the favorites is tried again this often, this many seconds apart
+# (the amplifier can answer before its cloud part is ready, just after power-on).
+FAVORITES_RETRIES = 3
+FAVORITES_RETRY_DELAY = 45
+# Stations started from Home Assistant by path that play can restart after a stop.
+RADIO_PATHS_KEPT = 20
 # The amplifier does not report a change of its auto-standby setting: read it again now and then (one small read).
 AUTO_STANDBY_INTERVAL = timedelta(minutes=15)
 BACKOFF_START = 5

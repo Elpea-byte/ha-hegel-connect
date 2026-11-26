@@ -6,8 +6,32 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
+### Breaking changes: who is affected and what to do
+
+**One change can break something: entities are *unavailable* while the amplifier is gone.**
+
+- **Who:** only setups where the amplifier is sometimes *switched off at the mains, unplugged or off the network* (for example a power strip that switches off at night, a smart plug, a Wi-Fi or network outage). If your amplifier is always on the network, standby included, nothing changes for you: standby is still *off*, as before.
+- **When it shows:** while the amplifier does not answer. The media player, the six stream sensors, *Fixed volume* and the radio favorite select are then *unavailable* instead of *off* or *unknown*. They come back by themselves within a minute of the amplifier answering again.
+- **What can break:**
+  - an automation, script or template that uses `is_state('media_player.<name>', 'off')` or a state trigger `to: "off"` to mean "the amplifier is not in use": it no longer fires or matches when the amplifier is gone, only in standby;
+  - a dashboard card or template that shows the stream sensors and does not expect *unavailable* (it then shows *Unavailable* instead of an empty value);
+  - an automation that starts a radio favorite with `select.select_option` while the amplifier is gone: Home Assistant now skips the call (nothing is sent) instead of the call failing with an error, so an automation that relied on that error to stop or retry no longer sees it.
+- **What to do:**
+  - to ask "is the amplifier gone?", use `binary_sensor.<name>_network` (*off* when gone, *on* in standby and when on);
+  - to ask "is it not playing or switched off?", accept both: `states('media_player.<name>') in ['off', 'unavailable']`, or a state trigger with `to: ["off", "unavailable"]`;
+  - the five blueprints already handle *unavailable*: nothing to do there.
+- **Stays as it was:** the *Network* sensor, the radio favorites sensor (its list of stations), *Maximum volume*, the start volumes, *Remember volume per input* and the now-playing event stay available while the amplifier is gone. A normal start of Home Assistant does not show anything as unavailable, and `homeassistant.update_entity` still reconnects at once.
+
 ### Changed
-- **Breaking:** while the amplifier does not answer at all (switched off at the mains, unplugged, network down), the media player, the stream sensors (audio quality, codec, sample rate, bit depth, bitrate, streaming service), *Fixed volume* and the radio favorite select are now *unavailable*. Before, the media player showed *off* and the sensors *unknown*. Standby does not change: the amplifier still answers, the media player is *off* and everything stays available. The *Network* sensor (*off* when gone), the radio favorites sensor, *Maximum volume*, the start volumes, *Remember volume per input* and the now-playing event stay available. **What to do:** an automation, script, template or card that tests for `off` to mean "gone" should test `binary_sensor.<name>_network` instead, or also accept `unavailable`; the blueprints already do. A normal start does not show the entities as unavailable for a moment, and `homeassistant.update_entity` still reconnects at once. Announced in 0.7.0. Checked with automated tests; not yet tried on an H150.
+- **Breaking (see above):** while the amplifier does not answer at all (switched off at the mains, unplugged, network down), the media player, the stream sensors (audio quality, codec, sample rate, bit depth, bitrate, streaming service), *Fixed volume* and the radio favorite select are now *unavailable*. Before, the media player showed *off* and the sensors *unknown*. Standby does not change: the amplifier still answers, the media player is *off* and everything stays available. The *Network* sensor (*off* when gone), the radio favorites sensor, *Maximum volume*, the start volumes, *Remember volume per input* and the now-playing event stay available. **What to do:** an automation, script, template or card that tests for `off` to mean "gone" should test `binary_sensor.<name>_network` instead, or also accept `unavailable`; the blueprints already do. A normal start does not show the entities as unavailable for a moment, and `homeassistant.update_entity` still reconnects at once. Announced in 0.7.0. Checked with automated tests; not yet tried on an H150.
+- Renaming an input in the options now reloads the integration once, so its *Start volume* entity shows the new name at once (before it kept the old name until the next restart). Hiding or showing inputs still needs no reload.
+
+### Fixed
+- Saving the options from a script or the API without `hidden_sources` no longer shows the hidden inputs again: they stay hidden. Sending an empty list still shows every input. The form in the interface always sends the list, so nothing changes there.
+- *Play* after *stop* also starts a station again that was found with search or picked in the media browser, not only a radio favorite. Up to 20 such stations are remembered until Home Assistant restarts.
+- Just after the amplifier is switched on, the radio favorites could come back empty (the amplifier answers before its cloud part is ready), and the list then stayed empty for up to six hours. An empty or failed answer is now read again after 45 seconds, up to three times; a list that was known stays until a new one arrives. An empty list still counts after those retries (for example when you removed every favorite).
+
+These three and the rename were checked with automated tests, not yet on an H150.
 
 ## [0.7.0] - 2026-11-26
 
