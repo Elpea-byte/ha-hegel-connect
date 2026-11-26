@@ -473,6 +473,14 @@ def play_request(track: dict[str, Any], parent: dict[str, Any] | None, index: in
     return {"control": "play", "mediaRoles": media, "trackRoles": track, "type": kind, "index": index}
 
 
+def _is_lone_track(item: Any) -> bool:
+    """A "container" that is really one playable item: its own audio resources, nothing to open."""
+    if not isinstance(item, dict) or item.get("containerPlayable"):
+        return False
+    resources = _dig(item, "mediaData", "resources")
+    return isinstance(resources, list) and bool(resources)
+
+
 async def _read_text(resp: aiohttp.ClientResponse) -> str:
     """The body as text, read in chunks so a runaway answer cannot fill the memory."""
     body = bytearray()
@@ -533,7 +541,9 @@ class HegelClient:
                         raise HegelQueueLost(text[:200])
                     raise HegelError(f"{endpoint} {resp.status}: {text[:200]}")
         except (TimeoutError, aiohttp.ClientError) as err:
-            raise HegelConnectionError(f"{self.host}: {err!r}") from err
+            # Without the address: the log line and the error shown to the user already say which amplifier.
+            detail = str(err)
+            raise HegelConnectionError(f"no answer ({type(err).__name__}{': ' + detail if detail else ''})") from err
         if not text:
             return None
         try:
@@ -751,7 +761,16 @@ class HegelClient:
         if isinstance(item, dict) and item.get("type") not in (None, "container"):
             await self._play(item, None, 0)
             return
-        await self.play_in_container(path, 0, item if isinstance(item, dict) else None)
+        try:
+            await self.play_in_container(path, 0, item if isinstance(item, dict) else None)
+        except HegelConnectionError:
+            raise
+        except HegelError:
+            # A podcast episode: getData calls it a container (with its own audio), but it has no rows, so the
+            # amplifier refuses getRows on it (seen on an H150). Play it as the track it is in its episode list.
+            if not isinstance(item, dict) or not _is_lone_track(item):
+                raise
+            await self._play({**item, "type": "audio"}, None, 0)
 
     async def play_in_container(self, path: str, index: int, parent: dict[str, Any] | None = None) -> None:
         """Play item number `index` of a folder, and continue with the rest."""

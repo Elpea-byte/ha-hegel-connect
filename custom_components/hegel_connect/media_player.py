@@ -702,7 +702,7 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
     broadcast = row.get("audioType") == "audioBroadcast"
     if row["path"].startswith(PATH_AIRABLE_ROOT) and meta.get("serviceID") == _PODCAST_SERVICE:
         # Podcasts: a podcast opens to "Episodes", a list that opens (pick an episode) and also plays as a
-        # whole (from the newest); an episode plays. Seen on an H150; starting an episode was not tried yet.
+        # whole (from the newest); an episode plays. Seen on an H150, where the whole list played.
         is_folder = kind == "container"
         row_id = str(row.get("id") or "")
         if kind == "audio":
@@ -711,9 +711,12 @@ def _child(row: Any, parent_path: str, index: int, parent: dict[str, Any]) -> Br
             media_class = MediaClass.PODCAST
         else:
             media_class = MediaClass.DIRECTORY
+        # An episode plays as item <index> of its episode list (the amplifier cannot open an episode on its
+        # own path), and the list then goes on with the next episodes, as in the Hegel web client.
+        in_list = kind == "audio" and parent_path != PATH_AIRABLE_ROOT
         return BrowseMedia(
             media_class=media_class,
-            media_content_id=row["path"],
+            media_content_id=f"{TRACK_PREFIX}{index}:{parent_path}" if in_list else row["path"],
             media_content_type=MEDIA_TYPE_HEGEL,
             title=row["title"],
             can_play=bool(row.get("containerPlayable")) or kind == "audio",

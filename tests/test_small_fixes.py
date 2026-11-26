@@ -167,6 +167,34 @@ async def test_the_new_station_reported_while_the_command_runs_is_bound(
     assert fake.calls.count(("play_path", SEARCHED)) == 1
 
 
+async def test_a_station_that_starts_buffering_without_the_radio_mark_is_bound(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """Seen on an H150: the first report after play_media is "buffering" without radioStation, 40 ms later
+    it is radio. The buffering report must not make the started station be forgotten."""
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    fake = fake_hegel[-1]
+    await hass.services.async_call(
+        MP_DOMAIN,
+        "play_media",
+        {ATTR_ENTITY_ID: ENTITY, "media_content_type": "hegel_path", "media_content_id": SEARCHED},
+        blocking=True,
+    )
+    fake.push(
+        "player:player/data",
+        {"state": "buffering", "mediaRoles": {"id": "station-42"}, "trackRoles": {"title": "Station"}},
+    )
+    fake.push("player:player/data", _radio("station-42", "buffering"))
+    fake.push("player:player/data", _radio("station-42"))
+    fake.push("player:player/data", {"state": "stopped"})
+    await hass.async_block_till_done()
+    assert coordinator.radio_paths == {"station-42": SEARCHED}
+    fake.calls.clear()
+    await hass.services.async_call(MP_DOMAIN, "media_play", {ATTR_ENTITY_ID: ENTITY}, blocking=True)
+    assert ("play_path", SEARCHED) in fake.calls
+
+
 async def test_a_refused_station_is_not_bound_to_a_later_one(
     hass: HomeAssistant, fake_hegel, config_entry, monkeypatch
 ) -> None:

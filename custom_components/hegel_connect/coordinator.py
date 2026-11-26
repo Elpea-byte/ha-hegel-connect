@@ -272,8 +272,9 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     def _bind_started_radio(self, state: HegelState) -> None:
         if self._started_radio is None:
             return
-        if state.player.state in ACTIVE_STATES and not state.player.is_radio:
+        if state.player.state in ("playing", "paused") and not state.player.is_radio:
             # What was started is no station (a podcast episode), or something else took over: forget it.
+            # Not while buffering: a station starts with a report without the radio mark (seen on an H150).
             self._started_radio = None
             return
         if not state.last_radio_id:

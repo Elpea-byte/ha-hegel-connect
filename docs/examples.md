@@ -61,7 +61,7 @@ actions:
 
 Tried on an H150 (Home Assistant 2026.11): about 15 results per search in under a second, and the first result started with `play_media`.
 
-Search podcasts (new in 0.8, not released yet): add `media_filter_classes: [podcast]` to the search. A result is a podcast, not an episode: open it in the media browser (or browse it with `media_player.browse_media`) to its *Episodes*, then play one episode or the whole list. The podcast folders were read on an H150; starting an episode was not tried yet.
+Search podcasts (new in 0.8, not released yet): add `media_filter_classes: [podcast]` to the search. A result is a podcast, not an episode: open it in the media browser (or browse it with `media_player.browse_media`) to its *Episodes*, then play one episode or the whole list. Tried on an H150: the search, opening a podcast and playing its whole episode list. Starting one episode is fixed in 0.8 but not tried yet, and while an episode plays the amplifier gives a placeholder title (`Title Placeholder Episode ID: ...`).
 
 ```yaml
 actions:

@@ -274,8 +274,14 @@ async def test_request_unknown_charset_and_bad_bytes_are_tolerated() -> None:
 
 
 async def test_request_connection_problem_is_a_connection_error() -> None:
-    with pytest.raises(HegelConnectionError):
+    with pytest.raises(HegelConnectionError) as err:
         await _ask(TimeoutError())
+    # The address is not repeated: the log line and the error for the user already name the amplifier.
+    assert str(err.value) == "no answer (TimeoutError)"
+    with pytest.raises(HegelConnectionError) as err:
+        await _ask(aiohttp.ClientConnectionError("refused"))
+    assert str(err.value) == "no answer (ClientConnectionError: refused)"
+    assert "192.0.2" not in str(err.value)
 
 
 async def test_request_too_large_is_refused_and_stops_reading() -> None:

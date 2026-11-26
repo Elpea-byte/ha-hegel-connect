@@ -10,6 +10,8 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 import pytest
 
+from custom_components.hegel_connect.api import HegelClient, HegelConnectionError, HegelError
+
 from .conftest import FakeHegel
 
 ENTITY = "media_player.hegel_h150"
@@ -108,6 +110,75 @@ async def test_episodes_are_episodes_that_play(hass: HomeAssistant, fake_hegel, 
         ("Monday", "episode", True, False),
         ("Tuesday", "episode", True, False),
     ]
+
+
+async def test_an_episode_plays_as_an_item_of_its_list(
+    hass: HomeAssistant, fake_hegel, config_entry, hass_ws_client
+) -> None:
+    """The amplifier refuses to open an episode on its own path; in its list it plays (and goes on)."""
+    await _setup(hass, config_entry)
+    ws = await hass_ws_client(hass)
+    tuesday = (await _browse(hass, ws, EPISODES))["children"][1]
+    assert tuesday["media_content_id"] == f"track:1:{EPISODES}"
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {"entity_id": ENTITY, "media_content_type": "hegel_path", "media_content_id": tuesday["media_content_id"]},
+        blocking=True,
+    )
+    assert ("play_in_container", EPISODES, 1) in fake_hegel[-1].calls
+
+
+class _Episodes(HegelClient):
+    """The answers of an H150 for one episode: getData calls it a container, getRows on it fails."""
+
+    def __init__(self, item: dict[str, Any], rows_error: HegelError) -> None:
+        self.item = item
+        self.rows_error = rows_error
+        self.sent: list[dict[str, Any]] = []
+
+    async def get_raw(self, path: str, roles: str = "@all") -> Any:
+        return self.item
+
+    async def get_rows(self, path: str, start: int = 0, count: int = 50) -> dict[str, Any]:
+        raise self.rows_error
+
+    async def activate(self, path: str, value: dict[str, Any] | None = None, **extra: Any) -> None:
+        self.sent.append(value or {})
+
+
+def _episode_as_get_data() -> dict[str, Any]:
+    item = _episode(3, "Wednesday")
+    item["type"] = "container"  # what getData says for an episode
+    item["mediaData"]["resources"][0]["data"] = f"{HOST}/airable/play/feed.episode/3/0"
+    return item
+
+
+async def test_the_client_plays_an_episode_path_on_its_own() -> None:
+    """play_media with an episode path (a script, a saved path) plays that one episode."""
+    client = _Episodes(_episode_as_get_data(), HegelError('getRows 500: {"error": "Error during communication"}'))
+    await client.play_path(_episode_as_get_data()["path"])
+    [sent] = client.sent
+    assert sent["control"] == "play"
+    assert sent["trackRoles"]["type"] == "audio"
+    assert sent["trackRoles"]["title"] == "Wednesday"
+    assert sent["type"] is None  # on its own, not as part of a list
+
+
+async def test_a_real_folder_that_fails_still_fails() -> None:
+    """Only an item with its own audio is played on its own; an empty folder keeps its error."""
+    folder = {"type": "container", "path": "airable:x/folder", "title": "Folder"}
+    client = _Episodes(folder, HegelError("getRows 500"))
+    with pytest.raises(HegelError, match="getRows 500"):
+        await client.play_path("airable:x/folder")
+    assert client.sent == []
+
+
+async def test_no_answer_is_not_mistaken_for_an_episode() -> None:
+    client = _Episodes(_episode_as_get_data(), HegelConnectionError("no answer (TimeoutError)"))
+    with pytest.raises(HegelConnectionError):
+        await client.play_path("airable:x/episode")
+    assert client.sent == []
 
 
 async def test_playing_an_episode_sends_its_path(hass: HomeAssistant, fake_hegel, config_entry) -> None:
