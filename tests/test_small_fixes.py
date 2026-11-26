@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -9,16 +10,20 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+import pytest
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.hegel_connect.api import HegelError
-from custom_components.hegel_connect.const import FAVORITES_RETRIES, FAVORITES_RETRY_DELAY
+from custom_components.hegel_connect.const import DOMAIN, FAVORITES_RETRIES, FAVORITES_RETRY_DELAY
 
 from .conftest import FakeHegel
 
 ENTITY = "media_player.hegel_h150"
 SEARCHED = "airable:radios/search/result/42"
+START_VOLUME_RCA = "number.hegel_h150_start_volume_rca"
 QMUSIC = [{"title": "Qmusic", "path": "airable:fav/qmusic", "id": "fav-1", "icon": None}]
 
 
@@ -67,7 +72,17 @@ async def test_options_with_an_empty_list_show_every_input(hass: HomeAssistant, 
 
 async def test_hiding_does_not_reload_renaming_does(hass: HomeAssistant, fake_hegel, config_entry) -> None:
     """The start volume entities carry the input's name, which Home Assistant reads when they are added."""
+    config_entry.add_to_hass(hass)
+    er.async_get(hass).async_get_or_create(  # enabled, as a user who switched it on
+        "number",
+        DOMAIN,
+        f"{config_entry.unique_id}_start_volume_2",
+        config_entry=config_entry,
+        suggested_object_id="hegel_h150_start_volume_rca",
+        translation_key="start_volume",
+    )
     await _setup(hass, config_entry)
+    assert hass.states.get(START_VOLUME_RCA).name.endswith("Start volume RCA")
     first = config_entry.runtime_data
     await _options(hass, config_entry, {"hidden_sources": ["5"]})
     assert config_entry.runtime_data is first
@@ -75,6 +90,7 @@ async def test_hiding_does_not_reload_renaming_does(hass: HomeAssistant, fake_he
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.runtime_data is not first
     assert config_entry.runtime_data.names_at_setup == {"2": "TV"}
+    assert hass.states.get(START_VOLUME_RCA).name.endswith("Start volume TV")
     # The same names again: no second reload.
     second = config_entry.runtime_data
     await _options(hass, config_entry, {"hidden_sources": [], "RCA": "TV"})
@@ -120,6 +136,74 @@ async def test_the_station_from_before_the_command_is_not_bound(hass: HomeAssist
     fake.push("player:player/data", _radio("station-42"))
     await hass.async_block_till_done()
     assert coordinator.radio_paths == {"station-42": SEARCHED}
+
+
+async def test_the_new_station_reported_while_the_command_runs_is_bound(
+    hass: HomeAssistant, fake_hegel, config_entry, monkeypatch
+) -> None:
+    """The amplifier can report the new station before it answers the play command."""
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    fake = fake_hegel[-1]
+
+    async def play_path(self, path: str) -> None:
+        self.calls.append(("play_path", path))
+        self.push("player:player/data", _radio("station-42"))
+        for _ in range(20):  # let the listener handle the event before the answer comes
+            if coordinator.data.last_radio_id == "station-42":
+                break
+            await asyncio.sleep(0)
+        assert coordinator.data.last_radio_id == "station-42"
+
+    monkeypatch.setattr(FakeHegel, "play_path", play_path)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        "play_media",
+        {ATTR_ENTITY_ID: ENTITY, "media_content_type": "hegel_path", "media_content_id": SEARCHED},
+        blocking=True,
+    )
+    assert coordinator.radio_paths == {"station-42": SEARCHED}
+    assert coordinator._started_radio is None
+    assert fake.calls.count(("play_path", SEARCHED)) == 1
+
+
+async def test_a_refused_station_is_not_bound_to_a_later_one(
+    hass: HomeAssistant, fake_hegel, config_entry, monkeypatch
+) -> None:
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+
+    async def refused(self, path: str) -> None:
+        raise HegelError("setData 500")
+
+    monkeypatch.setattr(FakeHegel, "play_path", refused)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            "play_media",
+            {ATTR_ENTITY_ID: ENTITY, "media_content_type": "hegel_path", "media_content_id": SEARCHED},
+            blocking=True,
+        )
+    assert coordinator._started_radio is None
+    # A station started later in the Hegel app keeps no path of ours.
+    fake_hegel[-1].push("player:player/data", _radio("station-7"))
+    await hass.async_block_till_done()
+    assert coordinator.radio_paths == {}
+
+
+async def test_a_podcast_episode_is_not_noted_as_a_station(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        "play_media",
+        {
+            ATTR_ENTITY_ID: ENTITY,
+            "media_content_type": "hegel_path",
+            "media_content_id": "airable:https://0000000000.airable.io/id/airable/feed.episode/2",
+        },
+        blocking=True,
+    )
+    assert config_entry.runtime_data._started_radio is None
 
 
 async def test_only_the_last_stations_are_kept(hass: HomeAssistant, fake_hegel, config_entry) -> None:
@@ -212,4 +296,73 @@ async def test_the_retry_is_cancelled_on_unload(hass: HomeAssistant, fake_hegel,
     assert coordinator._favorites_retry is not None
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+    assert coordinator._favorites_retry is None
+
+
+async def test_an_amplifier_without_favorites_is_not_asked_again_and_again(
+    hass: HomeAssistant, fake_hegel, config_entry, monkeypatch
+) -> None:
+    """After the retries of the start, the next reads (every 6 hours) take an empty list at once."""
+    reads = 0
+
+    async def empty(self) -> list[dict]:
+        nonlocal reads
+        reads += 1
+        return []
+
+    monkeypatch.setattr(FakeHegel, "favorites", empty)
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    for _ in range(FAVORITES_RETRIES):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=FAVORITES_RETRY_DELAY + 1))
+        await hass.async_block_till_done()
+    assert reads == 1 + FAVORITES_RETRIES
+    assert coordinator._favorites_retry is None
+    await coordinator.async_refresh_favorites()  # the periodic read
+    assert reads == 2 + FAVORITES_RETRIES
+    assert coordinator._favorites_retry is None
+
+
+async def test_a_good_read_cancels_the_pending_retry(
+    hass: HomeAssistant, fake_hegel, config_entry, monkeypatch
+) -> None:
+    answers: list[list[dict]] = [[], QMUSIC]
+
+    async def favorites(self) -> list[dict]:
+        return answers.pop(0) if answers else QMUSIC
+
+    monkeypatch.setattr(FakeHegel, "favorites", favorites)
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    assert coordinator._favorites_retry is not None
+    await coordinator.async_refresh_favorites()  # e.g. on reconnecting
+    assert coordinator.favorites == QMUSIC
+    assert coordinator._favorites_retry is None
+    assert coordinator._favorites_retries == 0
+
+
+async def test_going_away_resets_the_retries(hass: HomeAssistant, fake_hegel, config_entry, monkeypatch) -> None:
+    async def empty(self) -> list[dict]:
+        return []
+
+    monkeypatch.setattr(FakeHegel, "favorites", empty)
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    assert coordinator._favorites_retries == 1
+    await coordinator._async_connection_lost("test")
+    assert coordinator._favorites_retry is None
+    assert coordinator._favorites_retries == 0
+
+
+async def test_a_retry_while_gone_resets_the_count(hass: HomeAssistant, fake_hegel, config_entry, monkeypatch) -> None:
+    async def empty(self) -> list[dict]:
+        return []
+
+    monkeypatch.setattr(FakeHegel, "favorites", empty)
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    coordinator.connected = False  # gone without the listener noticing yet
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=FAVORITES_RETRY_DELAY + 1))
+    await hass.async_block_till_done()
+    assert coordinator._favorites_retries == 0
     assert coordinator._favorites_retry is None

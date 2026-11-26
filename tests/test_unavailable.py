@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from custom_components.hegel_connect.const import DOMAIN
 
 from .conftest import FakeHegel
 
@@ -117,3 +120,26 @@ async def test_started_offline_is_unavailable_but_keeps_the_favorites(
     assert hass.states.get(PLAYER).state == STATE_UNAVAILABLE
     assert hass.states.get(NETWORK).state == "off"
     assert hass.states.get("sensor.hegel_h150_radio_favorites").state != STATE_UNAVAILABLE
+
+
+async def test_a_failed_refresh_leaves_the_kept_entities_and_the_event_available(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """A refresh that fails (a bad answer, not "gone") must not flip the now-playing event either."""
+    config_entry.add_to_hass(hass)
+    er.async_get(hass).async_get_or_create(
+        "event",
+        DOMAIN,
+        f"{config_entry.unique_id}_now_playing",
+        config_entry=config_entry,
+        suggested_object_id="hegel_h150_now_playing",
+        translation_key="now_playing",
+    )
+    await _setup(hass, config_entry)
+    coordinator = config_entry.runtime_data
+    coordinator.last_update_success = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    for entity_id in [*STAY, "event.hegel_h150_now_playing"]:
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE, entity_id
+    assert hass.states.get(PLAYER).state == STATE_UNAVAILABLE

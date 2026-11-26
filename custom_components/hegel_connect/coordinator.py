@@ -110,6 +110,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         # Favorites read again after a start that gave none (see async_refresh_favorites).
         self._favorites_retries = 0
         self._favorites_retry: Callable[[], None] | None = None
+        self._favorites_read = False  # a list (even an empty one) was accepted once
         # Set by a refresh (homeassistant.update_entity) while the listener waits to reconnect.
         self._reconnect_now = asyncio.Event()
         # Pending position check after a seek (cancel callback), see position_seeked().
@@ -119,8 +120,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         """Read the static facts; fall back to the copy saved at the last start.
 
         Off at the mains (e.g. a power strip switched off at night) while Home
-        Assistant starts: set up from the saved copy, show the amplifier as off
-        and let the listener connect as soon as it is back.
+        Assistant starts: set up from the saved copy, show the amplifier as
+        unavailable and let the listener connect as soon as it is back.
         """
         try:
             self.sources = await self.client.sources()
@@ -162,11 +163,14 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             _LOGGER.debug("Radio favorites not available: %s", err)
             self._retry_favorites()  # the last good list stays
             return
-        if not favorites and self._retry_favorites():
-            # Right after power-on the amplifier can answer before its cloud part is ready and give an
-            # empty list: keep what is known and read again in a moment instead.
+        # Right after power-on the amplifier can answer before its cloud part is ready and give an empty list:
+        # keep what is known and read again in a moment instead. Only when favorites were seen before or none
+        # was read yet: an amplifier that really has none is not asked again and again.
+        if not favorites and (self.favorites or not self._favorites_read) and self._retry_favorites():
             return
+        self._favorites_read = True
         self._favorites_retries = 0
+        self._cancel_favorites_retry()
         if favorites != self.favorites:
             self.favorites = favorites
             if self.data is not None:
@@ -184,6 +188,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 self._favorites_retry = None
                 if self.connected:
                     await self.async_refresh_favorites()
+                else:
+                    self._favorites_retries = 0  # gone again: reading on reconnect starts afresh
 
             self._favorites_retry = async_call_later(self.hass, FAVORITES_RETRY_DELAY, _again)
         return True
@@ -257,6 +263,11 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
     def radio_started(self, path: str) -> None:
         """Home Assistant started ``path`` (an internet radio path); bind it once the station plays."""
         self._started_radio = (path, self.data.last_radio_id if self.data is not None else None)
+
+    def radio_not_started(self, path: str) -> None:
+        """The amplifier refused to start ``path``: do not bind a station started later to it."""
+        if self._started_radio is not None and self._started_radio[0] == path:
+            self._started_radio = None
 
     def _bind_started_radio(self, state: HegelState) -> None:
         if self._started_radio is None:
@@ -360,6 +371,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             # Switched off at the mains, unplugged or network down: the network sensor goes off and
             # the entities that need the amplifier become unavailable (standby is not this).
             self.connected = False
+            self._cancel_favorites_retry()
+            self._favorites_retries = 0
             self.async_update_listeners()
 
     def _apply(self, events: list[dict[str, Any]]) -> None:

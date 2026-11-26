@@ -118,13 +118,10 @@ class HegelFavoritesSensor(HegelEntity, SensorEntity):
 
     _attr_translation_key = "radio_favorites"
     _unrecorded_attributes = frozenset({"favorites"})
+    _follows_connection = False  # the last list read stays known
 
     def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "radio_favorites")
-
-    @property
-    def available(self) -> bool:
-        return True
 
     @property
     def native_value(self) -> int:

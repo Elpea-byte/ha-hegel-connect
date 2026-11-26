@@ -15,7 +15,8 @@ class HegelEntity(CoordinatorEntity[HegelCoordinator]):
     _attr_has_entity_name = True
     # Unavailable while the amplifier does not answer at all (off at the mains, unplugged, network
     # down). Standby still answers, so it is not affected. Entities whose value lives in Home
-    # Assistant (settings, the saved favorites) or that tell "gone" themselves override this.
+    # Assistant (settings, the saved favorites) or that tell "gone" themselves set this to False:
+    # they then stay available, also when a refresh fails.
     _follows_connection = True
 
     def __init__(self, coordinator: HegelCoordinator, key: str) -> None:
@@ -34,4 +35,6 @@ class HegelEntity(CoordinatorEntity[HegelCoordinator]):
 
     @property
     def available(self) -> bool:
-        return super().available and (self.coordinator.connected or not self._follows_connection)
+        if not self._follows_connection:
+            return True
+        return super().available and self.coordinator.connected

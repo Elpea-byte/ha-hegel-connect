@@ -123,12 +123,24 @@ async def test_a_found_station_starts_like_a_favorite(hass: HomeAssistant, fake_
 
 @pytest.mark.parametrize("filter_classes", [["channel"], ["music"], ["podcast", "channel"]])
 @needs_search
-async def test_a_filter_for_anything_but_podcasts_still_searches_radio(
+async def test_a_filter_for_stations_searches_radio(
     hass: HomeAssistant, fake_hegel, config_entry, filter_classes: list[str]
 ) -> None:
     FakeHegel.search_results = {"radio": [_station("A", 1)]}
     await _setup(hass, config_entry)
     assert len(await _search(hass, "x", media_filter_classes=filter_classes)) == 1
+
+
+@pytest.mark.parametrize("filter_classes", [["album"], ["artist"], ["track"]])
+@needs_search
+async def test_a_filter_the_amplifier_cannot_search_finds_nothing(
+    hass: HomeAssistant, fake_hegel, config_entry, filter_classes: list[str]
+) -> None:
+    """Asking to play the album X must not start a radio station called X."""
+    FakeHegel.search_results = {"radio": [_station("A", 1)], "podcast": [_podcast("B", 2)]}
+    await _setup(hass, config_entry)
+    assert await _search(hass, "x", media_filter_classes=filter_classes) == []
+    assert fake_hegel[-1].searches == []
 
 
 @pytest.mark.parametrize("filter_classes", [["podcast"], ["episode"], ["podcast", "episode"]])
@@ -319,7 +331,7 @@ async def test_the_client_follows_the_form_like_the_web_client() -> None:
 
 
 async def test_the_client_can_search_podcasts_too() -> None:
-    """The client is ready for podcasts (planned for a later version); the integration does not use it yet."""
+    """The client searches podcasts the same way as radio (only the kind differs)."""
     session = _Replies(
         [
             {

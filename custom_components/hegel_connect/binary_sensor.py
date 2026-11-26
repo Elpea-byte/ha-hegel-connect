@@ -47,13 +47,10 @@ class HegelNetwork(HegelEntity, BinarySensorEntity):
     _attr_translation_key = "network"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _follows_connection = False  # it tells "gone" itself
 
     def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "network")
-
-    @property
-    def available(self) -> bool:
-        return True
 
     @property
     def is_on(self) -> bool:

@@ -41,6 +41,8 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
     _attr_native_step = 1
     _attr_mode = NumberMode.SLIDER
 
+    _follows_connection = False  # a setting kept in Home Assistant
+
     def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "max_volume")
 
@@ -49,10 +51,6 @@ class HegelMaxVolume(HegelEntity, RestoreNumber):
         last = await self.async_get_last_number_data()
         if last is not None and last.native_value is not None:
             self.coordinator.max_volume = max(1, min(int(last.native_value), self.coordinator.volume_max))
-
-    @property
-    def available(self) -> bool:
-        return True
 
     @property
     def native_max_value(self) -> float:

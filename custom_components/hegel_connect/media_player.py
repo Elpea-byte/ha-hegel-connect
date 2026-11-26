@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Awaitable
 from datetime import datetime
 import ipaddress
+import re
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
@@ -79,10 +80,29 @@ _ROOT_TITLES = {
     PATH_PLAY_HISTORY: "Recently played",
 }
 
-# Search filters that mean podcasts; any other class (or none) searches internet radio.
+# Search filters: these mean podcasts, these internet radio (no filter searches radio too).
 _PODCAST_CLASSES = {MediaClass.PODCAST, MediaClass.EPISODE}
+_RADIO_CLASSES = {MediaClass.CHANNEL, MediaClass.MUSIC}
 # Airable marks podcasts, their episode lists and episodes with this service id.
 _PODCAST_SERVICE = "airablePodcasts"
+# Airable paths of a podcast (".../feed/<id>"), its episode list and its episodes (".../feed.episode/<id>").
+_FEED = re.compile(r"/feed/[^/]+$")
+
+
+def _is_podcast_path(path: str) -> bool:
+    return "/feed/" in path or "/feed.episode/" in path
+
+
+def _service(row: Any) -> Any:
+    media_data = row.get("mediaData") if isinstance(row, dict) else None
+    meta = media_data.get("metaData") if isinstance(media_data, dict) else None
+    return meta.get("serviceID") if isinstance(meta, dict) else None
+
+
+def _is_podcast_folder(folder: dict[str, Any], rows: list[Any]) -> bool:
+    """A podcast or its episode list (the folder says so, or else its rows do)."""
+    return _service(folder) == _PODCAST_SERVICE or any(_service(row) == _PODCAST_SERVICE for row in rows)
+
 
 # Search in the media browser exists from a newer Home Assistant on; older ones simply do not offer it.
 _SEARCH = getattr(MediaPlayerEntityFeature, "SEARCH_MEDIA", MediaPlayerEntityFeature(0))
@@ -430,16 +450,17 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search internet radio and podcasts on the amplifier.
 
-        Without a filter, or with a filter for anything but podcasts, internet radio is searched (Assist plays
-        the first result, so "play Qmusic" keeps starting the station). Podcasts are searched when the filter
-        asks for podcasts or episodes; with both in the filter, radio comes first. A podcast is a folder:
-        open it to pick an episode, or play its episode list.
+        Without a filter, or with a filter for stations (channel, music), internet radio is searched (Assist
+        plays the first result, so "play Qmusic" keeps starting the station). Podcasts are searched when the
+        filter asks for podcasts or episodes; with both in the filter, radio comes first. Other filters (album,
+        artist, track) find nothing: the amplifier cannot search those. A podcast is a folder: open it to pick
+        an episode, or play its episode list.
         """
         from homeassistant.components.media_player.browse_media import SearchMedia
 
         classes = set(query.media_filter_classes or [])
         want_podcasts = bool(classes & _PODCAST_CLASSES)
-        want_radio = not classes or bool(classes - _PODCAST_CLASSES)
+        want_radio = not classes or bool(classes & _RADIO_CLASSES)
         results: list[BrowseMedia] = []
         errors: list[HegelError] = []
         if want_radio:
@@ -510,9 +531,15 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
                 )
             await self._run(client.play_in_container(folder, int(index)))
             return
-        await self._run(client.play_path(media_id))
-        if media_id.startswith(PATH_AIRABLE_ROOT):
-            self.coordinator.radio_started(media_id)  # so play after a stop can start it again
+        if media_id.startswith(PATH_AIRABLE_ROOT) and not _is_podcast_path(media_id):
+            # Noted before sending, so play after a stop can start it again: the amplifier can report the new
+            # station while play_path is still waiting for its answer.
+            self.coordinator.radio_started(media_id)
+        try:
+            await self._run(client.play_path(media_id))
+        except HomeAssistantError:
+            self.coordinator.radio_not_started(media_id)
+            raise
 
     # ------------------------------------------------------------- browsing
 
@@ -549,8 +576,14 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
         # A folder with tracks in it (album, playlist) can be played as a whole
         has_tracks = any(isinstance(r, dict) and r.get("type") == "audio" for r in rows)
         playable = has_tracks and not path.startswith(PATH_AIRABLE_ROOT) and media_content_id != FAVORITES_ID
+        media_class = MediaClass.ALBUM if playable else MediaClass.DIRECTORY
+        if path.startswith(PATH_AIRABLE_ROOT) and _is_podcast_folder(folder, rows):
+            # An opened podcast; its episode list plays as a whole too, like it does one level up.
+            playable = has_tracks or bool(folder.get("containerPlayable"))
+            if _FEED.search(path):
+                media_class = MediaClass.PODCAST
         return BrowseMedia(
-            media_class=MediaClass.ALBUM if playable else MediaClass.DIRECTORY,
+            media_class=media_class,
             media_content_id=media_content_id,
             media_content_type=MEDIA_TYPE_HEGEL,
             title=folder.get("title") or _ROOT_TITLES.get(media_content_id) or "Hegel",

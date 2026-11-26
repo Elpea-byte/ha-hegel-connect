@@ -36,6 +36,8 @@ class HegelRememberVolume(HegelEntity, SwitchEntity, RestoreEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_entity_registry_enabled_default = False
 
+    _follows_connection = False  # a setting kept in Home Assistant
+
     def __init__(self, coordinator: HegelCoordinator) -> None:
         super().__init__(coordinator, "remember_volume")
 
@@ -43,10 +45,6 @@ class HegelRememberVolume(HegelEntity, SwitchEntity, RestoreEntity):
         await super().async_added_to_hass()
         if (last := await self.async_get_last_state()) is not None:
             self.coordinator.remember_volume = last.state == STATE_ON
-
-    @property
-    def available(self) -> bool:
-        return True
 
     @property
     def is_on(self) -> bool:

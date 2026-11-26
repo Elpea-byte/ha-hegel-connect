@@ -91,6 +91,7 @@ async def test_a_podcast_opens_to_an_episode_list_that_opens_and_plays(
     ws = await hass_ws_client(hass)
     podcast = await _browse(hass, ws, PODCAST)
     assert podcast["title"] == "A news podcast"
+    assert (podcast["media_class"], podcast["can_play"]) == ("podcast", False)
     episodes = podcast["children"][0]
     assert episodes["title"] == "Episodes"
     # Before 0.8 a playable folder could not be opened, so no single episode could be picked.
@@ -101,6 +102,8 @@ async def test_episodes_are_episodes_that_play(hass: HomeAssistant, fake_hegel, 
     await _setup(hass, config_entry)
     ws = await hass_ws_client(hass)
     listing = await _browse(hass, ws, EPISODES)
+    # Opened, the list still plays as a whole (its play button), as it does one level up.
+    assert (listing["media_class"], listing["can_play"], listing["can_expand"]) == ("directory", True, True)
     assert [(c["title"], c["media_class"], c["can_play"], c["can_expand"]) for c in listing["children"]] == [
         ("Monday", "episode", True, False),
         ("Tuesday", "episode", True, False),
