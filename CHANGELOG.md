@@ -6,7 +6,7 @@ All notable changes are listed here. Versions follow [semantic versioning](https
 
 Changes on the `dev` branch that are not in a release yet.
 
-## [0.7.0] - 2026-11-27
+## [0.7.0] - 2026-11-26
 
 Requires Home Assistant 2025.4 or newer (searching needs a newer one; older versions just do not offer it). Nothing needs to be done after updating: the new entities (the now-playing event, auto standby, the extra start volumes) are disabled until you enable them. Two small things you can notice are listed under *Changed*: the media type of the media player and the attributes that are no longer in the history. Version 0.8 will make the entities *unavailable* when the amplifier cannot be reached (announced under *Changed*).
 

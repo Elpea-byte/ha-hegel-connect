@@ -31,7 +31,7 @@ There is no fixed schedule. The plan follows what is actually done:
 | Version | Status | Theme | Done when |
 | :---- | :---- | :---- | :---- |
 | **0.6** | Released (2026-11-07) | Daily use | Done: see the [release](https://github.com/Elpea-byte/ha-hegel-connect/releases/tag/v0.6.0) and the [changelog](../CHANGELOG.md) |
-| **0.7** | Released (2026-11-27) | Features | Done: see the [release](https://github.com/Elpea-byte/ha-hegel-connect/releases/tag/v0.7.0) and the [changelog](../CHANGELOG.md) |
+| **0.7** | Released (2026-11-26) | Features | Done: see the [release](https://github.com/Elpea-byte/ha-hegel-connect/releases/tag/v0.7.0) and the [changelog](../CHANGELOG.md) |
 | **0.8** | Planned | Core behaviour and coverage | The CI fails under 95% coverage; the `test-coverage` rule is done; *unavailable* works as announced |
 | **0.9** | Planned | Own library and quality | The library is on PyPI and used by the integration; no `todo` left in `quality_scale.yaml` |
 | **1.0** | Planned | Stable | Every `quality_scale.yaml` rule done or exempt; coverage 95% or more; [REFERENCE.md](REFERENCE.md) frozen; every "not tested yet" in the [streaming services table](streaming-services.md) tested on an H150 or removed from the claims; no open bug report for six weeks |
