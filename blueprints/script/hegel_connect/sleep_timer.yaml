@@ -79,14 +79,17 @@ sequence:
       sequence:
         - delay: {seconds: "{{ step_seconds }}"}
         # Stop when the amplifier was switched off, or when someone set another volume in the meantime.
+        # What this script set last (as it set it, rounded); one step at the knob or in an app differs from it.
         - variables:
-            expected: "{{ start_volume * (1 - (repeat.index - 1) / (step_count + 1)) }}"
+            expected: >-
+              {{ start_volume if repeat.index == 1
+                 else (start_volume * (1 - (repeat.index - 1) / (step_count + 1))) | round(2) }}
         # (A condition here would only end this round of the repeat; stop ends the whole script.)
         - if:
             - condition: template
               value_template: >-
                 {{ states(amplifier) in ['off', 'unavailable', 'unknown']
-                   or (not fixed and ((state_attr(amplifier, 'volume_level') | float(0)) - expected) | abs >= 0.02) }}
+                   or (not fixed and ((state_attr(amplifier, 'volume_level') | float(0)) - expected) | abs > 0.006) }}
           then:
             - stop: Switched off or volume changed by hand
 

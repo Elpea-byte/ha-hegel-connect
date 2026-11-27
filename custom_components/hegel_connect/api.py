@@ -156,6 +156,23 @@ class HegelSource:
     name: str
 
 
+# Title an H150 reports while a podcast episode plays, and the Cast receiver that plays a Cast message.
+PLACEHOLDER_TITLE = "Title Placeholder"
+CAST_RECEIVER = "Default Media Receiver"
+TRACK_TITLES_KEPT = 100
+
+
+def remember_title(titles: dict[str, str], keys: list[str], title: Any) -> None:
+    """Keep the real title of a track under its id and path (the oldest go first)."""
+    if not isinstance(title, str) or not title or title.startswith(PLACEHOLDER_TITLE):
+        return
+    for key in keys:
+        titles.pop(key, None)
+        titles[key] = title
+    while len(titles) > TRACK_TITLES_KEPT:
+        titles.pop(next(iter(titles)))
+
+
 def _dig(data: Any, *keys: str) -> Any:
     for key in keys:
         if not isinstance(data, dict):
@@ -176,6 +193,25 @@ class PlayerData:
     """What the streamer is doing (parsed from ``player:player/data``)."""
 
     raw: dict[str, Any] = field(default_factory=dict)
+    # The real title when the amplifier reports a placeholder (a podcast episode), see HegelState.track_titles.
+    known_title: str | None = None
+
+    @property
+    def track_keys(self) -> list[str]:
+        """The id and the path of the track, to look up its real title."""
+        keys = (_dig(self.raw, "trackRoles", "id"), _dig(self.raw, "trackRoles", "path"))
+        return [str(key) for key in keys if key]
+
+    @property
+    def has_placeholder_title(self) -> bool:
+        """An H150 reports a podcast episode as "Title Placeholder Episode ID: <number>"."""
+        title = _dig(self.raw, "trackRoles", "title")
+        return isinstance(title, str) and title.startswith(PLACEHOLDER_TITLE)
+
+    @property
+    def is_cast_receiver(self) -> bool:
+        """A Google Cast message plays (text-to-speech): the player then shows Cast's own receiver."""
+        return CAST_RECEIVER in str(self._meta.get("serviceName") or "")
 
     @property
     def state(self) -> str | None:
@@ -192,6 +228,8 @@ class PlayerData:
 
     @property
     def title(self) -> str | None:
+        if self.has_placeholder_title:
+            return self.known_title  # None until the real title is known: better than the placeholder
         return _dig(self.raw, "trackRoles", "title") or _dig(self.raw, "mediaRoles", "title") or None
 
     @property
@@ -398,6 +436,8 @@ class HegelState:
     # Playback position (seconds) and when it was read.
     position: int | None = None
     position_at: datetime | None = None
+    # Real titles of tracks by id and path (shared with the client, which adds the tracks it starts).
+    track_titles: dict[str, str] = field(default_factory=dict)
 
     def set_play_time(self, value: Any) -> None:
         ms = unwrap(value)
@@ -441,15 +481,23 @@ class HegelState:
             if isinstance(data, dict) and "playLogicData" in data:
                 data = data["playLogicData"]
             old = self.player
-            self.player = PlayerData(data if isinstance(data, dict) else {})
-            if (self.player.title, self.player.duration) != (old.title, old.duration):
+            self.player = player = PlayerData(data if isinstance(data, dict) else {})
+            if player.has_placeholder_title:
+                known = (self.track_titles[key] for key in player.track_keys if key in self.track_titles)
+                player.known_title = next(known, None)
+            elif player.title:
+                remember_title(self.track_titles, player.track_keys, player.title)
+            if (player.title, player.duration) != (old.title, old.duration):
                 # Next track: start at 0 at once instead of showing the old track's
                 # position until it is read again (the progress bar would run backwards).
                 self.set_play_time(0)
-            if self.player.service:
-                self.last_service = self.player.service
-            if self.player.state in ACTIVE_STATES:
-                self.last_radio_id = self.player.media_id if self.player.is_radio else None
+            if player.is_cast_receiver:
+                # A Cast message is no listening session: keep what played before it, so play can resume that.
+                return True
+            if player.service:
+                self.last_service = player.service
+            if player.state in ACTIVE_STATES:
+                self.last_radio_id = player.media_id if player.is_radio else None
             return True
         return False
 
@@ -514,6 +562,8 @@ class HegelClient:
         # One search at a time: the amplifier gives every search its own form.
         self._search_lock = asyncio.Lock()
         self._search_forms: dict[str, str] = {}
+        # Real titles of the tracks this client started (see HegelState.track_titles).
+        self.track_titles: dict[str, str] = {}
 
     # ---------------------------------------------------------------- basics
 
@@ -682,7 +732,7 @@ class HegelClient:
 
     async def fetch_state(self) -> HegelState:
         """Read everything once (used at start-up and after reconnecting)."""
-        state = HegelState()
+        state = HegelState(track_titles=self.track_titles)
         state.apply_event(PATH_POWER, await self.get_value(PATH_POWER))
         for path in (PATH_VOLUME, PATH_MUTE, PATH_SOURCE, PATH_VOLUME_TYPE):
             try:
@@ -794,6 +844,9 @@ class HegelClient:
         """Send the play command (see play_request)."""
         # Same request as the Hegel web client (including "platform"), live-tested
         # with radio favorites and media server albums.
+        # The row has the real title; while it plays, a podcast episode only reports a placeholder.
+        keys = [str(track[k]) for k in ("id", "path") if track.get(k)]
+        remember_title(self.track_titles, keys, track.get("title"))
         await self.activate(PATH_CONTROL, play_request(track, parent, index), platform="windows")
 
     async def favorites_path(self) -> str:

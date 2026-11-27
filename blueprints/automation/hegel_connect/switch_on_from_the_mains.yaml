@@ -5,7 +5,10 @@ blueprint:
     amplifier answers on the network (about 20–45 seconds on an H150), switch it
     on from standby and, if you choose, go to an input and set a volume. While
     waiting, Hegel Connect is asked to reconnect every few seconds, so this also
-    replaces the blueprint "reconnect at once after a smart plug turns on".
+    replaces the blueprint "reconnect at once after a smart plug turns on". Note:
+    if the plug turns on by a schedule (for example every morning), the amplifier
+    then switches on every time as well; add a condition of your own (a time, or
+    someone at home) to the automation if that is not what you want.
   domain: automation
   homeassistant:
     min_version: 2025.4.0

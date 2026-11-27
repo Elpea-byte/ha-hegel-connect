@@ -136,6 +136,7 @@ class _Episodes(HegelClient):
         self.item = item
         self.rows_error = rows_error
         self.sent: list[dict[str, Any]] = []
+        self.track_titles: dict[str, str] = {}
 
     async def get_raw(self, path: str, roles: str = "@all") -> Any:
         return self.item

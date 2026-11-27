@@ -2,11 +2,13 @@ blueprint:
   name: Hegel Connect – announcement, then back to what played
   description: >-
     A script that speaks a message on the amplifier and then puts it back as it
-    was: power, input, volume and mute come back, internet radio starts again and
-    Spotify continues. The message goes through the amplifier's Cast entity (enable
-    it under the device if it is disabled) and a text-to-speech entity of your own.
-    It waits until the message has played instead of a fixed pause. Run it with
-    `message` from an automation, a button or a voice command.
+    was: power, input, volume and mute come back, and what played before starts
+    again (internet radio from the start, Spotify where it was). The message goes
+    through the amplifier's Cast entity and a text-to-speech entity of your own.
+    The Cast entity is often disabled: enable it under the amplifier's device and
+    restart Home Assistant (reloading the Cast integration was not enough in a
+    test). It waits until the message has played instead of a fixed pause. Run it
+    with `message` from an automation, a button or a voice command.
   domain: script
   homeassistant:
     min_version: 2025.4.0
@@ -33,6 +35,14 @@ blueprint:
         entity:
           filter:
             domain: tts
+    language:
+      name: Language
+      description: >-
+        Language of the message for the text-to-speech, for example "nl" or
+        "en-GB". Leave empty for its own default (often English).
+      default: ""
+      selector:
+        text:
     volume:
       name: Volume of the message
       description: >-
@@ -71,6 +81,10 @@ variables:
   cast_player: !input cast_player
   volume: !input volume
   max_seconds: !input max_seconds
+  language: !input language
+  # Playing before the message: start it again afterwards (the scene brings back power, input and volume,
+  # not what played).
+  was_playing: "{{ states(amplifier) in ['playing', 'buffering'] }}"
 
 sequence:
   - action: scene.create
@@ -100,9 +114,9 @@ sequence:
   - action: tts.speak
     target:
       entity_id: !input tts_engine
-    data:
-      media_player_entity_id: !input cast_player
-      message: "{{ message }}"
+    data: >-
+      {% set data = {'media_player_entity_id': cast_player, 'message': message} %}
+      {{ dict(data, language=language | trim) if language | trim else data }}
   # Wait for the message to start, then for it to end (instead of a fixed pause).
   - wait_template: "{{ is_state(cast_player, 'playing') }}"
     timeout: {seconds: 15}
@@ -112,3 +126,20 @@ sequence:
   - action: scene.turn_on
     target:
       entity_id: scene.hegel_connect_before_announcement
+  - if:
+      - condition: template
+        value_template: "{{ was_playing }}"
+    then:
+      # Spotify can carry on by itself; otherwise the player stays on Cast's receiver until play.
+      - wait_template: >-
+          {{ is_state(amplifier, 'playing')
+             and 'Default Media Receiver' not in (state_attr(amplifier, 'service') or '') }}
+        timeout: {seconds: 5}
+      - if:
+          - condition: template
+            value_template: "{{ not wait.completed }}"
+        then:
+          - action: media_player.media_play
+            continue_on_error: true
+            target:
+              entity_id: !input amplifier

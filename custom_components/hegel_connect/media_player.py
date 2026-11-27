@@ -379,13 +379,16 @@ class HegelMediaPlayer(HegelEntity, MediaPlayerEntity):
             # Another input (the TV, a turntable) or standby: resuming would switch the amplifier away from it,
             # or pull a Spotify session over from another device. Start music on purpose instead.
             raise ServiceValidationError(translation_domain=DOMAIN, translation_key="nothing_to_resume")
-        if (data.player.service or data.last_service) == "Spotify":
+        # After a Cast message (text-to-speech) the player stays on Cast's receiver, "buffering": nothing of
+        # the listener plays then, so resume what played before the message (seen on an H150).
+        cast = data.player.is_cast_receiver
+        if ((data.last_service if cast else data.player.service) or data.last_service) == "Spotify":
             await self._run(client.resume_spotify())
             return
-        if data.player.state == "paused":
+        if not cast and data.player.state == "paused":
             await self._run(client.control("pause"))
             return
-        if data.player.state in ("playing", "buffering", "transitioning"):
+        if not cast and data.player.state in ("playing", "buffering", "transitioning"):
             return  # already playing
         if radio_path := self.coordinator.last_radio_path():
             # Live radio cannot pause, so stopping it left nothing to resume: start the same station again

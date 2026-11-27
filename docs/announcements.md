@@ -29,6 +29,7 @@ What was tried on an H150 (the scene steps; the spoken message itself was not pl
 
 - Input and volume come back, also from standby (the amplifier switches on first). Allow 4 to 8 seconds, from standby the longest.
 - Internet radio starts again (live radio cannot continue); Spotify continues at the same place.
+- After a real Cast message (tried with the script, 0.8 dev) the radio did **not** come back by itself: the amplifier stays on Cast's receiver. Add `media_player.media_play` on the amplifier after the scene; from 0.8 that starts the station from before the message again (new in 0.8, not released yet). The script does this for you.
 - A lower *Maximum volume* wins over the volume in the scene, and mute is restored as it was.
 - The now-playing event fires again for the track that continues, because the stream was interrupted.
 

@@ -66,6 +66,7 @@ SAMPLE_INPUTS = {
     "cast_player": "media_player.hegel_h150_cast",
     "tts_engine": "tts.speech",
     "max_seconds": 60,
+    "language": "nl",
 }
 
 
@@ -383,3 +384,51 @@ async def test_sleep_timer_on_fixed_volume_only_waits(hass: HomeAssistant, freez
     await _tick(hass, freezer, 30)
     assert len(calls["turn_off"]) == 1
     assert calls["volume_set"] == []
+
+
+async def test_sleep_timer_stops_at_one_step_by_hand(hass: HomeAssistant, freezer) -> None:
+    """Seen on an H150: 10 -> 11 at the knob went unnoticed with a margin of two steps."""
+    _amp(hass, "playing", "Network")
+    calls = await _sleep_timer(hass, steps=2)
+    await _start_sleep_timer(hass)
+    await _settle()
+    await _tick(hass, freezer, 30)
+    _amp(hass, "playing", "Network", volume_level=0.21)  # one step up from the 0.2 the script set
+    await _tick(hass, freezer, 30)
+    assert calls["turn_off"] == []
+
+
+CAST = "media_player.hegel_h150_cast"
+
+
+async def test_announcement_starts_what_played_again_and_passes_the_language(hass: HomeAssistant, freezer) -> None:
+    """Seen on an H150: after the message the amplifier stayed on Cast's receiver, buffering."""
+    _amp(hass, "playing", "Network", service="Airable")
+    hass.states.async_set(CAST, "idle")
+    scene_calls = {name: async_mock_service(hass, "scene", name) for name in ("create", "turn_on")}
+    play = async_mock_service(hass, "media_player", "media_play")
+    spoken: list = []
+
+    async def speak(call) -> None:
+        spoken.append(call)
+        hass.states.async_set(CAST, "playing")
+        _amp(hass, "buffering", "Network", service="Casting Default Media Receiver")
+
+    hass.services.async_register("tts", "speak", speak)
+    await hass.async_add_executor_job(_install, hass, "script", "announcement.yaml")
+    inputs = {"amplifier": AMP, "cast_player": CAST, "tts_engine": "tts.speech", "language": "nl"}
+    config = {"script": {"say": {"use_blueprint": {"path": "hegel_connect/announcement.yaml", "input": inputs}}}}
+    assert await async_setup_component(hass, "script", config)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "script", "turn_on", {"entity_id": "script.say", "variables": {"message": "Eten!"}}, blocking=True
+    )
+    await _settle()
+    assert [(c.data["message"], c.data["language"]) for c in spoken] == [("Eten!", "nl")]
+    hass.states.async_set(CAST, "idle")  # the message has played
+    await _settle()
+    await _tick(hass, freezer, 1)
+    assert len(scene_calls["turn_on"]) == 1
+    assert play == []
+    await _tick(hass, freezer, 5)  # still on Cast's receiver
+    assert len(play) == 1
