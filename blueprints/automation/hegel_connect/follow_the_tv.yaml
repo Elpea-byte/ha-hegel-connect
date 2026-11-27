@@ -1,0 +1,132 @@
+blueprint:
+  name: Hegel Connect – follow the TV
+  description: >-
+    When the TV switches on, the amplifier switches on and goes to the TV's input
+    (for example an optical input, or an input in home theater bypass), at a volume
+    you can pick. When the TV switches off, the amplifier goes to standby, but only
+    if it is still on that input: if you started music in the meantime, it keeps
+    playing. Use the amplifier's own name for the input (as in its own menu, for
+    example "Optical 1"); a name you gave the input in the options works too.
+  domain: automation
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/follow_the_tv.yaml
+  input:
+    tv:
+      name: TV
+      description: >-
+        The TV, or anything that is on while the TV is (a media player, a switch,
+        a remote or a binary sensor, for example a plug that measures power).
+        Its states "off" and "standby" count as off.
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+            - domain: switch
+            - domain: remote
+            - domain: binary_sensor
+    amplifier:
+      name: Amplifier
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: media_player
+    source:
+      name: TV input
+      description: The amplifier's input the TV is connected to, for example "Optical 1".
+      selector:
+        text:
+    volume:
+      name: Volume
+      description: >-
+        Volume to start at (0–100); 0 leaves the volume alone. Ignored on an input
+        with fixed volume (home theater bypass). The maximum volume still applies.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+    standby_with_tv:
+      name: Standby when the TV switches off
+      description: Only while the amplifier is still on the TV input.
+      default: true
+      selector:
+        boolean:
+    off_delay:
+      name: Wait before standby
+      description: >-
+        How long the TV must stay off first, so a quick restart of the TV does not
+        switch the amplifier off.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 600
+          step: 5
+          unit_of_measurement: s
+
+mode: restart
+
+triggers:
+  - trigger: state
+    entity_id: !input tv
+    from: ["off", "standby"]
+    not_to: ["off", "standby", "unavailable", "unknown"]
+    id: tv_on
+  - trigger: state
+    entity_id: !input tv
+    to: ["off", "standby"]
+    for:
+      seconds: !input off_delay
+    id: tv_off
+
+variables:
+  amplifier: !input amplifier
+  source: !input source
+  volume: !input volume
+  standby_with_tv: !input standby_with_tv
+
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: tv_on
+        sequence:
+          - action: media_player.turn_on
+            target:
+              entity_id: !input amplifier
+          - wait_template: "{{ states(amplifier) not in ['off', 'unavailable', 'unknown'] }}"
+            timeout: {seconds: 30}
+            continue_on_timeout: false
+          - action: media_player.select_source
+            target:
+              entity_id: !input amplifier
+            data:
+              source: !input source
+          - if:
+              - condition: template
+                value_template: "{{ (volume | int(0)) > 0 and not state_attr(amplifier, 'fixed_volume') }}"
+            then:
+              - action: media_player.volume_set
+                continue_on_error: true  # fixed volume can be learned only after the switch
+                target:
+                  entity_id: !input amplifier
+                data:
+                  volume_level: "{{ (volume | int(0)) / 100 }}"
+      - conditions:
+          - condition: trigger
+            id: tv_off
+          - condition: template
+            value_template: "{{ standby_with_tv and states(amplifier) not in ['off', 'unavailable', 'unknown'] }}"
+          - condition: template
+            # The input the amplifier is on, by its own name and by the name shown (the options can rename it).
+            value_template: >-
+              {% set shown = state_attr(amplifier, 'source') %}
+              {% set own = (state_attr(amplifier, 'input_names') or {}).get(shown, shown) %}
+              {{ (source | lower) in [(own or '') | lower, (shown or '') | lower] }}
+        sequence:
+          - action: media_player.turn_off
+            target:
+              entity_id: !input amplifier

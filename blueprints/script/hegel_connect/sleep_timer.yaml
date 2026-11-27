@@ -1,0 +1,119 @@
+blueprint:
+  name: Hegel Connect – sleep timer
+  description: >-
+    A script that turns the volume down in small steps over the time you choose,
+    then puts the amplifier in standby and sets the volume back to where it
+    started, so it is not silent the next time. Touch the volume yourself, switch
+    the amplifier off or run the script again and the fading stops (running it
+    again starts over). On an input with fixed volume it only waits, then goes to
+    standby. Run it from a dashboard button, a voice command or an automation; you
+    can pass `minutes` to choose the time for one run.
+  domain: script
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/script/hegel_connect/sleep_timer.yaml
+  input:
+    amplifier:
+      name: Amplifier
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: media_player
+    default_minutes:
+      name: Time
+      description: Minutes until standby, when the script is run without `minutes`.
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 180
+          step: 1
+          unit_of_measurement: min
+    steps:
+      name: Steps
+      description: In how many steps the volume goes down (spread evenly over the time).
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 30
+          step: 1
+    restore_volume:
+      name: Volume back after standby
+      description: Set the volume back to where it started once the amplifier is in standby.
+      default: true
+      selector:
+        boolean:
+
+fields:
+  minutes:
+    name: Minutes
+    description: Minutes until standby for this run (leave empty for the time set in the blueprint).
+    required: false
+    selector:
+      number:
+        min: 1
+        max: 180
+        step: 1
+        unit_of_measurement: min
+
+mode: restart
+
+variables:
+  amplifier: !input amplifier
+  default_minutes: !input default_minutes
+  steps: !input steps
+  restore_volume: !input restore_volume
+  total_minutes: "{{ (minutes | default(0, true) | int(0)) or (default_minutes | int(30)) }}"
+  step_count: "{{ [steps | int(10), 1] | max }}"
+  step_seconds: "{{ (total_minutes * 60 / step_count) | round(0) | int }}"
+  start_volume: "{{ state_attr(amplifier, 'volume_level') | float(0) }}"
+  fixed: "{{ state_attr(amplifier, 'fixed_volume') == true }}"
+
+sequence:
+  - condition: template
+    value_template: "{{ states(amplifier) not in ['off', 'unavailable', 'unknown'] }}"
+  - repeat:
+      count: "{{ step_count }}"
+      sequence:
+        - delay: {seconds: "{{ step_seconds }}"}
+        # Stop when the amplifier was switched off, or when someone set another volume in the meantime.
+        - variables:
+            expected: "{{ start_volume * (1 - (repeat.index - 1) / (step_count + 1)) }}"
+        # (A condition here would only end this round of the repeat; stop ends the whole script.)
+        - if:
+            - condition: template
+              value_template: >-
+                {{ states(amplifier) in ['off', 'unavailable', 'unknown']
+                   or (not fixed and ((state_attr(amplifier, 'volume_level') | float(0)) - expected) | abs >= 0.02) }}
+          then:
+            - stop: Switched off or volume changed by hand
+
+        - if:
+            - condition: template
+              value_template: "{{ not fixed and repeat.index < step_count }}"
+          then:
+            - action: media_player.volume_set
+              target:
+                entity_id: !input amplifier
+              data:
+                volume_level: "{{ (start_volume * (1 - repeat.index / (step_count + 1))) | round(2) }}"
+  - condition: template
+    value_template: "{{ states(amplifier) not in ['off', 'unavailable', 'unknown'] }}"
+  - action: media_player.turn_off
+    target:
+      entity_id: !input amplifier
+  - if:
+      - condition: template
+        value_template: "{{ restore_volume and not fixed and start_volume > 0 }}"
+    then:
+      - wait_template: "{{ is_state(amplifier, 'off') }}"
+        timeout: {seconds: 15}
+        continue_on_timeout: false
+      - action: media_player.volume_set
+        continue_on_error: true
+        target:
+          entity_id: !input amplifier
+        data:
+          volume_level: "{{ start_volume }}"

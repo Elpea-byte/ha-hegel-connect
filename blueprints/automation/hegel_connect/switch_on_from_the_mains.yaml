@@ -1,0 +1,118 @@
+blueprint:
+  name: Hegel Connect – switch on when the smart plug turns on
+  description: >-
+    For an amplifier on a smart plug: when the plug turns on, wait until the
+    amplifier answers on the network (about 20–45 seconds on an H150), switch it
+    on from standby and, if you choose, go to an input and set a volume. While
+    waiting, Hegel Connect is asked to reconnect every few seconds, so this also
+    replaces the blueprint "reconnect at once after a smart plug turns on".
+  domain: automation
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/switch_on_from_the_mains.yaml
+  input:
+    plug:
+      name: Smart plug
+      description: The switch that powers the amplifier.
+      selector:
+        entity:
+          filter:
+            domain: switch
+    amplifier:
+      name: Amplifier
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: media_player
+    connected:
+      name: Network sensor
+      description: The amplifier's "Network" connectivity sensor (binary_sensor.<name>_network).
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: binary_sensor
+            device_class: connectivity
+    source:
+      name: Input
+      description: >-
+        Input to go to, by the amplifier's own name (for example "Network" or
+        "Optical 1"). Leave empty to keep the input the amplifier starts on.
+      default: ""
+      selector:
+        text:
+    volume:
+      name: Volume
+      description: Volume to start at (0–100); 0 leaves the volume alone. The maximum volume still applies.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+    give_up_after:
+      name: Give up after
+      description: Do nothing if the amplifier does not answer within this many seconds.
+      default: 120
+      selector:
+        number:
+          min: 30
+          max: 300
+          step: 10
+          unit_of_measurement: s
+
+mode: restart
+
+triggers:
+  - trigger: state
+    entity_id: !input plug
+    to: "on"
+
+variables:
+  amplifier: !input amplifier
+  connected: !input connected
+  source: !input source
+  volume: !input volume
+  give_up_after: !input give_up_after
+  attempts: "{{ ((give_up_after | int(120)) / 5) | round(0, 'ceil') | int }}"
+
+actions:
+  - repeat:
+      sequence:
+        - delay: {seconds: 5}
+        - action: homeassistant.update_entity
+          target:
+            entity_id: !input amplifier
+          continue_on_error: true
+      until:
+        - condition: template
+          value_template: "{{ is_state(connected, 'on') or repeat.index >= attempts }}"
+  - condition: state
+    entity_id: !input connected
+    state: "on"
+  - action: media_player.turn_on
+    target:
+      entity_id: !input amplifier
+  - wait_template: "{{ states(amplifier) not in ['off', 'unavailable', 'unknown'] }}"
+    timeout: {seconds: 30}
+    continue_on_timeout: false
+  - if:
+      - condition: template
+        value_template: "{{ source | trim != '' }}"
+    then:
+      - action: media_player.select_source
+        target:
+          entity_id: !input amplifier
+        data:
+          source: "{{ source | trim }}"
+  - if:
+      - condition: template
+        value_template: "{{ (volume | int(0)) > 0 }}"
+    then:
+      - action: media_player.volume_set
+        continue_on_error: true  # the input could have fixed volume
+        target:
+          entity_id: !input amplifier
+        data:
+          volume_level: "{{ (volume | int(0)) / 100 }}"

@@ -1,0 +1,114 @@
+blueprint:
+  name: Hegel Connect – announcement, then back to what played
+  description: >-
+    A script that speaks a message on the amplifier and then puts it back as it
+    was: power, input, volume and mute come back, internet radio starts again and
+    Spotify continues. The message goes through the amplifier's Cast entity (enable
+    it under the device if it is disabled) and a text-to-speech entity of your own.
+    It waits until the message has played instead of a fixed pause. Run it with
+    `message` from an automation, a button or a voice command.
+  domain: script
+  homeassistant:
+    min_version: 2025.4.0
+  source_url: https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/script/hegel_connect/announcement.yaml
+  input:
+    amplifier:
+      name: Amplifier
+      selector:
+        entity:
+          filter:
+            integration: hegel_connect
+            domain: media_player
+    cast_player:
+      name: Cast entity of the amplifier
+      description: The amplifier as a Google Cast media player (from the Cast integration).
+      selector:
+        entity:
+          filter:
+            integration: cast
+            domain: media_player
+    tts_engine:
+      name: Text-to-speech
+      selector:
+        entity:
+          filter:
+            domain: tts
+    volume:
+      name: Volume of the message
+      description: >-
+        Volume for the message (0–100); 0 leaves the volume alone. The maximum
+        volume still applies, and the volume from before comes back afterwards.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+    max_seconds:
+      name: Longest message
+      description: Put the amplifier back after this many seconds at the latest.
+      default: 60
+      selector:
+        number:
+          min: 5
+          max: 600
+          step: 5
+          unit_of_measurement: s
+
+fields:
+  message:
+    name: Message
+    description: The text to speak.
+    required: true
+    example: Dinner is ready
+    selector:
+      text:
+
+mode: queued
+
+variables:
+  amplifier: !input amplifier
+  cast_player: !input cast_player
+  volume: !input volume
+  max_seconds: !input max_seconds
+
+sequence:
+  - action: scene.create
+    data:
+      scene_id: hegel_connect_before_announcement
+      snapshot_entities:
+        - !input amplifier
+  - if:
+      - condition: template
+        value_template: "{{ (volume | int(0)) > 0 }}"
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ is_state(amplifier, 'off') }}"
+        then:
+          - action: media_player.turn_on
+            target:
+              entity_id: !input amplifier
+          - wait_template: "{{ not is_state(amplifier, 'off') }}"
+            timeout: {seconds: 15}
+      - action: media_player.volume_set
+        continue_on_error: true  # an input with fixed volume keeps its volume
+        target:
+          entity_id: !input amplifier
+        data:
+          volume_level: "{{ (volume | int(0)) / 100 }}"
+  - action: tts.speak
+    target:
+      entity_id: !input tts_engine
+    data:
+      media_player_entity_id: !input cast_player
+      message: "{{ message }}"
+  # Wait for the message to start, then for it to end (instead of a fixed pause).
+  - wait_template: "{{ is_state(cast_player, 'playing') }}"
+    timeout: {seconds: 15}
+  - wait_template: "{{ not is_state(cast_player, 'playing') }}"
+    timeout: {seconds: "{{ max_seconds | int(60) }}"}
+  - delay: {seconds: 1}
+  - action: scene.turn_on
+    target:
+      entity_id: scene.hegel_connect_before_announcement

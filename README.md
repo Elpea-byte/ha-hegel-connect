@@ -68,7 +68,7 @@ You get one device with a **media player** (power, volume, mute, inputs, playbac
 
 **Maximum volume** is a number on the device page. Home Assistant never makes the volume louder than it; the amplifier's own remote and knob are not limited. Set it to protect your speakers and ears. [More about it](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/volume-per-input.md#maximum-volume).
 
-**Automate:** [five blueprints](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/blueprints.md) with one-click import (reconnect after a smart plug, radio at a set time, standby when idle, lower volume at night, log what plays, new in 0.7), [examples](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/examples.md), and a recipe to [put the amplifier back after an announcement](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/announcements.md).
+**Automate:** [blueprints](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/blueprints.md) with one-click import (reconnect after a smart plug, radio at a set time, standby when idle, lower volume at night, log what plays; new in 0.8 and not released yet: follow the TV, switch on with the smart plug, a sleep timer and an announcement that puts the amplifier back), [examples](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/examples.md), and a recipe to [put the amplifier back after an announcement](https://github.com/Elpea-byte/ha-hegel-connect/blob/main/docs/announcements.md).
 
 ## Troubleshooting
 

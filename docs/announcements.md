@@ -2,6 +2,8 @@
 
 # Announcements: put the amplifier back afterwards
 
+There is also a ready-made script for this (new in 0.8, not released yet): *Announcement, then back to what played* on the [blueprints page](blueprints.md#scripts). It does what the recipe below does, but waits until the message has played instead of a fixed pause.
+
 A spoken message or a doorbell sound on the amplifier interrupts what plays. A scene brings the amplifier back to where it was: Home Assistant stores the power state, input, volume and mute of a media player in a scene and restores them, so Hegel Connect needs nothing extra.
 
 ```yaml

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from datetime import timedelta
 from pathlib import Path
 import re
 import shutil
@@ -10,16 +12,25 @@ from urllib.parse import quote
 from homeassistant.components.automation.config import async_validate_config_item
 from homeassistant.components.blueprint.models import Blueprint, BlueprintInputs
 from homeassistant.components.blueprint.schemas import BLUEPRINT_SCHEMA
+from homeassistant.components.script.config import async_validate_config_item as async_validate_script
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import load_yaml_dict
 import pytest
-from pytest_homeassistant_custom_component.common import async_mock_service
+from pytest_homeassistant_custom_component.common import async_fire_time_changed, async_mock_service
 
 ROOT = Path(__file__).parent.parent
 DIR = ROOT / "blueprints" / "automation" / "hegel_connect"
-FILES = sorted(DIR.glob("*.yaml"))
-REPO_BLOB = "https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/automation/hegel_connect/"
+SCRIPT_DIR = ROOT / "blueprints" / "script" / "hegel_connect"
+FILES = sorted(DIR.glob("*.yaml")) + sorted(SCRIPT_DIR.glob("*.yaml"))
+REPO_BLOB = "https://github.com/Elpea-byte/ha-hegel-connect/blob/main/blueprints/"
+# Inputs that pick an entity of another integration (the plug, the TV, Cast, text-to-speech).
+OTHER_ENTITIES = {"plug", "tv", "cast_player", "tts_engine"}
+
+
+def _domain(path: Path) -> str:
+    return path.parent.parent.name  # automation or script
+
 
 # Values for every input, so each blueprint can be filled in and checked as an automation.
 SAMPLE_INPUTS = {
@@ -45,23 +56,42 @@ SAMPLE_INPUTS = {
     "notify_action": [],
     "only_quality": [],
     "skip_radio": False,
+    "tv": "media_player.tv",
+    "source": "Optical 1",
+    "standby_with_tv": True,
+    "off_delay": 10,
+    "default_minutes": 30,
+    "steps": 10,
+    "restore_volume": True,
+    "cast_player": "media_player.hegel_h150_cast",
+    "tts_engine": "tts.speech",
+    "max_seconds": 60,
 }
 
 
 def _load(path: Path) -> Blueprint:
-    return Blueprint(load_yaml_dict(str(path)), path=str(path), expected_domain="automation", schema=BLUEPRINT_SCHEMA)
+    return Blueprint(load_yaml_dict(str(path)), path=str(path), expected_domain=_domain(path), schema=BLUEPRINT_SCHEMA)
 
 
-def test_the_five_blueprints_are_there() -> None:
-    names = ["night_volume_limit", "now_playing", "radio_at_time", "smart_plug_reconnect", "standby_when_idle"]
-    assert [f.stem for f in FILES] == names
+def test_the_blueprints_are_there() -> None:
+    assert [f"{_domain(f)}/{f.stem}" for f in FILES] == [
+        "automation/follow_the_tv",
+        "automation/night_volume_limit",
+        "automation/now_playing",
+        "automation/radio_at_time",
+        "automation/smart_plug_reconnect",
+        "automation/standby_when_idle",
+        "automation/switch_on_from_the_mains",
+        "script/announcement",
+        "script/sleep_timer",
+    ]
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
 def test_blueprint_is_valid(path: Path) -> None:
     blueprint = _load(path)
     meta = blueprint.data["blueprint"]
-    assert meta["source_url"] == REPO_BLOB + path.name
+    assert meta["source_url"] == f"{REPO_BLOB}{_domain(path)}/hegel_connect/{path.name}"
     assert meta["name"].startswith("Hegel Connect")
     assert meta["description"]
     assert meta["homeassistant"]["min_version"]
@@ -69,8 +99,8 @@ def test_blueprint_is_valid(path: Path) -> None:
     for name, option in blueprint.inputs.items():
         assert option and option.get("name"), f"{name} needs a name"
         selector = option["selector"]
-        # Entity pickers show only this integration's entities (except the smart plug, which is not ours).
-        if "entity" in selector and name != "plug":
+        # Entity pickers show only this integration's entities (except the ones of other integrations).
+        if "entity" in selector and name not in OTHER_ENTITIES:
             assert [f["integration"] for f in selector["entity"]["filter"]] == ["hegel_connect"], name
 
 
@@ -79,7 +109,11 @@ async def test_blueprint_makes_a_valid_automation(hass: HomeAssistant, path: Pat
     blueprint = _load(path)
     inputs = {name: SAMPLE_INPUTS[name] for name in blueprint.inputs}
     config = BlueprintInputs(blueprint, {"use_blueprint": {"path": path.name, "input": inputs}}).async_substitute()
-    validated = await async_validate_config_item(hass, "test", {"id": "test", "alias": "test", **config})
+    if _domain(path) == "script":
+        validated = await async_validate_script(hass, "test", {"alias": "test", **config})
+    else:
+        validated = await async_validate_config_item(hass, "test", {"id": "test", "alias": "test", **config})
+    assert validated is not None
     assert validated.validation_status == "ok", validated.validation_error
 
 
@@ -87,7 +121,10 @@ def test_the_blueprint_page_lists_every_blueprint_with_an_import_button() -> Non
     readme = (ROOT / "docs" / "blueprints.md").read_text(encoding="utf-8")
     assert "docs/blueprints.md" in (ROOT / "README.md").read_text(encoding="utf-8")  # the README links to the page
     for path in FILES:
-        raw = f"https://raw.githubusercontent.com/Elpea-byte/ha-hegel-connect/main/blueprints/automation/hegel_connect/{path.name}"
+        raw = (
+            "https://raw.githubusercontent.com/Elpea-byte/ha-hegel-connect/main/blueprints/"
+            f"{_domain(path)}/hegel_connect/{path.name}"
+        )
         assert f"blueprint_import/?blueprint_url={quote(raw, safe='')}" in readme, path.name
     assert not re.search(r"blueprint_url=https:(//|%2F%2F)github\.com", readme)
 
@@ -177,3 +214,172 @@ async def test_now_playing_blueprint_runs_the_action_of_the_user_and_sends_nothi
     _track(hass, "2026-11-09T20:00:00.000+00:00", "One")
     await hass.async_block_till_done()
     assert [c.data["message"] for c in calls] == ["One by Artist"]
+
+
+# ------------------------------------------------------------------ behaviour of the 0.8 blueprints
+
+AMP = "media_player.hegel_h150"
+TV = "media_player.tv"
+
+
+def _install(hass: HomeAssistant, domain: str, name: str) -> None:
+    target = Path(hass.config.path(f"blueprints/{domain}/hegel_connect"))
+    target.mkdir(parents=True, exist_ok=True)
+    source = DIR if domain == "automation" else SCRIPT_DIR
+    shutil.copy(source / name, target / name)
+
+
+def _amp(hass: HomeAssistant, state: str, source: str = "Optical 1", **attributes) -> None:
+    hass.states.async_set(
+        AMP,
+        state,
+        {"source": source, "input_names": {"TV": "Optical 1", "Network": "Network"}, "volume_level": 0.3} | attributes,
+    )
+
+
+async def _follow_the_tv(hass: HomeAssistant, **inputs) -> dict[str, list]:
+    names = ("turn_off", "select_source", "volume_set")
+    calls = {name: async_mock_service(hass, "media_player", name) for name in names}
+    calls["turn_on"] = []
+
+    async def turn_on(call) -> None:
+        calls["turn_on"].append(call)
+        _amp(hass, "on", hass.states.get(AMP).attributes["source"])
+
+    hass.services.async_register("media_player", "turn_on", turn_on)
+    await hass.async_add_executor_job(_install, hass, "automation", "follow_the_tv.yaml")
+    config = {
+        "automation": {
+            "alias": "follow the tv",
+            "use_blueprint": {
+                "path": "hegel_connect/follow_the_tv.yaml",
+                "input": {"tv": TV, "amplifier": AMP, "source": "Optical 1", "off_delay": 0, **inputs},
+            },
+        }
+    }
+    assert await async_setup_component(hass, "automation", config)
+    await hass.async_block_till_done()
+    return calls
+
+
+async def test_follow_the_tv_switches_on_to_the_tv_input(hass: HomeAssistant) -> None:
+    _amp(hass, "off", "Network")
+    hass.states.async_set(TV, "off")
+    calls = await _follow_the_tv(hass, volume=25)
+    hass.states.async_set(TV, "on")
+    await hass.async_block_till_done()
+    assert len(calls["turn_on"]) == 1
+    assert [c.data["source"] for c in calls["select_source"]] == ["Optical 1"]
+    assert [c.data["volume_level"] for c in calls["volume_set"]] == [0.25]
+
+
+async def test_follow_the_tv_standby_only_on_the_tv_input(hass: HomeAssistant) -> None:
+    """Shown name "TV" is the amplifier's "Optical 1" (renamed in the options): still the TV input."""
+    _amp(hass, "on", "TV")
+    hass.states.async_set(TV, "on")
+    calls = await _follow_the_tv(hass)
+    hass.states.async_set(TV, "off")
+    await hass.async_block_till_done()
+    assert len(calls["turn_off"]) == 1
+    # Music started in the meantime: the TV going off leaves it playing.
+    _amp(hass, "playing", "Network")
+    hass.states.async_set(TV, "on")
+    await hass.async_block_till_done()
+    _amp(hass, "playing", "Network")
+    hass.states.async_set(TV, "off")
+    await hass.async_block_till_done()
+    assert len(calls["turn_off"]) == 1
+
+
+async def test_follow_the_tv_ignores_a_tv_that_comes_back_after_a_restart(hass: HomeAssistant) -> None:
+    """unavailable/unknown -> on (Home Assistant or the TV integration starting) is no "TV switched on"."""
+    _amp(hass, "off", "Network")
+    hass.states.async_set(TV, "unavailable")
+    calls = await _follow_the_tv(hass)
+    hass.states.async_set(TV, "on")
+    await hass.async_block_till_done()
+    assert calls["turn_on"] == []
+
+
+async def _sleep_timer(hass: HomeAssistant, **inputs) -> dict[str, list]:
+    calls: dict[str, list] = {}
+
+    async def volume_set(call) -> None:
+        calls["volume_set"].append(call)
+        _amp(hass, hass.states.get(AMP).state, "Network", volume_level=call.data["volume_level"])
+
+    async def turn_off(call) -> None:
+        calls["turn_off"].append(call)
+        _amp(hass, "off", "Network", volume_level=hass.states.get(AMP).attributes["volume_level"])
+
+    calls["volume_set"], calls["turn_off"] = [], []
+    hass.services.async_register("media_player", "volume_set", volume_set)
+    hass.services.async_register("media_player", "turn_off", turn_off)
+    await hass.async_add_executor_job(_install, hass, "script", "sleep_timer.yaml")
+    config = {
+        "script": {
+            "sleep": {
+                "use_blueprint": {
+                    "path": "hegel_connect/sleep_timer.yaml",
+                    "input": {"amplifier": AMP, **inputs},
+                }
+            }
+        }
+    }
+    assert await async_setup_component(hass, "script", config)
+    await hass.async_block_till_done()
+    return calls
+
+
+async def _start_sleep_timer(hass: HomeAssistant) -> None:
+    """Start the script without waiting for it (it runs for a minute of the frozen clock)."""
+    await hass.services.async_call(
+        "script", "turn_on", {"entity_id": "script.sleep", "variables": {"minutes": 1}}, blocking=True
+    )
+
+
+async def _tick(hass: HomeAssistant, freezer, seconds: int) -> None:
+    freezer.tick(timedelta(seconds=seconds))
+    async_fire_time_changed(hass)
+    await _settle()
+
+
+async def _settle() -> None:
+    """Let the script run its next steps; async_block_till_done would also wait for its next delay."""
+    for _ in range(50):
+        await asyncio.sleep(0)
+
+
+async def test_sleep_timer_fades_goes_to_standby_and_puts_the_volume_back(hass: HomeAssistant, freezer) -> None:
+    _amp(hass, "playing", "Network")
+    calls = await _sleep_timer(hass, steps=2)
+    await _start_sleep_timer(hass)
+    await _settle()
+    await _tick(hass, freezer, 30)
+    assert [c.data["volume_level"] for c in calls["volume_set"]] == [0.2]
+    await _tick(hass, freezer, 30)
+    assert len(calls["turn_off"]) == 1
+    assert [c.data["volume_level"] for c in calls["volume_set"]] == [0.2, 0.3]  # back to the start
+
+
+async def test_sleep_timer_stops_when_someone_sets_the_volume(hass: HomeAssistant, freezer) -> None:
+    _amp(hass, "playing", "Network")
+    calls = await _sleep_timer(hass, steps=2)
+    await _start_sleep_timer(hass)
+    await _settle()
+    await _tick(hass, freezer, 30)
+    _amp(hass, "playing", "Network", volume_level=0.5)  # turned up by hand
+    await _tick(hass, freezer, 30)
+    assert calls["turn_off"] == []
+    assert [c.data["volume_level"] for c in calls["volume_set"]] == [0.2]
+
+
+async def test_sleep_timer_on_fixed_volume_only_waits(hass: HomeAssistant, freezer) -> None:
+    _amp(hass, "playing", "Optical 1", fixed_volume=True)
+    calls = await _sleep_timer(hass, steps=2)
+    await _start_sleep_timer(hass)
+    await _settle()
+    await _tick(hass, freezer, 30)
+    await _tick(hass, freezer, 30)
+    assert len(calls["turn_off"]) == 1
+    assert calls["volume_set"] == []
