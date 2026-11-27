@@ -86,6 +86,8 @@ variables:
   spotify_album_uri: "{{ trigger.to_state.attributes.spotify_album_uri }}"
   spotify_artist_uri: "{{ trigger.to_state.attributes.spotify_artist_uri }}"
   spotify_playlist_uri: "{{ trigger.to_state.attributes.spotify_playlist_uri }}"
+  duration: "{{ trigger.to_state.attributes.duration }}"
+  playback_source: "{{ trigger.to_state.attributes.playback_source }}"
 
 conditions:
   - condition: template

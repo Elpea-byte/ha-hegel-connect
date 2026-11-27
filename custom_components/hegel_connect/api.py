@@ -159,6 +159,7 @@ class HegelSource:
 # Title an H150 reports while a podcast episode plays, and the Cast receiver that plays a Cast message.
 PLACEHOLDER_TITLE = "Title Placeholder"
 CAST_RECEIVER = "Default Media Receiver"
+CAST_TITLE = "Google Cast"
 TRACK_TITLES_KEPT = 100
 
 
@@ -210,8 +211,20 @@ class PlayerData:
 
     @property
     def is_cast_receiver(self) -> bool:
-        """A Google Cast message plays (text-to-speech): the player then shows Cast's own receiver."""
-        return CAST_RECEIVER in str(self._meta.get("serviceName") or "")
+        """A Google Cast message plays (text-to-speech): the player then shows Cast's own receiver.
+
+        Seen on an H150: service "Casting Default Media Receiver", title "Google Cast" (either is enough, since
+        a first report can come without the metadata).
+        """
+        return CAST_RECEIVER in str(self._meta.get("serviceName") or "") or (
+            _dig(self.raw, "trackRoles", "title") == CAST_TITLE
+        )
+
+    @property
+    def media_path(self) -> str | None:
+        """Path of what plays (for a radio station the path that starts it again, seen on an H150)."""
+        path = _dig(self.raw, "mediaRoles", "path")
+        return path if isinstance(path, str) and path else None
 
     @property
     def state(self) -> str | None:
@@ -431,8 +444,9 @@ class HegelState:
     play_mode: str | None = None
     # Last streaming service seen (player data can lose it while paused).
     last_service: str | None = None
-    # Id of the radio station that played last; emptied when something else plays.
+    # Id and path of the radio station that played last; emptied when something else plays.
     last_radio_id: str | None = None
+    last_radio_path: str | None = None
     # Playback position (seconds) and when it was read.
     position: int | None = None
     position_at: datetime | None = None
@@ -496,8 +510,11 @@ class HegelState:
                 return True
             if player.service:
                 self.last_service = player.service
-            if player.state in ACTIVE_STATES:
-                self.last_radio_id = player.media_id if player.is_radio else None
+            if player.state in ACTIVE_STATES and player.is_radio:
+                self.last_radio_id, self.last_radio_path = player.media_id, player.media_path
+            elif player.state in ("playing", "paused"):
+                # Something else really plays. Not on "buffering": a first report often has no metadata yet.
+                self.last_radio_id = self.last_radio_path = None
             return True
         return False
 

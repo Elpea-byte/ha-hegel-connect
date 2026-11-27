@@ -124,6 +124,8 @@ sequence:
     timeout: {seconds: "{{ max_seconds | int(60) }}"}
   - delay: {seconds: 1}
   - action: scene.turn_on
+    # Restoring "playing" presses play; if that fails, power, input and volume still came back.
+    continue_on_error: true
     target:
       entity_id: scene.hegel_connect_before_announcement
   - if:

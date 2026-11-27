@@ -170,3 +170,75 @@ async def test_the_media_player_and_the_event_skip_the_placeholder(
     attributes = hass.states.get(ENTITY).attributes
     assert attributes.get("media_title") is None
     assert attributes.get("media_album_name") == "A podcast"
+
+
+# ------------------------------------------------------------------ the last station, also through a Cast message
+
+STATION_PATH = f"airable:{HOST}/id/airable/radio/55"
+
+
+def _station(state: str = "playing") -> dict[str, Any]:
+    """A station that is no favorite, with the path an H150 reports for it in mediaRoles."""
+    return {
+        "state": state,
+        "mediaRoles": {"id": "airable://airable/radio/55", "path": STATION_PATH, "title": "Sublime"},
+        "trackRoles": {"title": "Sublime", "mediaData": {"metaData": {"serviceName": "Airable", "radioStation": True}}},
+    }
+
+
+async def test_play_starts_any_station_again_by_the_path_it_reported(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    """Also one that Home Assistant did not start (or started before a restart, which forgets that)."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _station())
+    fake.push("player:player/data", {"state": "stopped"})
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    await _play(hass)
+    assert ("play_path", STATION_PATH) in fake.calls
+
+
+async def test_a_cast_message_whose_first_report_has_no_service_keeps_the_station(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _station())
+    fake.push("player:player/data", {"state": "buffering", "trackRoles": {}})  # nothing known yet
+    fake.push("player:player/data", {"state": "playing", "trackRoles": {"title": "Google Cast"}})
+    fake.push("player:player/data", _cast("buffering"))
+    await hass.async_block_till_done()
+    fake.calls.clear()
+    await _play(hass)
+    assert ("play_path", STATION_PATH) in fake.calls
+
+
+async def test_a_full_read_during_a_cast_message_keeps_the_station(
+    hass: HomeAssistant, fake_hegel, config_entry
+) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _station())
+    await hass.async_block_till_done()
+    fake.values["player:player/data"] = _cast("buffering")  # what a read gives during the message
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert config_entry.runtime_data.data.last_radio_path == STATION_PATH
+    fake.calls.clear()
+    await _play(hass)
+    assert ("play_path", STATION_PATH) in fake.calls
+
+
+async def test_something_else_playing_forgets_the_station(hass: HomeAssistant, fake_hegel, config_entry) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _station())
+    fake.push(
+        "player:player/data",
+        {"state": "playing", "mediaRoles": {"id": "song"}, "trackRoles": {"title": "Song"}},
+    )
+    await hass.async_block_till_done()
+    data = config_entry.runtime_data.data
+    assert (data.last_radio_id, data.last_radio_path) == (None, None)

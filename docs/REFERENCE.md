@@ -94,7 +94,7 @@ The dashboards rely on these. They describe what plays and are `null` unless the
 
 ### The now-playing event
 
-Event type `track_changed`, with the attributes `title`, `artist`, `album`, `image_url`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `spotify_playlist_uri` (Spotify only, otherwise null; the playlist only when it plays from one), `station`, `source` (the shown input name), `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate` and `is_radio`. A value the amplifier does not report is null. Details and examples: [now playing](now-playing.md).
+Event type `track_changed`, with the attributes `title`, `artist`, `album`, `image_url`, `service`, `spotify_uri`, `spotify_album_uri`, `spotify_artist_uri`, `spotify_playlist_uri` (Spotify only, otherwise null; the playlist only when it plays from one), `station`, `source` (the shown input name), `audio_quality`, `codec`, `sample_rate`, `bit_depth`, `bitrate`, `is_radio`, and `duration` (seconds, null for radio) and `playback_source` (the album or playlist name the service reports; both new in 0.8, not released yet). A value the amplifier does not report is null. When the first report of a new track lacks its audio quality or album, the event waits up to 1.5 seconds for them and fires once (new in 0.8, not released yet). Details and examples: [now playing](now-playing.md).
 
 ## Actions
 

@@ -19,7 +19,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
-    ACTIVE_STATES,
     NETWORK_SOURCE_NAME,
     PATH_PLAYER,
     PATH_SOURCE,
@@ -306,20 +305,23 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         """Keep what a fresh read cannot know (the last streaming service)."""
         if self.data is not None and not state.last_service:
             state.last_service = self.data.last_service
-        if self.data is not None and state.last_radio_id is None and state.player.state not in ACTIVE_STATES:
-            state.last_radio_id = self.data.last_radio_id
+        # The last station stays unless something else really plays (also through a Cast message).
+        something_else = state.player.state in ("playing", "paused") and not state.player.is_cast_receiver
+        if self.data is not None and state.last_radio_id is None and not something_else:
+            state.last_radio_id, state.last_radio_path = self.data.last_radio_id, self.data.last_radio_path
         return state
 
     def last_radio_path(self) -> str | None:
         """Path of the station that played last, if radio was the last thing played.
 
-        A favorite, or a station Home Assistant started by its path (search, media browser).
+        A favorite, a station Home Assistant started by its path (search, media browser), or else the path the
+        amplifier reported for the station (any station, also after a restart of Home Assistant).
         """
         radio_id = self.data.last_radio_id if self.data is not None else None
-        if not radio_id:
+        if not radio_id or self.data is None:
             return None
         favorite = next((f["path"] for f in self.favorites if f["id"] == radio_id and f["path"]), None)
-        return favorite or self.radio_paths.get(radio_id)
+        return favorite or self.radio_paths.get(radio_id) or self.data.last_radio_path
 
     def radio_started(self, path: str) -> None:
         """Home Assistant started ``path`` (an internet radio path); bind it once the station plays."""

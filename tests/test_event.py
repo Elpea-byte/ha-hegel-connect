@@ -310,3 +310,85 @@ async def test_a_link_played_from_outside_is_not_a_track(hass: HomeAssistant, fa
     await hass.async_block_till_done()
     assert hass.states.get("media_player.hegel_h150").attributes.get("media_title") == "Home Assistant"
     assert fired == []
+
+
+# ------------------------------------------------------------------ waiting for the details (0.8)
+
+
+def _nas(title: str, album: str | None, codec: str | None, media_id: str = "song-1") -> dict[str, Any]:
+    meta: dict[str, Any] = {"serviceName": "UPnP"}
+    if album:
+        meta["album"] = album
+    media_data: dict[str, Any] = {"metaData": meta}
+    if codec:
+        media_data["activeResource"] = {"codec": codec, "sampleFrequency": 44100, "bitsPerSample": 16}
+    return {
+        "state": "playing",
+        "mediaRoles": {"id": media_id},
+        "trackRoles": {"title": title, "mediaData": media_data},
+        "status": {"duration": 245000},
+    }
+
+
+async def _later(hass: HomeAssistant, seconds: float) -> None:
+    from datetime import timedelta
+
+    from homeassistant.util import dt as dt_util
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
+    await hass.async_block_till_done()
+
+
+async def test_a_track_without_its_details_waits_and_fires_once(
+    hass: HomeAssistant, fake_hegel, config_entry, fired
+) -> None:
+    """Seen with podcasts on an H150: a first report without the album, then one with it."""
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _nas("One", None, None))
+    await hass.async_block_till_done()
+    assert fired == []  # waits for the details
+    fake.push("player:player/data", _nas("One", "Album", "FLAC"))
+    await hass.async_block_till_done()
+    assert [(e["title"], e["album"], e["audio_quality"]) for e in fired] == [("One", "Album", "cd")]
+    assert fired[0]["duration"] == 245
+    await _later(hass, 2)
+    assert len(fired) == 1  # no second event when the wait is over
+
+
+async def test_details_that_never_come_fire_after_the_wait(
+    hass: HomeAssistant, fake_hegel, config_entry, fired
+) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _nas("One", None, None))
+    await hass.async_block_till_done()
+    assert fired == []
+    await _later(hass, 2)
+    assert [(e["title"], e["album"]) for e in fired] == [("One", None)]
+    # The album arrives later: the same track, no second event.
+    fake.push("player:player/data", _nas("One", "Album", "FLAC"))
+    await hass.async_block_till_done()
+    assert len(fired) == 1
+
+
+async def test_a_skip_during_the_wait_fires_only_the_new_track(
+    hass: HomeAssistant, fake_hegel, config_entry, fired
+) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _nas("One", None, None))
+    fake.push("player:player/data", _nas("Two", None, None, media_id="song-2"))
+    await hass.async_block_till_done()
+    await _later(hass, 2)
+    assert [e["title"] for e in fired] == ["Two"]
+
+
+async def test_a_complete_track_fires_at_once(hass: HomeAssistant, fake_hegel, config_entry, fired) -> None:
+    await _setup(hass, config_entry)
+    fake = fake_hegel[-1]
+    fake.push("player:player/data", _nas("One", "Album", "FLAC"))
+    await hass.async_block_till_done()
+    assert [e["title"] for e in fired] == ["One"]
+    assert "playback_source" in fired[0]
