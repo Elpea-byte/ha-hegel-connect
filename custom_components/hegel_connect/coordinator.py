@@ -11,7 +11,9 @@ import time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -45,6 +47,7 @@ from .const import (
     RADIO_PATHS_KEPT,
     SOURCE_ATTEMPTS,
     SOURCE_VERIFY_WAIT,
+    UNREACHABLE_ISSUE_AFTER,
     VOLUMES_SAVE_DELAY,
     VOLUMES_STORAGE_VERSION,
 )
@@ -111,6 +114,8 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         self._favorites_retries = 0
         self._favorites_retry: Callable[[], None] | None = None
         self._favorites_read = False  # a list (even an empty one) was accepted once
+        # Repair issue when the amplifier has not answered for a long time (see _watch_unreachable).
+        self._unreachable_timer: Callable[[], None] | None = None
         # Set by a refresh (homeassistant.update_entity) while the listener waits to reconnect.
         self._reconnect_now = asyncio.Event()
         # Pending position check after a seek (cancel callback), see position_seeked().
@@ -143,6 +148,9 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         )
         self.config_entry.async_on_unload(self._cancel_seek_check)
         self.config_entry.async_on_unload(self._cancel_favorites_retry)
+        self.config_entry.async_on_unload(self._clear_unreachable)
+        if self.started_offline:
+            self._watch_unreachable()
         saved = await self._volume_store.async_load()
         saved = saved or {}
         # Earlier dev versions saved the volumes alone, without the "volumes" key.
@@ -155,13 +163,22 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
         if self.connected:
             await self.async_refresh_favorites()
 
-    async def async_refresh_favorites(self) -> None:
-        """Re-read the radio favorites (they change only in the Hegel Control app)."""
+    async def async_refresh_favorites(self, raise_errors: bool = False) -> None:
+        """Re-read the radio favorites (they change only in the Hegel Control app).
+
+        ``raise_errors``: for a press of the button, which tells the user when the amplifier refuses.
+        """
         try:
             favorites = await self.client.favorites()
         except HegelError as err:
             _LOGGER.debug("Radio favorites not available: %s", err)
             self._retry_favorites()  # the last good list stays
+            if raise_errors:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
             return
         # Right after power-on the amplifier can answer before its cloud part is ready and give an empty list:
         # keep what is known and read again in a moment instead. Only when favorites were seen before or none
@@ -193,6 +210,49 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
 
             self._favorites_retry = async_call_later(self.hass, FAVORITES_RETRY_DELAY, _again)
         return True
+
+    # ------------------------------------------------------------ repair issue
+
+    @property
+    def _issue_id(self) -> str:
+        return f"unreachable_{self.config_entry.entry_id}"
+
+    def _watch_unreachable(self) -> None:
+        """Gone: raise a repair issue if the amplifier still does not answer after UNREACHABLE_ISSUE_AFTER.
+
+        Longer than a night or a weekend without power, so a power strip switched off at night raises none.
+        """
+        if self._unreachable_timer is not None:
+            return
+
+        @callback  # in the event loop: the issue registry may not be touched from another thread
+        def _raise(_now: datetime) -> None:
+            self._unreachable_timer = None
+            if self.connected:
+                return
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                self._issue_id,
+                is_fixable=False,
+                is_persistent=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="unreachable",
+                translation_placeholders={
+                    "name": self.config_entry.title,
+                    "host": self.client.host,
+                    "hours": str(round(UNREACHABLE_ISSUE_AFTER.total_seconds() / 3600)),
+                },
+            )
+
+        self._unreachable_timer = async_call_later(self.hass, UNREACHABLE_ISSUE_AFTER, _raise)
+
+    def _clear_unreachable(self) -> None:
+        """Answering again (or unloaded): no timer, no issue."""
+        if self._unreachable_timer is not None:
+            self._unreachable_timer()
+            self._unreachable_timer = None
+        ir.async_delete_issue(self.hass, DOMAIN, self._issue_id)
 
     def _cancel_favorites_retry(self) -> None:
         if self._favorites_retry is not None:
@@ -239,6 +299,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             # favorites when it connects.
             _LOGGER.info("Connected to Hegel at %s", self.client.host)
             self.connected = True
+            self._clear_unreachable()
         return state
 
     def _carry_over(self, state: HegelState) -> HegelState:
@@ -328,6 +389,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
                 state = self._carry_over(await self.client.fetch_state())
                 if not self.connected:
                     _LOGGER.info("Connected to Hegel at %s", self.client.host)
+                    self._clear_unreachable()
                     if not self.favorites:
                         self.config_entry.async_create_task(self.hass, self.async_refresh_favorites())
                 self.connected = True
@@ -372,6 +434,7 @@ class HegelCoordinator(DataUpdateCoordinator[HegelState]):
             # Switched off at the mains, unplugged or network down: the network sensor goes off and
             # the entities that need the amplifier become unavailable (standby is not this).
             self.connected = False
+            self._watch_unreachable()
             self._cancel_favorites_retry()
             self._favorites_retries = 0
             self.async_update_listeners()

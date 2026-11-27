@@ -12,6 +12,7 @@ MANUFACTURER = "Hegel"
 # Kept here (not in __init__.py) so adding a platform only touches this file.
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.EVENT,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
@@ -52,6 +53,8 @@ FAVORITES_INTERVAL = timedelta(hours=6)
 # An empty or failed read of the favorites is tried again this often, this many seconds apart
 # (the amplifier can answer before its cloud part is ready, just after power-on).
 FAVORITES_RETRIES = 3
+# A repair issue when the amplifier has not answered this long (longer than a night or weekend without power).
+UNREACHABLE_ISSUE_AFTER = timedelta(hours=24)
 FAVORITES_RETRY_DELAY = 45
 # Stations started from Home Assistant by path that play can restart after a stop.
 RADIO_PATHS_KEPT = 20

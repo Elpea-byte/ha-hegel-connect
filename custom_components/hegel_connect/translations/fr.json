@@ -57,6 +57,14 @@
         "name": "Réseau"
       }
     },
+    "button": {
+      "reconnect": {
+        "name": "Reconnecter"
+      },
+      "refresh_favorites": {
+        "name": "Actualiser les favoris radio"
+      }
+    },
     "event": {
       "now_playing": {
         "name": "Lecture en cours",
@@ -177,6 +185,12 @@
     },
     "abort": {
       "no_inputs": "Les entrées ne sont pas encore connues. Réessayez lorsque l'amplificateur est connecté."
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} ne répond plus depuis {hours} heures",
+      "description": "Home Assistant n'arrive pas à joindre {name} à l'adresse {host} : il ne répond pas du tout, même en veille. Vérifiez que l'amplificateur est alimenté (une prise connectée ou une multiprise éteinte) et sur le réseau, et que son adresse n'a pas changé (sinon, utilisez *Reconfigurer* sur l'intégration). Si vous l'avez éteint volontairement, vous pouvez ignorer ce message : il disparaît de lui-même dès que l'amplificateur répond à nouveau."
     }
   }
 }

@@ -95,7 +95,7 @@ Then open an [issue](https://github.com/Elpea-byte/ha-hegel-connect/issues/new/c
 | *Configure* says the inputs are not known yet | Hegel Connect has not read the inputs yet: wait until the amplifier is connected and try again. Expected from the code; not tried. |
 | Now playing and the stream sensors are empty | They only show something on the network input (the media player is *on* on other inputs). If it stays empty on the network input, a new firmware may have renamed it: please open an issue. |
 
-**Amplifier switched off at the mains or unplugged?** When it comes back, Home Assistant normally notices within a minute (it retries after 5, 10, 20, 40 and then every 60 seconds). To reconnect at once, call `homeassistant.update_entity` on any Hegel Connect entity (for example `media_player.hegel_h150`), or use the blueprint *Smart plug: reconnect at once*. It only helps once the amplifier answers on the network again: right after power-on it needs about 20 to 45 seconds to start (on an H150).
+**Amplifier switched off at the mains or unplugged?** When it comes back, Home Assistant normally notices within a minute (it retries after 5, 10, 20, 40 and then every 60 seconds). To reconnect at once, call `homeassistant.update_entity` on any Hegel Connect entity (for example `media_player.hegel_h150`), press the *Reconnect* button (disabled by default; new in 0.8, not released yet), or use the blueprint *Smart plug: reconnect at once*. If it does not answer for 24 hours, a repair issue says so under Settings > Repairs (new in 0.8, not released yet). It only helps once the amplifier answers on the network again: right after power-on it needs about 20 to 45 seconds to start (on an H150).
 
 ## Features
 

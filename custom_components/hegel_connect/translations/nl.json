@@ -57,6 +57,14 @@
         "name": "Netwerk"
       }
     },
+    "button": {
+      "reconnect": {
+        "name": "Opnieuw verbinden"
+      },
+      "refresh_favorites": {
+        "name": "Radiofavorieten verversen"
+      }
+    },
     "event": {
       "now_playing": {
         "name": "Nu aan het spelen",
@@ -177,6 +185,12 @@
     },
     "abort": {
       "no_inputs": "De ingangen zijn nog niet bekend. Probeer het opnieuw als de versterker verbonden is."
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} antwoordt al {hours} uur niet",
+      "description": "Home Assistant kan {name} op {host} niet bereiken: hij antwoordt helemaal niet, ook niet in stand-by. Controleer of de versterker stroom heeft (een slimme stekker of stekkerdoos die uit staat) en op het netwerk zit, en of zijn adres niet veranderd is (zo ja, gebruik *Opnieuw configureren* bij de integratie). Heb je hem bewust uitgezet, dan kun je dit negeren: de melding verdwijnt vanzelf zodra de versterker weer antwoordt."
     }
   }
 }

@@ -58,6 +58,14 @@
       "auto_standby": {
         "default": "mdi:power-sleep"
       }
+    },
+    "button": {
+      "reconnect": {
+        "default": "mdi:lan-pending"
+      },
+      "refresh_favorites": {
+        "default": "mdi:playlist-music"
+      }
     }
   }
 }

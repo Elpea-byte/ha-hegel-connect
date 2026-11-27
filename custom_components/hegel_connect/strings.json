@@ -57,6 +57,14 @@
         "name": "Network"
       }
     },
+    "button": {
+      "reconnect": {
+        "name": "Reconnect"
+      },
+      "refresh_favorites": {
+        "name": "Refresh radio favorites"
+      }
+    },
     "event": {
       "now_playing": {
         "name": "Now playing",
@@ -177,6 +185,12 @@
     },
     "abort": {
       "no_inputs": "The inputs are not known yet. Try again when the amplifier is connected."
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} has not answered for {hours} hours",
+      "description": "Home Assistant cannot reach {name} at {host}: it does not answer at all, not even in standby. Check that the amplifier has power (a smart plug or power strip that is off) and is on the network, and that its address has not changed (if it has, use *Reconfigure* on the integration). If you switched it off on purpose, you can ignore this: the message goes away by itself as soon as the amplifier answers again."
     }
   }
 }

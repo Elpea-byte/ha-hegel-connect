@@ -57,6 +57,14 @@
         "name": "Red"
       }
     },
+    "button": {
+      "reconnect": {
+        "name": "Volver a conectar"
+      },
+      "refresh_favorites": {
+        "name": "Actualizar favoritos de radio"
+      }
+    },
     "event": {
       "now_playing": {
         "name": "Reproduciendo ahora",
@@ -177,6 +185,12 @@
     },
     "abort": {
       "no_inputs": "Las entradas aún no se conocen. Inténtalo de nuevo cuando el amplificador esté conectado."
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} lleva {hours} horas sin responder",
+      "description": "Home Assistant no puede llegar a {name} en {host}: no responde en absoluto, ni siquiera en reposo. Comprueba que el amplificador tiene corriente (un enchufe inteligente o una regleta apagados) y está en la red, y que su dirección no ha cambiado (si ha cambiado, usa *Reconfigurar* en la integración). Si lo apagaste a propósito, puedes ignorarlo: el aviso desaparece solo en cuanto el amplificador vuelve a responder."
     }
   }
 }

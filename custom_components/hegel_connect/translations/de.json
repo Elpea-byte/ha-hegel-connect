@@ -57,6 +57,14 @@
         "name": "Netzwerk"
       }
     },
+    "button": {
+      "reconnect": {
+        "name": "Neu verbinden"
+      },
+      "refresh_favorites": {
+        "name": "Radiofavoriten aktualisieren"
+      }
+    },
     "event": {
       "now_playing": {
         "name": "Aktuelle Wiedergabe",
@@ -177,6 +185,12 @@
     },
     "abort": {
       "no_inputs": "Die Eingänge sind noch nicht bekannt. Versuche es erneut, wenn der Verstärker verbunden ist."
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} antwortet seit {hours} Stunden nicht",
+      "description": "Home Assistant erreicht {name} unter {host} nicht: Er antwortet gar nicht, auch nicht im Standby. Prüfe, ob der Verstärker Strom hat (eine smarte Steckdose oder Steckdosenleiste, die aus ist) und im Netzwerk ist, und ob sich seine Adresse nicht geändert hat (wenn doch, nutze *Neu konfigurieren* bei der Integration). Hast du ihn absichtlich ausgeschaltet, kannst du das ignorieren: Die Meldung verschwindet von selbst, sobald der Verstärker wieder antwortet."
     }
   }
 }

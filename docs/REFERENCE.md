@@ -62,8 +62,10 @@ Features: next, previous, seek, shuffle, repeat and stop are only offered while 
 | `switch.hegel_h150_remember_volume_per_input` | `remember_volume` | no | config | `on` or `off` |
 | `select.hegel_h150_auto_standby` | `auto_standby` | no | config | `off`, `5_min`, `10_min`, `20_min` (the amplifier's own list); `unavailable` while not connected or when the amplifier does not have the setting |
 | `event.hegel_h150_now_playing` | `now_playing` | no | | event type `track_changed`, see below |
+| `button.hegel_h150_reconnect` | `reconnect` | no | diagnostic | press to try to reach the amplifier now, the same as `homeassistant.update_entity`; always available (new in 0.8, not released yet) |
+| `button.hegel_h150_refresh_radio_favorites` | `refresh_favorites` | no | config | press to read the radio favorites now instead of at the next six-hourly read; an error when the amplifier refuses (new in 0.8, not released yet) |
 
-**When the amplifier does not answer at all** (switched off at the mains, unplugged, network down), the media player, the stream sensors, *Fixed volume*, the radio favorite select and auto standby are `unavailable`. These stay available: the network sensor (it is `off` then), the radio favorites sensor (the saved list), *Maximum volume*, the start volumes and *Remember volume per input* (their values are kept in Home Assistant), and the now-playing event (so the next track after the night is not mistaken for a repeat). Standby is not "gone": the amplifier still answers, the media player is `off` and everything is available. *New in 0.8, not released yet: in 0.7 and older the media player showed `off` and the sensors `unknown`.* The optional entities are enabled under the device page's disabled entities.
+**When the amplifier does not answer at all** (switched off at the mains, unplugged, network down), the media player, the stream sensors, *Fixed volume*, the radio favorite select and auto standby are `unavailable`. These stay available: the network sensor (it is `off` then), the radio favorites sensor (the saved list), *Maximum volume*, the start volumes and *Remember volume per input* (their values are kept in Home Assistant), the *Reconnect* button, and the now-playing event (so the next track after the night is not mistaken for a repeat). Standby is not "gone": the amplifier still answers, the media player is `off` and everything is available. *New in 0.8, not released yet: in 0.7 and older the media player showed `off` and the sensors `unknown`.* The optional entities are enabled under the device page's disabled entities.
 
 ### Standard attributes of the media player
 
@@ -133,6 +135,12 @@ What works, and when an action is refused (the errors are listed at the end of t
 | A radio station started | The state of `select.hegel_h150_radio_favorite` |
 
 Home Assistant no longer accepts new device triggers and conditions and points to entity triggers, so Hegel Connect does not add any.
+
+## Repairs
+
+| Issue | When | Goes away |
+| :-- | :-- | :-- |
+| `unreachable` | The amplifier has not answered for 24 hours (longer than a night or a weekend without power): check its power, the network and its address (new in 0.8, not released yet) | By itself when the amplifier answers again, and when the integration is unloaded |
 
 ## Errors
 

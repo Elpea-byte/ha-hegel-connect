@@ -57,6 +57,14 @@
         "name": "Nettverk"
       }
     },
+    "button": {
+      "reconnect": {
+        "name": "Koble til på nytt"
+      },
+      "refresh_favorites": {
+        "name": "Oppdater radiofavoritter"
+      }
+    },
     "event": {
       "now_playing": {
         "name": "Spilles nå",
@@ -177,6 +185,12 @@
     },
     "abort": {
       "no_inputs": "Inngangene er ikke kjent ennå. Prøv igjen når forsterkeren er tilkoblet."
+    }
+  },
+  "issues": {
+    "unreachable": {
+      "title": "{name} har ikke svart på {hours} timer",
+      "description": "Home Assistant når ikke {name} på {host}: den svarer ikke i det hele tatt, heller ikke i hvilemodus. Sjekk at forsterkeren har strøm (en smartplugg eller grenuttak som er av) og er på nettverket, og at adressen ikke er endret (bruk i så fall *Konfigurer på nytt* på integrasjonen). Har du slått den av med vilje, kan du se bort fra dette: meldingen forsvinner av seg selv så snart forsterkeren svarer igjen."
     }
   }
 }

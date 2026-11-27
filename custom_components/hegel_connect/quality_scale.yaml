@@ -95,8 +95,11 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: exempt
-    comment: No situation needs a repair; setup points owners of IP-control models to the built-in integration.
+    status: done
+    comment: >-
+      An issue when the amplifier has not answered for 24 hours (not fixable from Home Assistant: power,
+      network or address); it goes away by itself when the amplifier answers again. An unsupported model needs
+      none: setup refuses it and points owners of IP-control models to the built-in integration.
   stale-devices:
     status: exempt
     comment: One config entry is one amplifier; removing the entry removes the device.
